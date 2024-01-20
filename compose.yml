@@ -1,0 +1,228 @@
+version: '3.8'
+services:
+
+  # Traefik is a reverse proxy and load balancer.
+  # It is used to route incoming requests to the correct container by domain name and not by port.
+  # Ex: https://movies.example.com -> jellyfin container:8096
+  # Ex: https://gitea.example.com -> gitea container:3000
+  # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
+  traefik:
+    container_name: "traefik"
+    image: "traefik"
+    restart: unless-stopped
+    command:
+#      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=${CONTACT_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "443:443"
+      - "80:80"
+#      - "8080:8080"
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # Uptime Kuma is a monitoring tool, that checks the status of your websites and APIs.
+  uptime-kuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma
+    volumes:
+      - ./.volumes/uptime-kuma:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${HOSTNAME_UPTIME_KUMA}" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`${HOSTNAME_UPTIME_KUMA}`)"
+      - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
+      - "traefik.http.routers.uptime-kuma.tls=true"
+      - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+
+  # Transmission is a BitTorrent client with a web interface.
+  # It is a lightweight, works on the server in background and has zero configuration.
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Singapore
+    volumes:
+      - ./.volumes/transmission:/config
+      - ${PATH_MOVIES}:/downloads
+    ports:
+      - 51413:51413  # Default port for torrent traffic
+      - 51413:51413/udp  # Default port for DHT
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${HOSTNAME_TORRENTS}" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.transmission.rule=Host(`${HOSTNAME_TORRENTS}`)"
+      - "traefik.http.routers.transmission.entrypoints=websecure"
+      - "traefik.http.routers.transmission.tls=true"
+      - "traefik.http.routers.transmission.tls.certresolver=myresolver"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+
+  # Jellyfin is a media server for hosting and managing personal media libraries.
+  # Think of movies, TV shows, home videos, music, and pictures.
+  jellyfin:
+    container_name: jellyfin
+    image: jellyfin/jellyfin
+    volumes:
+      - ./.volumes/jellyfin:/config
+      - ./.volumes/jellyfin/cache:/cache
+      - ${PATH_MOVIES}:/media
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${HOSTNAME_MOVIES}" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '2'
+    security_opt:
+      - no-new-privileges:true
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.jellyfin.rule=Host(`${HOSTNAME_MOVIES}`)"
+        - "traefik.http.routers.jellyfin.entrypoints=websecure"
+        - "traefik.http.routers.jellyfin.tls=true"
+        - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+        - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+
+  # Gitea is a lightweight self-hosted Git service.
+  gitea:
+    container_name: gitea
+    image: gitea/gitea:latest
+    ports:
+      - 222:22
+    volumes:
+      - ./.volumes/gitea:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${HOSTNAME_GITEA}" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.25'
+    security_opt:
+        - no-new-privileges:true
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.gitea.rule=Host(`${HOSTNAME_GITEA}`)"
+        - "traefik.http.routers.gitea.entrypoints=websecure"
+        - "traefik.http.routers.gitea.tls=true"
+        - "traefik.http.routers.gitea.tls.certresolver=myresolver"
+        - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+
+  # Home Assistant is an open-source home automation platform.
+  # For your smart home, it is the software "hub" that allows you to control all your devices.
+  home-assistant:
+    container_name: home-assistant
+    image: homeassistant/home-assistant:stable
+    volumes:
+      - ./.volumes/home-assistant:/config
+    environment:
+      - TZ=Asia/Singapore
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${HOSTNAME_HOME_ASSISTANT}" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+          limits:
+            memory: 512M
+            cpus: '0.25'
+    security_opt:
+        - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.home-assistant.rule=Host(`${HOSTNAME_HOME_ASSISTANT}`)"
+      - "traefik.http.routers.home-assistant.entrypoints=websecure"
+      - "traefik.http.routers.home-assistant.tls=true"
+      - "traefik.http.routers.home-assistant.tls.certresolver=myresolver"
+      - "traefik.http.services.home-assistant.loadbalancer.server.port=8123"
+
+  # A simple HTML page to display links to all the services.
+  homepage:
+    container_name: homepage
+    image: nginx:alpine
+    volumes:
+      - ./homepage/dist:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "${HOSTNAME_HOMEPAGE}" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.10'
+    security_opt:
+      - no-new-privileges:true
+    labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.homepage.rule=Host(`${HOSTNAME_HOMEPAGE}`)"
+        - "traefik.http.routers.homepage.entrypoints=websecure"
+        - "traefik.http.routers.homepage.tls=true"
+        - "traefik.http.routers.homepage.tls.certresolver=myresolver"
+        - "traefik.http.services.homepage.loadbalancer.server.port=80"

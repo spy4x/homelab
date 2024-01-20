@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        a {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: white;
+            background-color: #1e1e1e;
+            border-radius: 5px;
+            font-size: 30px;
+            transition: background-color 0.3s ease;
+        }
+
+        a:hover, a:focus {
+            background-color: #2979ff;
+        }
+    </style>
+    <title>Home</title>
+</head>
+
+<body>
+
+<h1>Homelab</h1>
+
+<div class="container">
+    <ul>
+        <li>
+            <a href="https://$HOSTNAME_SAGE"
+               target="_blank">
+                🧠 Sage
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_AQS"
+               target="_blank">
+                🌬️ Air Quality Sensor
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_UPTIME_KUMA/status/tod"
+               target="_blank">
+                ⏱️ Uptime (TOD)
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_UPTIME_KUMA"
+               target="_blank">
+                ⏱️ Uptime Kuma
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_TORRENTS"
+               target="_blank">
+                ⬇️ Torrents
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_MOVIES"
+               target="_blank">
+                🎬 Movies
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_GITEA"
+               target="_blank">
+                📦 Gitea
+            </a>
+        </li>
+        <li>
+            <a href="https://$HOSTNAME_HOME_ASSISTANT"
+               target="_blank">
+                ⚡ Home Assistant
+            </a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>
