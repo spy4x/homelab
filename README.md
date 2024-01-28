@@ -27,9 +27,8 @@ Think of movies, TV shows, home videos, music, and pictures.
 ### [Gitea](https://github.com/go-gitea/gitea)
 Gitea is a lightweight self-hosted Git service, similar to GitHub.
 
-### [Home Assistant](https://github.com/home-assistant/home-assistant.io)
-Home Assistant is an open-source home automation platform.  
-For your smart home, it is the software "hub" that allows you to control all your devices.
+### [Immich](https://immich.app/)
+Google Photos self-hosted alternative.
 
 ### [Homepage](./homepage/src/index.html)
 A simple homepage with links to all the services.

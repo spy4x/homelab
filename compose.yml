@@ -1,4 +1,9 @@
 version: '3.8'
+#
+networks:
+  proxy:
+    external: true
+
 services:
 
   # Traefik is a reverse proxy and load balancer.
@@ -27,10 +32,13 @@ services:
     ports:
       - "443:443"
       - "80:80"
-#      - "8080:8080"
+      - "8080:8080"
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - proxy
+      - default
     deploy:
       resources:
         limits:
@@ -44,12 +52,6 @@ services:
     volumes:
       - ./.volumes/uptime-kuma:/app/data
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "${HOSTNAME_UPTIME_KUMA}" ]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
@@ -73,20 +75,14 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Asia/Singapore
+      - TZ=${TIMEZONE}
     volumes:
       - ./.volumes/transmission:/config
-      - ${PATH_MOVIES}:/downloads
+      - ${PATH_MEDIA}:/downloads
     ports:
       - 51413:51413  # Default port for torrent traffic
       - 51413:51413/udp  # Default port for DHT
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "${HOSTNAME_TORRENTS}" ]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
@@ -110,14 +106,8 @@ services:
     volumes:
       - ./.volumes/jellyfin:/config
       - ./.volumes/jellyfin/cache:/cache
-      - ${PATH_MOVIES}:/media
+      - ${PATH_MEDIA}:/media
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "${HOSTNAME_MOVIES}" ]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
@@ -147,12 +137,6 @@ services:
       - USER_UID=1000
       - USER_GID=1000
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "${HOSTNAME_GITEA}" ]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:
@@ -168,37 +152,6 @@ services:
         - "traefik.http.routers.gitea.tls.certresolver=myresolver"
         - "traefik.http.services.gitea.loadbalancer.server.port=3000"
 
-  # Home Assistant is an open-source home automation platform.
-  # For your smart home, it is the software "hub" that allows you to control all your devices.
-  home-assistant:
-    container_name: home-assistant
-    image: homeassistant/home-assistant:stable
-    volumes:
-      - ./.volumes/home-assistant:/config
-    environment:
-      - TZ=Asia/Singapore
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "${HOSTNAME_HOME_ASSISTANT}" ]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    deploy:
-      resources:
-          limits:
-            memory: 512M
-            cpus: '0.25'
-    security_opt:
-        - no-new-privileges:true
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.home-assistant.rule=Host(`${HOSTNAME_HOME_ASSISTANT}`)"
-      - "traefik.http.routers.home-assistant.entrypoints=websecure"
-      - "traefik.http.routers.home-assistant.tls=true"
-      - "traefik.http.routers.home-assistant.tls.certresolver=myresolver"
-      - "traefik.http.services.home-assistant.loadbalancer.server.port=8123"
-
   # A simple HTML page to display links to all the services.
   homepage:
     container_name: homepage
@@ -206,12 +159,6 @@ services:
     volumes:
       - ./homepage/dist:/usr/share/nginx/html:ro
     restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "${HOSTNAME_HOMEPAGE}" ]
-      interval: 1m
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     deploy:
       resources:
         limits:

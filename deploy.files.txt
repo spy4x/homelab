@@ -1,3 +1,4 @@
 compose.yml
-homepage/dist/***
+homepage/***
+immich/***
 .env
