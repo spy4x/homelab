@@ -33,6 +33,9 @@ Google Photos self-hosted alternative.
 ### [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
 Password Manager, Bitwarden-compatible server written in Rust.
 
+### [Watchtower](https://github.com/containrrr/watchtower)
+Watchtower automates updating your docker containers to the latest version.
+
 ### [Homepage](./homepage/src/index.html)
 A simple homepage with links to all the services.
 
