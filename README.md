@@ -30,6 +30,9 @@ Gitea is a lightweight self-hosted Git service, similar to GitHub.
 ### [Immich](https://immich.app/)
 Google Photos self-hosted alternative.
 
+### [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
+Password Manager, Bitwarden-compatible server written in Rust.
+
 ### [Homepage](./homepage/src/index.html)
 A simple homepage with links to all the services.
 
