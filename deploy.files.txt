@@ -2,3 +2,4 @@ compose.yml
 homepage/***
 immich/***
 .env
+confs/***

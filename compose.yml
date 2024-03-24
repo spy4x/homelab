@@ -1,11 +1,10 @@
-version: '3.8'
+version: "3.8"
 #
 networks:
   proxy:
     external: true
 
 services:
-
   # Traefik is a reverse proxy and load balancer.
   # It is used to route incoming requests to the correct container by domain name and not by port.
   # Ex: https://movies.example.com -> jellyfin container:8096
@@ -16,7 +15,7 @@ services:
     image: "traefik"
     restart: unless-stopped
     command:
-#      - "--log.level=DEBUG"
+      #      - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -42,7 +41,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 512M
 
   # Uptime Kuma is a monitoring tool, that checks the status of your websites and APIs.
@@ -56,7 +55,7 @@ services:
       resources:
         limits:
           memory: 256M
-          cpus: '0.25'
+          cpus: "0.25"
     security_opt:
       - no-new-privileges:true
     labels:
@@ -80,14 +79,14 @@ services:
       - ./.volumes/transmission:/config
       - ${PATH_MEDIA}:/downloads
     ports:
-      - 51413:51413  # Default port for torrent traffic
-      - 51413:51413/udp  # Default port for DHT
+      - 51413:51413 # Default port for torrent traffic
+      - 51413:51413/udp # Default port for DHT
     restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 256M
-          cpus: '0.25'
+          cpus: "0.25"
     security_opt:
       - no-new-privileges:true
     labels:
@@ -112,16 +111,16 @@ services:
       resources:
         limits:
           memory: 2048M
-          cpus: '2'
+          cpus: "2"
     security_opt:
       - no-new-privileges:true
     labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.jellyfin.rule=Host(`${HOSTNAME_MOVIES}`)"
-        - "traefik.http.routers.jellyfin.entrypoints=websecure"
-        - "traefik.http.routers.jellyfin.tls=true"
-        - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
-        - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin.rule=Host(`${HOSTNAME_MOVIES}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls=true"
+      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
 
   # Gitea is a lightweight self-hosted Git service.
   gitea:
@@ -141,16 +140,16 @@ services:
       resources:
         limits:
           memory: 256M
-          cpus: '0.25'
+          cpus: "0.25"
     security_opt:
-        - no-new-privileges:true
+      - no-new-privileges:true
     labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.gitea.rule=Host(`${HOSTNAME_GITEA}`)"
-        - "traefik.http.routers.gitea.entrypoints=websecure"
-        - "traefik.http.routers.gitea.tls=true"
-        - "traefik.http.routers.gitea.tls.certresolver=myresolver"
-        - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+      - "traefik.enable=true"
+      - "traefik.http.routers.gitea.rule=Host(`${HOSTNAME_GITEA}`)"
+      - "traefik.http.routers.gitea.entrypoints=websecure"
+      - "traefik.http.routers.gitea.tls=true"
+      - "traefik.http.routers.gitea.tls.certresolver=myresolver"
+      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
 
   # A simple HTML page to display links to all the services.
   homepage:
@@ -163,16 +162,16 @@ services:
       resources:
         limits:
           memory: 128M
-          cpus: '0.10'
+          cpus: "0.10"
     security_opt:
       - no-new-privileges:true
     labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.homepage.rule=Host(`${HOSTNAME_HOMEPAGE}`)"
-        - "traefik.http.routers.homepage.entrypoints=websecure"
-        - "traefik.http.routers.homepage.tls=true"
-        - "traefik.http.routers.homepage.tls.certresolver=myresolver"
-        - "traefik.http.services.homepage.loadbalancer.server.port=80"
+      - "traefik.enable=true"
+      - "traefik.http.routers.homepage.rule=Host(`${HOSTNAME_HOMEPAGE}`)"
+      - "traefik.http.routers.homepage.entrypoints=websecure"
+      - "traefik.http.routers.homepage.tls=true"
+      - "traefik.http.routers.homepage.tls.certresolver=myresolver"
+      - "traefik.http.services.homepage.loadbalancer.server.port=80"
 
   # Vaultwarden is a password manager which is compatible with Bitwarden clients.
   vaultwarden:
@@ -187,7 +186,7 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: '0.5'
+          cpus: "0.5"
     security_opt:
       - no-new-privileges:true
     labels:
@@ -203,13 +202,39 @@ services:
     container_name: watchtower
     image: containrrr/watchtower
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     deploy:
       resources:
         limits:
+          cpus: "0.5"
           memory: 2048M
-          cpus: '0.5'
     security_opt:
-    - no-new-privileges:true
+      - no-new-privileges:true
     command: --interval 86400 --cleanup
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - ./confs:/mosquitto/config
+      - ./.volumes/mosquitto/data:/mosquitto/data
+      - ./.volumes/mosquitto/log:/mosquitto/log
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.mosquitto.rule=Host(`${HOSTNAME_MQTT}`)"
+      - "traefik.http.routers.mosquitto.entrypoints=websecure"
+      - "traefik.http.routers.mosquitto.tls=true"
+      - "traefik.http.routers.mosquitto.tls.certresolver=myresolver"
+      - "traefik.http.services.mosquitto.loadbalancer.server.port=1883"
