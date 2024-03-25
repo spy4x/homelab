@@ -19,6 +19,7 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.mosquittosecure.address=:8883"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -29,9 +30,10 @@ services:
       - "--certificatesresolvers.myresolver.acme.email=${CONTACT_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
-      - "443:443"
-      - "80:80"
-      - "8080:8080"
+      - 443:443
+      - 80:80
+      - 8883:8883
+      - 8080:8080
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -216,9 +218,6 @@ services:
   mosquitto:
     container_name: mosquitto
     image: eclipse-mosquitto
-    ports:
-      - 1883:1883
-      - 9001:9001
     volumes:
       - ./confs:/mosquitto/config
       - ./.volumes/mosquitto/data:/mosquitto/data
@@ -233,8 +232,9 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.mosquitto.rule=Host(`${HOSTNAME_MQTT}`)"
-      - "traefik.http.routers.mosquitto.entrypoints=websecure"
-      - "traefik.http.routers.mosquitto.tls=true"
-      - "traefik.http.routers.mosquitto.tls.certresolver=myresolver"
-      - "traefik.http.services.mosquitto.loadbalancer.server.port=1883"
+      - "traefik.tcp.routers.mosquitto.rule=HostSNI(`${HOSTNAME_MQTT}`)"
+      - "traefik.tcp.routers.mosquitto.entrypoints=mosquittosecure"
+      - "traefik.tcp.routers.mosquitto.tls=true"
+      - "traefik.tcp.routers.mosquitto.tls=true"
+      - "traefik.tcp.routers.mosquitto.tls.certresolver=myresolver"
+      - "traefik.tcp.services.mosquitto.loadbalancer.server.port=8883"
