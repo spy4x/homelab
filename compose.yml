@@ -12,14 +12,14 @@ services:
   # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
   traefik:
     container_name: "traefik"
-    image: "traefik"
+    image: "traefik:latest"
     restart: unless-stopped
     command:
       #      - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.mosquittosecure.address=:8883"
+#FOR MQTT      - "--entrypoints.mosquittosecure.address=:8883"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -32,8 +32,7 @@ services:
     ports:
       - 443:443
       - 80:80
-      - 8883:8883
-      - 8080:8080
+#      - 8883:8883
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -45,6 +44,15 @@ services:
         limits:
           cpus: "0.5"
           memory: 512M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`proxy.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"
 
   # Uptime Kuma is a monitoring tool, that checks the status of your websites and APIs.
   uptime-kuma:
@@ -62,7 +70,7 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`${HOSTNAME_UPTIME_KUMA}`)"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.${DOMAIN}`)"
       - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
       - "traefik.http.routers.uptime-kuma.tls=true"
       - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
@@ -93,10 +101,11 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.transmission.rule=Host(`${HOSTNAME_TORRENTS}`)"
+      - "traefik.http.routers.transmission.rule=Host(`torrents.${DOMAIN}`)"
       - "traefik.http.routers.transmission.entrypoints=websecure"
       - "traefik.http.routers.transmission.tls=true"
       - "traefik.http.routers.transmission.tls.certresolver=myresolver"
+      - "traefik.http.routers.transmission.middlewares=auth"
       - "traefik.http.services.transmission.loadbalancer.server.port=9091"
 
   # Jellyfin is a media server for hosting and managing personal media libraries.
@@ -118,7 +127,7 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jellyfin.rule=Host(`${HOSTNAME_MOVIES}`)"
+      - "traefik.http.routers.jellyfin.rule=Host(`movies.${DOMAIN}`)"
       - "traefik.http.routers.jellyfin.entrypoints=websecure"
       - "traefik.http.routers.jellyfin.tls=true"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
@@ -147,7 +156,7 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.gitea.rule=Host(`${HOSTNAME_GITEA}`)"
+      - "traefik.http.routers.gitea.rule=Host(`git.${DOMAIN}`)"
       - "traefik.http.routers.gitea.entrypoints=websecure"
       - "traefik.http.routers.gitea.tls=true"
       - "traefik.http.routers.gitea.tls.certresolver=myresolver"
@@ -169,7 +178,7 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.homepage.rule=Host(`${HOSTNAME_HOMEPAGE}`)"
+      - "traefik.http.routers.homepage.rule=Host(`ui.${DOMAIN}`)"
       - "traefik.http.routers.homepage.entrypoints=websecure"
       - "traefik.http.routers.homepage.tls=true"
       - "traefik.http.routers.homepage.tls.certresolver=myresolver"
@@ -180,7 +189,7 @@ services:
     container_name: vaultwarden
     image: vaultwarden/server:latest
     environment:
-      - DOMAIN=https://${HOSTNAME_PASSWORDS}
+      - DOMAIN=https://passwords.${DOMAIN}
     volumes:
       - ./.volumes/vaultwarden:/data
     restart: unless-stopped
@@ -193,7 +202,7 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.vaultwarden.rule=Host(`${HOSTNAME_PASSWORDS}`)"
+      - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
       - "traefik.http.routers.vaultwarden.tls=true"
       - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
@@ -215,13 +224,52 @@ services:
       - no-new-privileges:true
     command: --interval 86400 --cleanup
 
-  mosquitto:
-    container_name: mosquitto
-    image: eclipse-mosquitto
+#  mosquitto:
+#    container_name: mosquitto
+#    image: eclipse-mosquitto
+#    ports:
+#      - 1883:1883
+#      - 9001:9001
+#    volumes:
+#      - ./confs:/mosquitto/config
+#      - ./.volumes/mosquitto/data:/mosquitto/data
+#      - ./.volumes/mosquitto/log:/mosquitto/log
+#    restart: unless-stopped
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: "0.25"
+#          memory: 256M
+#    security_opt:
+#      - no-new-privileges:true
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${DOMAIN}`)"
+#      - "traefik.http.routers.mosquitto.entrypoints=websecure"
+#      - "traefik.http.routers.mosquitto.tls=true"
+#      - "traefik.http.routers.mosquitto.tls.certresolver=myresolver"
+#      - "traefik.http.services.mosquitto.loadbalancer.server.port=1883"
+
+  wireguard:
+    container_name: wireguard
+    image: lscr.io/linuxserver/wireguard:latest
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+      - SERVERURL=vpn.${DOMAIN}
+      - SERVERPORT=51820
+      - PEERS=${VPN_PEERS}
+      - PEERDNS=1.1.1.1,8.8.8.8,9.9.9.9
+      - LOG_CONFS=true
     volumes:
-      - ./confs:/mosquitto/config
-      - ./.volumes/mosquitto/data:/mosquitto/data
-      - ./.volumes/mosquitto/log:/mosquitto/log
+      - ./confs/wireguard:/config
+      - /lib/modules:/lib/modules
+    ports:
+      - 51820:51820/udp
     restart: unless-stopped
     deploy:
       resources:
@@ -230,11 +278,5 @@ services:
           memory: 256M
     security_opt:
       - no-new-privileges:true
-    labels:
-      - "traefik.enable=true"
-      - "traefik.tcp.routers.mosquitto.rule=HostSNI(`${HOSTNAME_MQTT}`)"
-      - "traefik.tcp.routers.mosquitto.entrypoints=mosquittosecure"
-      - "traefik.tcp.routers.mosquitto.tls=true"
-      - "traefik.tcp.routers.mosquitto.tls=true"
-      - "traefik.tcp.routers.mosquitto.tls.certresolver=myresolver"
-      - "traefik.tcp.services.mosquitto.loadbalancer.server.port=8883"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1

@@ -17,11 +17,11 @@ create-proxy-network:
 
 # Deploy main homelab services
 up-homelab:
-	ssh homelab "cd $(PATH_APPS) && docker compose up -d"
+	ssh homelab "cd $(PATH_APPS) && docker compose up -d --force-recreate"
 
 # Deploy Immich
 up-immich:
-	ssh homelab "cd $(PATH_APPS)/immich && docker compose --env-file=.env --env-file=../.env up -d"
+	ssh homelab "cd $(PATH_APPS)/immich && docker compose --env-file=.env --env-file=../.env up -d --force-recreate"
 
 deploy:
 	make build-homepage
