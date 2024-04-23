@@ -39,6 +39,9 @@ Watchtower automates updating your docker containers to the latest version.
 ### [Homepage](./homepage/src/index.html)
 A simple homepage with links to all the services.
 
+### [wireguard](https://www.wireguard.com/)
+WireGuard is a modern VPN server that is easy to setup and very fast.
+
 ## Setup
 To start you need to create .env file by copying .env.example:
 ```bash
