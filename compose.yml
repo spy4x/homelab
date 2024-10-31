@@ -1,5 +1,5 @@
-version: "3.8"
-#
+name: ${PROJECT}
+
 networks:
   proxy:
     external: true
@@ -19,7 +19,7 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-#FOR MQTT      - "--entrypoints.mosquittosecure.address=:8883"
+      #FOR MQTT      - "--entrypoints.mosquittosecure.address=:8883"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -32,7 +32,7 @@ services:
     ports:
       - 443:443
       - 80:80
-#      - 8883:8883
+    #      - 8883:8883
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -224,31 +224,31 @@ services:
       - no-new-privileges:true
     command: --interval 86400 --cleanup
 
-#  mosquitto:
-#    container_name: mosquitto
-#    image: eclipse-mosquitto
-#    ports:
-#      - 1883:1883
-#      - 9001:9001
-#    volumes:
-#      - ./confs:/mosquitto/config
-#      - ./.volumes/mosquitto/data:/mosquitto/data
-#      - ./.volumes/mosquitto/log:/mosquitto/log
-#    restart: unless-stopped
-#    deploy:
-#      resources:
-#        limits:
-#          cpus: "0.25"
-#          memory: 256M
-#    security_opt:
-#      - no-new-privileges:true
-#    labels:
-#      - "traefik.enable=true"
-#      - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${DOMAIN}`)"
-#      - "traefik.http.routers.mosquitto.entrypoints=websecure"
-#      - "traefik.http.routers.mosquitto.tls=true"
-#      - "traefik.http.routers.mosquitto.tls.certresolver=myresolver"
-#      - "traefik.http.services.mosquitto.loadbalancer.server.port=1883"
+  #  mosquitto:
+  #    container_name: mosquitto
+  #    image: eclipse-mosquitto
+  #    ports:
+  #      - 1883:1883
+  #      - 9001:9001
+  #    volumes:
+  #      - ./confs:/mosquitto/config
+  #      - ./.volumes/mosquitto/data:/mosquitto/data
+  #      - ./.volumes/mosquitto/log:/mosquitto/log
+  #    restart: unless-stopped
+  #    deploy:
+  #      resources:
+  #        limits:
+  #          cpus: "0.25"
+  #          memory: 256M
+  #    security_opt:
+  #      - no-new-privileges:true
+  #    labels:
+  #      - "traefik.enable=true"
+  #      - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${DOMAIN}`)"
+  #      - "traefik.http.routers.mosquitto.entrypoints=websecure"
+  #      - "traefik.http.routers.mosquitto.tls=true"
+  #      - "traefik.http.routers.mosquitto.tls.certresolver=myresolver"
+  #      - "traefik.http.services.mosquitto.loadbalancer.server.port=1883"
 
   wireguard:
     container_name: wireguard
