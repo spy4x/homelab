@@ -1,2 +1,0 @@
-REPLACE CONTENT OF THIS FILE WITH:
-mosquitto_passwd -c ./confs/mosquitto.passwd REPLACE_WITH_MOSQUITTO_USER

@@ -133,34 +133,34 @@ services:
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
 
-  # Gitea is a lightweight self-hosted Git service.
-  gitea:
-    container_name: gitea
-    image: gitea/gitea:latest
-    ports:
-      - 222:22
-    volumes:
-      - ./.volumes/gitea:/data
-      - /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-    environment:
-      - USER_UID=1000
-      - USER_GID=1000
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.25"
-    security_opt:
-      - no-new-privileges:true
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.gitea.rule=Host(`git.${DOMAIN}`)"
-      - "traefik.http.routers.gitea.entrypoints=websecure"
-      - "traefik.http.routers.gitea.tls=true"
-      - "traefik.http.routers.gitea.tls.certresolver=myresolver"
-      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+  # # Gitea is a lightweight self-hosted Git service.
+  # gitea:
+  #   container_name: gitea
+  #   image: gitea/gitea:latest
+  #   ports:
+  #     - 222:22
+  #   volumes:
+  #     - ./.volumes/gitea:/data
+  #     - /etc/timezone:/etc/timezone:ro
+  #     - /etc/localtime:/etc/localtime:ro
+  #   environment:
+  #     - USER_UID=1000
+  #     - USER_GID=1000
+  #   restart: unless-stopped
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 256M
+  #         cpus: "0.25"
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.gitea.rule=Host(`git.${DOMAIN}`)"
+  #     - "traefik.http.routers.gitea.entrypoints=websecure"
+  #     - "traefik.http.routers.gitea.tls=true"
+  #     - "traefik.http.routers.gitea.tls.certresolver=myresolver"
+  #     - "traefik.http.services.gitea.loadbalancer.server.port=3000"
 
   # A simple HTML page to display links to all the services.
   homepage:
@@ -280,3 +280,26 @@ services:
       - no-new-privileges:true
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+
+  syncthing:
+    container_name: syncthing
+    image: syncthing/syncthing:latest
+    volumes:
+      - ./.volumes/syncthing:/var/syncthing
+      - /etc/localtime:/etc/localtime:ro
+      - ${PATH_TO_SYNC}:/sync
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.syncthing.rule=Host(`sync.${DOMAIN}`)"
+      - "traefik.http.routers.syncthing.entrypoints=websecure"
+      - "traefik.http.routers.syncthing.tls=true"
+      - "traefik.http.routers.syncthing.tls.certresolver=myresolver"
+      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
