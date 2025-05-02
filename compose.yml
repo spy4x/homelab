@@ -42,8 +42,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 512M
+          cpus: "2"
+          memory: 1024M
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.rule=Host(`proxy.${DOMAIN}`)"
@@ -95,8 +95,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "0.25"
+          memory: 1024M
+          cpus: "1"
     security_opt:
       - no-new-privileges:true
     labels:
@@ -117,12 +117,14 @@ services:
       - ./.volumes/jellyfin:/config
       - ./.volumes/jellyfin/cache:/cache
       - ${PATH_MEDIA}:/media
+    devices:
+      - /dev/dri:/dev/dri # for GPU transcoding
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 2048M
-          cpus: "2"
+          memory: 8192M
+          cpus: "3"
     security_opt:
       - no-new-privileges:true
     labels:
@@ -274,8 +276,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: 256M
+          cpus: "1"
+          memory: 512M
     security_opt:
       - no-new-privileges:true
     sysctls:
@@ -292,8 +294,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "0.25"
+          memory: 4096M
+          cpus: "3"
     security_opt:
       - no-new-privileges:true
     labels:
