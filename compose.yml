@@ -305,3 +305,29 @@ services:
       - "traefik.http.routers.syncthing.tls=true"
       - "traefik.http.routers.syncthing.tls.certresolver=myresolver"
       - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
+
+  # Outline VPN is a self-hosted VPN solution that integrates Shadowsocks.
+  # Usage: https://github.com/spy4x/outline-vpn-docker?tab=readme-ov-file#usage
+  # Download client: https://getoutline.org/en-GB/get-started/#step-3
+  shadowbox:
+    image: diffusehyperion/outline-vpn
+    container_name: shadowbox
+    restart: unless-stopped
+    volumes:
+      - ./.volumes/shadowbox:/shadowbox/state
+    environment:
+      - SB_STATE_DIR=/shadowbox/state
+      - SB_API_PREFIX=api
+      - SB_CERTIFICATE_FILE=/shadowbox/state/shadowbox-selfsigned.crt
+      - SB_PRIVATE_KEY_FILE=/shadowbox/state/shadowbox-selfsigned.key
+    ports:
+      - 8082:8082
+      - 8082:8082/udp
+      # - 8081:8081 # Port for access key management API. Not necessary for running. Doesn't work for me for some reason.
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.shadowbox.rule=Host(`vpn-shadowbox.${DOMAIN}`)"
+      - "traefik.http.routers.shadowbox.entrypoints=websecure"
+      - "traefik.http.routers.shadowbox.tls=true"
+      - "traefik.http.routers.shadowbox.tls.certresolver=myresolver"
+      - "traefik.http.services.shadowbox.loadbalancer.server.port=8081" # Doesn't work for some reason.
