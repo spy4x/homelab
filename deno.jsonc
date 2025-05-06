@@ -1,0 +1,65 @@
+{
+    
+  "workspace": [
+    "./backup"
+  ], 
+  "tasks": {
+    // #region Checks
+    "check": {
+      "command": "echo 'Checks passed!'",
+      "description": "Run all checks",
+      "dependencies": [
+        "lint:check",
+        "fmt:check",
+        "ts:check",
+        "test"
+      ]
+    },
+    "fmt:fix": "deno fmt",
+    "fmt:check": "deno fmt --check",
+    "lint:fix": "deno lint --fix",
+    "lint:check": "deno lint",
+    "ts:check": "deno check **/*.ts",
+    "test": "deno test",
+    "fix": {
+      "command": "echo 'Fixes applied!'",
+      "description": "Run all fixes",
+      "dependencies": [
+        "lint:fix",
+        "fmt:fix"
+      ]
+    },
+    // #endregion Checks
+},
+  "exclude": [
+    "**/.vite/*",
+    "**/.cache/*",
+    "**/dist/*",
+    ".volumes",
+    ".git",
+    "node_modules",
+    "dist",
+    "build",
+    "docs",
+    "infra",
+    "*.lock"
+  ],
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ],
+      "exclude": [
+        "require-await"
+      ]
+    }
+  },
+  "fmt": {
+    "useTabs": false,
+    "lineWidth": 100,
+    "indentWidth": 2,
+    "singleQuote": false,
+    "proseWrap": "preserve",
+    "semiColons": false
+  }
+}

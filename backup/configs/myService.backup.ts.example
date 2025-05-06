@@ -1,0 +1,14 @@
+import { BackupConfig } from "../+lib.ts"
+
+const backupConfig: BackupConfig = {
+  name: "immich",
+  sourcePaths: [
+    "./volumes/immich",
+    "../media/photos",
+  ],
+  containers: {
+    stop: ["immich_server", "immich_machine_learning", "immich_postgres", "immich_redis"],
+  },
+}
+
+export default backupConfig

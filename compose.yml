@@ -268,7 +268,7 @@ services:
       - PEERDNS=1.1.1.1,8.8.8.8,9.9.9.9
       - LOG_CONFS=true
     volumes:
-      - ./confs/wireguard:/config
+      - ./.volumes/wireguard:/config
       - /lib/modules:/lib/modules
     ports:
       - 51820:51820/udp
@@ -289,7 +289,7 @@ services:
     volumes:
       - ./.volumes/syncthing:/var/syncthing
       - /etc/localtime:/etc/localtime:ro
-      - ${PATH_TO_SYNC}:/sync
+      - ${PATH_SYNC}:/sync
     restart: unless-stopped
     deploy:
       resources:

@@ -1,11 +1,12 @@
 .volumes
+dist
+build
+.idea
+.DS_Store
+node_modules
+*.passwd
+
+# Configs
 .env
 .env.*
 !.env.example
-dist
-.idea
-.vscode
-.DS_Store
-node_modules
-/build
-*.passwd
