@@ -308,6 +308,7 @@ services:
 
   # Outline VPN is a self-hosted VPN solution that integrates Shadowsocks.
   # Usage: https://github.com/spy4x/outline-vpn-docker?tab=readme-ov-file#usage
+  # When sharing a key, add &prefix=%13%03%03%3F to the end of the URL to make traffic more difficult to detect.
   # Download client: https://getoutline.org/en-GB/get-started/#step-3
   shadowbox:
     image: diffusehyperion/outline-vpn
