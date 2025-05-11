@@ -325,6 +325,11 @@ services:
       - 8082:8082
       - 8082:8082/udp
       # - 8081:8081 # Port for access key management API. Not necessary for running. Doesn't work for me for some reason.
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.shadowbox.rule=Host(`vpn-shadowbox.${DOMAIN}`)"
@@ -332,3 +337,22 @@ services:
       - "traefik.http.routers.shadowbox.tls=true"
       - "traefik.http.routers.shadowbox.tls.certresolver=myresolver"
       - "traefik.http.services.shadowbox.loadbalancer.server.port=8081" # Doesn't work for some reason.
+
+  open-webui:
+    container_name: open-webui
+    image: ghcr.io/open-webui/open-webui:latest
+    restart: unless-stopped
+    volumes:
+      - ./.volumes/open-webui:/app/backend/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.open-webui.rule=Host(`ai.${DOMAIN}`)"
+      - "traefik.http.routers.open-webui.entrypoints=websecure"
+      - "traefik.http.routers.open-webui.tls=true"
+      - "traefik.http.routers.open-webui.tls.certresolver=myresolver"
+      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
