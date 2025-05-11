@@ -1,8 +1,9 @@
 {
-  "workspace": [
-    "./server/backup"
-  ],
   "tasks": {
+    // #region Deploy
+    "deploy:secondary": "deno run ./secondary/deploy.ts",
+    // #endregion Deploy
+
     // #region Checks
     "check": {
       "command": "echo 'Checks passed!'",
