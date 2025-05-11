@@ -1,58 +1,89 @@
-# Homelab server
+# Homelab Server
 
-This is a collection of services I run on my homelab server.  
-It's pretty lightweight (you need at least 2GB RAM) and easy to setup.  
-All you need is a linux server with [Docker](https://get.docker.com/) installed.  
-Make sure you followed instructions after installation to configure to run Docker as a non-root user.
+This repository contains the configuration and setup for my homelab servers. The services are now organized into **Primary** and **Secondary** servers, each with its own folder for better management.
+It's pretty lightweight and you can run it on a Raspberry Pi or any other server.
+Only thing you need is [Docker](https://get.docker.com/) installed and running.
 
 ## Services
 
-### [Traefik](https://github.com/traefik/traefik)
-A reverse proxy that is used to route incoming requests to the correct container by domain name and not by port.  
-It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.  
-Ex: https://movies.example.com -> jellyfin container:8096  
-Ex: https://gitea.example.com -> gitea container:3000  
+### Primary Server
 
-### [Uptime Kuma](https://github.com/louislam/uptime-kuma)
-Uptime Kuma is a monitoring tool, that checks the status of your websites and APIs.
+#### [Traefik](https://github.com/traefik/traefik)
 
-### [Transmission](https://github.com/transmission/transmission)
-Transmission is a BitTorrent client with a web interface.  
-It is a lightweight, works on the server in background and has zero configuration.
+A reverse proxy that routes incoming requests to the correct container by domain name. It also handles SSL certificates with Let's Encrypt.
 
-### [Jellyfin](https://github.com/jellyfin/jellyfin)
-Jellyfin is a media server for hosting and managing personal media libraries.  
-Think of movies, TV shows, home videos, music, and pictures.
+#### [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 
-### [Gitea](https://github.com/go-gitea/gitea)
-Gitea is a lightweight self-hosted Git service, similar to GitHub.
+A monitoring tool to check the status of websites and APIs.
 
-### [Immich](https://immich.app/)
-Google Photos self-hosted alternative.
+#### [Transmission](https://github.com/transmission/transmission)
 
-### [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
-Password Manager, Bitwarden-compatible server written in Rust.
+A lightweight BitTorrent client with a web interface.
 
-### [Watchtower](https://github.com/containrrr/watchtower)
-Watchtower automates updating your docker containers to the latest version.
+#### [Jellyfin](https://github.com/jellyfin/jellyfin)
 
-### [Homepage](./homepage/src/index.html)
+A media server for hosting and managing personal media libraries.
+
+#### [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
+
+A password manager compatible with Bitwarden clients.
+
+#### [Watchtower](https://github.com/containrrr/watchtower)
+
+Automates updating Docker containers to the latest version.
+
+#### [Homepage](./homepage/src/index.html)
+
 A simple homepage with links to all the services.
 
-### [wireguard](https://www.wireguard.com/)
-WireGuard is a modern VPN server that is easy to setup and very fast.
+#### [WireGuard](https://www.wireguard.com/)
+
+A modern VPN server that is easy to set up and very fast.
+
+#### [Syncthing](https://syncthing.net/)
+
+A continuous file synchronization program.
+
+#### [Shadowbox (Outline VPN)](https://github.com/Jigsaw-Code/outline-server)
+
+A self-hosted VPN solution that integrates Shadowsocks.
+
+#### [Open WebUI](https://github.com/open-webui/open-webui)
+
+An AI-powered web interface for various backend services.
+
+### Secondary Server
+
+The secondary server contains additional services and configurations. Refer to the `secondary/compose.yml` file for details.
 
 ## Setup
-To start you need to create .env file by copying .env.example:
+
+### 1. Create the `.env` File
+
+Copy the example `.env` file and fill in the required variables:
+
 ```bash
 cp .env.example .env
 ```
-and filling in the variables.  
 
-Then you can deploy the stack to your server:
+### 2. Deploy the Stack
+
+Run the following command to deploy the stack:
+
 ```bash
 make deploy
 ```
 
-That's it! You can now access the services by going to the domain names you specified in the .env file.  
-If you want to add more services, just add them to the `compose.yml` file and run `make deploy` again.
+### 3. Access the Services
+
+Access the services using the domain names specified in the `.env` file.
+
+### 4. Add More Services
+
+To add more services, edit the `compose.yml` file and run `make deploy` again.
+
+## Notes
+
+- Ensure Docker is installed and configured to run as a non-root user.
+- Use the `backup/` folder for managing backups.
+- Check logs for troubleshooting if any service fails to start.
