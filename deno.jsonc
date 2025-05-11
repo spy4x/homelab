@@ -1,8 +1,7 @@
 {
-    
   "workspace": [
-    "./backup"
-  ], 
+    "./server/backup"
+  ],
   "tasks": {
     // #region Checks
     "check": {
@@ -28,9 +27,9 @@
         "lint:fix",
         "fmt:fix"
       ]
-    },
+    }
     // #endregion Checks
-},
+  },
   "exclude": [
     "**/.vite/*",
     "**/.cache/*",
