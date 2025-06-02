@@ -10,31 +10,31 @@ services:
   # Ex: https://movies.example.com -> jellyfin container:8096
   # Ex: https://gitea.example.com -> gitea container:3000
   # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
-  traefik:
-    container_name: "traefik"
+  proxy:
+    container_name: "proxy"
     image: "traefik:latest"
     restart: unless-stopped
     command:
-      #      - "--log.level=DEBUG"
+      # - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      #FOR MQTT      - "--entrypoints.mosquittosecure.address=:8883"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
-      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Use HTTP-01 challenge
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use 'web' entrypoint (port 80) for the challenge
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory" # Use staging server for testing
       - "--certificatesresolvers.myresolver.acme.email=${CONTACT_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - 443:443
       - 80:80
-    #      - 8883:8883
     volumes:
-      - "./letsencrypt:/letsencrypt"
+      - "./.volumes/traefik/letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - proxy
@@ -46,11 +46,11 @@ services:
           memory: 1024M
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
       - "traefik.http.routers.traefik.rule=Host(`proxy.${DOMAIN}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=myresolver"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
       - "traefik.http.routers.traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"
 
@@ -70,11 +70,11 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
       - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.${DOMAIN}`)"
       - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
       - "traefik.http.routers.uptime-kuma.tls=true"
       - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
-      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
 
   # Transmission is a BitTorrent client with a web interface.
   # It is a lightweight, works on the server in background and has zero configuration.
@@ -101,12 +101,12 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
       - "traefik.http.routers.transmission.rule=Host(`torrents.${DOMAIN}`)"
       - "traefik.http.routers.transmission.entrypoints=websecure"
       - "traefik.http.routers.transmission.tls=true"
       - "traefik.http.routers.transmission.tls.certresolver=myresolver"
       - "traefik.http.routers.transmission.middlewares=auth"
-      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
 
   # Jellyfin is a media server for hosting and managing personal media libraries.
   # Think of movies, TV shows, home videos, music, and pictures.
@@ -129,40 +129,11 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
       - "traefik.http.routers.jellyfin.rule=Host(`movies.${DOMAIN}`)"
       - "traefik.http.routers.jellyfin.entrypoints=websecure"
       - "traefik.http.routers.jellyfin.tls=true"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
-      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-
-  # # Gitea is a lightweight self-hosted Git service.
-  # gitea:
-  #   container_name: gitea
-  #   image: gitea/gitea:latest
-  #   ports:
-  #     - 222:22
-  #   volumes:
-  #     - ./.volumes/gitea:/data
-  #     - /etc/timezone:/etc/timezone:ro
-  #     - /etc/localtime:/etc/localtime:ro
-  #   environment:
-  #     - USER_UID=1000
-  #     - USER_GID=1000
-  #   restart: unless-stopped
-  #   deploy:
-  #     resources:
-  #       limits:
-  #         memory: 256M
-  #         cpus: "0.25"
-  #   security_opt:
-  #     - no-new-privileges:true
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.gitea.rule=Host(`git.${DOMAIN}`)"
-  #     - "traefik.http.routers.gitea.entrypoints=websecure"
-  #     - "traefik.http.routers.gitea.tls=true"
-  #     - "traefik.http.routers.gitea.tls.certresolver=myresolver"
-  #     - "traefik.http.services.gitea.loadbalancer.server.port=3000"
 
   # A simple HTML page to display links to all the services.
   homepage:
@@ -180,11 +151,11 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.homepage.loadbalancer.server.port=80"
       - "traefik.http.routers.homepage.rule=Host(`ui.${DOMAIN}`)"
       - "traefik.http.routers.homepage.entrypoints=websecure"
       - "traefik.http.routers.homepage.tls=true"
       - "traefik.http.routers.homepage.tls.certresolver=myresolver"
-      - "traefik.http.services.homepage.loadbalancer.server.port=80"
 
   # Vaultwarden is a password manager which is compatible with Bitwarden clients.
   vaultwarden:
@@ -204,11 +175,11 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
       - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
       - "traefik.http.routers.vaultwarden.tls=true"
       - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
-      - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
 
   # Watchtower is a process for automating Docker container base image updates.
   watchtower:
@@ -225,32 +196,6 @@ services:
     security_opt:
       - no-new-privileges:true
     command: --interval 86400 --cleanup
-
-  #  mosquitto:
-  #    container_name: mosquitto
-  #    image: eclipse-mosquitto
-  #    ports:
-  #      - 1883:1883
-  #      - 9001:9001
-  #    volumes:
-  #      - ./confs:/mosquitto/config
-  #      - ./.volumes/mosquitto/data:/mosquitto/data
-  #      - ./.volumes/mosquitto/log:/mosquitto/log
-  #    restart: unless-stopped
-  #    deploy:
-  #      resources:
-  #        limits:
-  #          cpus: "0.25"
-  #          memory: 256M
-  #    security_opt:
-  #      - no-new-privileges:true
-  #    labels:
-  #      - "traefik.enable=true"
-  #      - "traefik.http.routers.mosquitto.rule=Host(`mqtt.${DOMAIN}`)"
-  #      - "traefik.http.routers.mosquitto.entrypoints=websecure"
-  #      - "traefik.http.routers.mosquitto.tls=true"
-  #      - "traefik.http.routers.mosquitto.tls.certresolver=myresolver"
-  #      - "traefik.http.services.mosquitto.loadbalancer.server.port=1883"
 
   wireguard:
     container_name: wireguard
@@ -300,11 +245,11 @@ services:
       - no-new-privileges:true
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
       - "traefik.http.routers.syncthing.rule=Host(`sync.${DOMAIN}`)"
       - "traefik.http.routers.syncthing.entrypoints=websecure"
       - "traefik.http.routers.syncthing.tls=true"
       - "traefik.http.routers.syncthing.tls.certresolver=myresolver"
-      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
 
   # Outline VPN is a self-hosted VPN solution that integrates Shadowsocks.
   # Usage: https://github.com/spy4x/outline-vpn-docker?tab=readme-ov-file#usage
@@ -332,11 +277,11 @@ services:
           cpus: "0.5"
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.shadowbox.loadbalancer.server.port=8081" # Doesn't work for some reason.
       - "traefik.http.routers.shadowbox.rule=Host(`vpn-shadowbox.${DOMAIN}`)"
       - "traefik.http.routers.shadowbox.entrypoints=websecure"
       - "traefik.http.routers.shadowbox.tls=true"
       - "traefik.http.routers.shadowbox.tls.certresolver=myresolver"
-      - "traefik.http.services.shadowbox.loadbalancer.server.port=8081" # Doesn't work for some reason.
 
   open-webui:
     container_name: open-webui
@@ -351,8 +296,35 @@ services:
           cpus: "0.5"
     labels:
       - "traefik.enable=true"
+      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
       - "traefik.http.routers.open-webui.rule=Host(`ai.${DOMAIN}`)"
       - "traefik.http.routers.open-webui.entrypoints=websecure"
       - "traefik.http.routers.open-webui.tls=true"
       - "traefik.http.routers.open-webui.tls.certresolver=myresolver"
-      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
+
+  audiobookshelf:
+    container_name: audiobookshelf
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./.volumes/audiobookshelf/config:/config
+      - ./.volumes/audiobookshelf/metadata:/metadata
+      - ${PATH_BOOKS}:/audiobooks
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1"
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.audiobookshelf.loadbalancer.server.port=80"
+      - "traefik.http.routers.audiobookshelf.rule=Host(`books.${DOMAIN}`)"
+      - "traefik.http.routers.audiobookshelf.entrypoints=websecure"
+      - "traefik.http.routers.audiobookshelf.tls=true"
+      - "traefik.http.routers.audiobookshelf.tls.certresolver=myresolver"
