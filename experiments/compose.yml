@@ -1,0 +1,107 @@
+name: ${PROJECT}
+
+services:
+  # Traefik is a reverse proxy and load balancer.
+  # It is used to route incoming requests to the correct container by domain name and not by port.
+  # Ex: https://movies.example.com -> jellyfin container:8096
+  # Ex: https://gitea.example.com -> gitea container:3000
+  # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
+  traefik:
+    container_name: "traefik"
+    image: "traefik:latest"
+    restart: unless-stopped
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.address=:80"
+      # - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      # - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      # - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - '--certificatesresolvers.myresolver.acme.dnschallenge=true'
+      - '--certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare'
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=${CONTACT_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    environment:
+      # envs below are for https://go-acme.github.io/lego/dns/cloudflare/
+      - CF_DNS_API_TOKEN=${PROXY_CF_API_TOKEN}
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - "./.volumes/traefik/letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1024M
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`proxy.${DOMAIN}`)"
+      # - "traefik.http.routers.traefik.entrypoints=websecure"
+      # - "traefik.http.routers.traefik.tls=true"
+      # - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+  cloudflared:
+    container_name: cloudflared
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARED_TOKEN}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./.volumes/cloudflared:/etc/cloudflared
+
+  uptime-kuma:
+    container_name: uptime-kuma
+    image: louislam/uptime-kuma
+    volumes:
+      - ./.volumes/uptime-kuma:/app/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.${DOMAIN}`)"
+      # - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
+      # - "traefik.http.routers.uptime-kuma.tls=true"
+      # - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
+      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
+
+  vaultwarden:
+    container_name: vaultwarden
+    image: vaultwarden/server:latest
+    environment:
+      - DOMAIN=https://passwords.${DOMAIN}
+    volumes:
+      - ./.volumes/vaultwarden:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
+      # - "traefik.http.routers.vaultwarden.entrypoints=websecure"
+      # - "traefik.http.routers.vaultwarden.tls=true"
+      # - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
+      - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
