@@ -46,6 +46,7 @@ services:
           memory: 1024M
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
       - "traefik.http.routers.traefik.rule=Host(`proxy.${DOMAIN}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
@@ -68,8 +69,12 @@ services:
           cpus: "0.25"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
       - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.${DOMAIN}`)"
       - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
@@ -99,8 +104,12 @@ services:
           cpus: "1"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.transmission.loadbalancer.server.port=9091"
       - "traefik.http.routers.transmission.rule=Host(`torrents.${DOMAIN}`)"
       - "traefik.http.routers.transmission.entrypoints=websecure"
@@ -127,8 +136,12 @@ services:
           cpus: "3"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
       - "traefik.http.routers.jellyfin.rule=Host(`movies.${DOMAIN}`)"
       - "traefik.http.routers.jellyfin.entrypoints=websecure"
@@ -149,8 +162,12 @@ services:
           cpus: "0.10"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.homepage.loadbalancer.server.port=80"
       - "traefik.http.routers.homepage.rule=Host(`ui.${DOMAIN}`)"
       - "traefik.http.routers.homepage.entrypoints=websecure"
@@ -173,8 +190,12 @@ services:
           cpus: "0.5"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
       - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
@@ -243,8 +264,12 @@ services:
           cpus: "3"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
       - "traefik.http.routers.syncthing.rule=Host(`sync.${DOMAIN}`)"
       - "traefik.http.routers.syncthing.entrypoints=websecure"
@@ -275,8 +300,12 @@ services:
         limits:
           memory: 512M
           cpus: "0.5"
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.shadowbox.loadbalancer.server.port=8081" # Doesn't work for some reason.
       - "traefik.http.routers.shadowbox.rule=Host(`vpn-shadowbox.${DOMAIN}`)"
       - "traefik.http.routers.shadowbox.entrypoints=websecure"
@@ -294,8 +323,12 @@ services:
         limits:
           memory: 512M
           cpus: "0.5"
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
       - "traefik.http.routers.open-webui.rule=Host(`ai.${DOMAIN}`)"
       - "traefik.http.routers.open-webui.entrypoints=websecure"
@@ -321,8 +354,12 @@ services:
           cpus: "1"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.services.audiobookshelf.loadbalancer.server.port=80"
       - "traefik.http.routers.audiobookshelf.rule=Host(`books.${DOMAIN}`)"
       - "traefik.http.routers.audiobookshelf.entrypoints=websecure"

@@ -44,6 +44,7 @@ services:
           memory: 512M
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.routers.traefik.rule=Host(`proxy-2.${DOMAIN}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
@@ -66,8 +67,12 @@ services:
           cpus: "0.25"
     security_opt:
       - no-new-privileges:true
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.routers.uptime-kuma.rule=Host(`uptime-2.${DOMAIN}`)"
       - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
       - "traefik.http.routers.uptime-kuma.tls=true"
@@ -109,8 +114,12 @@ services:
       - 8384:8384
       - 22000:22000/tcp
       - 21027:21027/udp
+    networks:
+      - proxy
+      - default
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.routers.syncthing.rule=Host(`sync-2.${DOMAIN}`)"
       - "traefik.http.routers.syncthing.entrypoints=websecure"
       - "traefik.http.routers.syncthing.tls=true"
