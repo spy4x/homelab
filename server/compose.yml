@@ -92,7 +92,11 @@ services:
       - TZ=${TIMEZONE}
     volumes:
       - ./.volumes/transmission:/config
-      - ${PATH_MEDIA}:/downloads
+      - ${PATH_MOVIES}:/downloads/movies
+      - ${PATH_SERIES}:/downloads/series
+      - ${PATH_MUSIC}:/downloads/music
+      - ${PATH_BOOKS}:/downloads/books
+      - ${PATH_OTHER}:/downloads/other
     ports:
       - 51413:51413 # Default port for torrent traffic
       - 51413:51413/udp # Default port for DHT
