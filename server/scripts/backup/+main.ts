@@ -18,7 +18,7 @@ const backups: BackupConfigState[] = []
 const backupsOutputBasePath = absPath(getEnvVar("PATH_SYNC") + "/backups")
 const backupsPassword = getEnvVar("BACKUPS_PASSWORD")
 const webhookUrl = getEnvVar("SLACK_WEBHOOK_URL")
-const configsPath = absPath(`${PATH_APPS}/backup/configs`)
+const configsPath = absPath(`${PATH_APPS}/scripts/backup/configs`)
 
 // #endregion VARS & TYPES
 

@@ -1,4 +1,5 @@
 compose.yml
 homepage/***
 immich/***
+scripts/***
 .env
