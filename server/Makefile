@@ -6,6 +6,9 @@ export $(shell sed 's/=.*//' .env)
 build-homepage:
 	mkdir -p ./homepage/dist
 	envsubst < ./homepage/src/index.html > ./homepage/dist/index.html
+	cp ./homepage/src/sw.js ./homepage/dist/
+	cp ./homepage/src/manifest.json ./homepage/dist/
+	cp -r ./homepage/src/assets ./homepage/dist/
 
 # Copy files to server
 copy-files:
