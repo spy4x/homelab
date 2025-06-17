@@ -369,3 +369,36 @@ services:
       - "traefik.http.routers.audiobookshelf.entrypoints=websecure"
       - "traefik.http.routers.audiobookshelf.tls=true"
       - "traefik.http.routers.audiobookshelf.tls.certresolver=myresolver"
+
+  # MeTube is a web GUI for youtube-dl with playlist support.
+  # It allows you to download videos from YouTube and other supported sites.
+  metube:
+    container_name: metube
+    image: ghcr.io/alexta69/metube
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${PATH_VIDEOS}:/downloads
+      - ${PATH_MUSIC}:/audio-downloads
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.metube.loadbalancer.server.port=8081"
+      - "traefik.http.routers.metube.rule=Host(`metube.${DOMAIN}`)"
+      - "traefik.http.routers.metube.entrypoints=websecure"
+      - "traefik.http.routers.metube.tls=true"
+      - "traefik.http.routers.metube.tls.certresolver=myresolver"
+      - "traefik.http.routers.metube.middlewares=auth"

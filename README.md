@@ -1,8 +1,10 @@
 # Homelab Server
 
-This repository contains the configuration and setup for my homelab servers. The services are now organized into **Primary** and **Secondary** servers, each with its own folder for better management.
-It's pretty lightweight and you can run it on a Raspberry Pi or any other server.
-Only thing you need is [Docker](https://get.docker.com/) installed and running.
+This repository contains the configuration and setup for my homelab servers. The
+services are now organized into **Primary** and **Secondary** servers, each with
+its own folder for better management. It's pretty lightweight and you can run it
+on a Raspberry Pi or any other server. Only thing you need is
+[Docker](https://get.docker.com/) installed and running.
 
 ## Services
 
@@ -10,7 +12,8 @@ Only thing you need is [Docker](https://get.docker.com/) installed and running.
 
 #### [Traefik](https://github.com/traefik/traefik)
 
-A reverse proxy that routes incoming requests to the correct container by domain name. It also handles SSL certificates with Let's Encrypt.
+A reverse proxy that routes incoming requests to the correct container by domain
+name. It also handles SSL certificates with Let's Encrypt.
 
 #### [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 
@@ -20,9 +23,18 @@ A monitoring tool to check the status of websites and APIs.
 
 A lightweight BitTorrent client with a web interface.
 
+#### [MeTube](https://github.com/alexta69/metube)
+
+A web GUI for youtube-dl with playlist support. Allows downloading videos from
+YouTube and other supported sites.
+
 #### [Jellyfin](https://github.com/jellyfin/jellyfin)
 
 A media server for hosting and managing personal media libraries.
+
+#### [Immich](https://github.com/immich-app/immich)
+
+A self-hosted photo and video backup solution with automatic backup from mobile devices.
 
 #### [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
 
@@ -52,9 +64,14 @@ A self-hosted VPN solution that integrates Shadowsocks.
 
 An AI-powered web interface for various backend services.
 
+#### [AudioBookshelf](https://github.com/advplyr/audiobookshelf)
+
+A self-hosted audiobook and podcast server with web and mobile app clients.
+
 ### Secondary Server
 
-The secondary server contains additional services and configurations. Refer to the `secondary/compose.yml` file for details.
+The secondary server contains additional services and configurations. Refer to
+the `secondary/compose.yml` file for details.
 
 ## Setup
 
