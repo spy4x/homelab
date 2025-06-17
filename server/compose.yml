@@ -130,6 +130,8 @@ services:
       - ./.volumes/jellyfin:/config
       - ./.volumes/jellyfin/cache:/cache
       - ${PATH_MEDIA}:/media
+      - ${PATH_VIDEOS}:/videos
+      - ${PATH_MUSIC}:/music
     devices:
       - /dev/dri:/dev/dri # for GPU transcoding
     restart: unless-stopped
@@ -379,9 +381,13 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=${TIMEZONE}
+      - DOWNLOAD_DIR=/downloads/videos
+      - AUDIO_DOWNLOAD_DIR=/downloads/music
+      - OUTPUT_TEMPLATE=%(uploader,channel)s/%(title)s.%(ext)s
+      - OUTPUT_TEMPLATE_PLAYLIST=%(playlist,uploader,channel)s/%(title)s.%(ext)s
     volumes:
-      - ${PATH_VIDEOS}:/downloads
-      - ${PATH_MUSIC}:/audio-downloads
+      - ${PATH_VIDEOS}:/downloads/videos
+      - ${PATH_MUSIC}:/downloads/music
     restart: unless-stopped
     deploy:
       resources:
