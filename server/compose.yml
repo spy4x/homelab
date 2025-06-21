@@ -341,6 +341,7 @@ services:
       - "traefik.http.routers.open-webui.tls=true"
       - "traefik.http.routers.open-webui.tls.certresolver=myresolver"
 
+  # Audiobookshelf is a self-hosted audio & epub/pdf book server.
   audiobookshelf:
     container_name: audiobookshelf
     image: ghcr.io/advplyr/audiobookshelf:latest
@@ -408,3 +409,33 @@ services:
       - "traefik.http.routers.metube.tls=true"
       - "traefik.http.routers.metube.tls.certresolver=myresolver"
       - "traefik.http.routers.metube.middlewares=auth"
+
+  # Home Assistant is a home automation platform that focuses on privacy and local control.
+  # It allows you to control all your devices from a single, mobile-friendly interface.
+  home-assistant:
+    container_name: home-assistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    volumes:
+      - ./.volumes/home-assistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=${TIMEZONE}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: "2"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.home-assistant.loadbalancer.server.port=8123"
+      - "traefik.http.routers.home-assistant.rule=Host(`home.${DOMAIN}`)"
+      - "traefik.http.routers.home-assistant.entrypoints=websecure"
+      - "traefik.http.routers.home-assistant.tls=true"
+      - "traefik.http.routers.home-assistant.tls.certresolver=myresolver"
