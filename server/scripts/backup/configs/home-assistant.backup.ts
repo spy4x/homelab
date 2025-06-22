@@ -3,6 +3,7 @@ import { BackupConfig } from "../+lib.ts"
 const backupConfig: BackupConfig = {
   name: "home-assistant",
   sourcePaths: "default",
+  pathsToChangeOwnership: "default",
   containers: {
     stop: "default",
   },
