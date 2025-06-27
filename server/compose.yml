@@ -418,6 +418,8 @@ services:
     volumes:
       - ./.volumes/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0  # Zigbee USB dongle
     environment:
       - TZ=${TIMEZONE}
     restart: unless-stopped

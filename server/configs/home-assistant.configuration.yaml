@@ -17,7 +17,8 @@ scene: !include scenes.yaml
 http:
   use_x_forwarded_for: true
   trusted_proxies:
-    - 172.18.0.0/16 # Proxy network
     - 172.17.0.0/16 # Docker bridge network
+    - 172.18.0.0/16 # Proxy network
+    - 172.19.0.0/16 # Proxy network (additional range)
     - 127.0.0.1 # Localhost
     - ::1 # IPv6 localhost
