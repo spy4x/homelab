@@ -1,4 +1,4 @@
-import { BackupConfig, PATH_SYNC } from "../+lib.ts"
+import { BackupConfig, PATH_SYNC } from "../src/+lib.ts"
 
 const backupConfig: BackupConfig = {
   name: "archive",

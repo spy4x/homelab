@@ -1,4 +1,4 @@
-import { BackupConfig } from "../+lib.ts"
+import { BackupConfig } from "../src/+lib.ts"
 
 const backupConfig: BackupConfig = {
   name: "wireguard",

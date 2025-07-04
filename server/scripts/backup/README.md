@@ -1,93 +1,176 @@
 # Homelab Backup System
 
-This directory contains the backup automation for your homelab services using `Deno` script and `restic`.
+A modular TypeScript backup system using Deno and Restic for backing up homelab services.
 
-## How It Works
+## Architecture
 
-- **Configuration:** Each backup job is defined in a TypeScript file in `backup/configs/` (see examples in that folder).
-- **Main Script:** The main entrypoint is `backup/+main.ts`. It:
-  - Loads all configs from `backup/configs/*.backup.ts`
-  - Optionally stops containers before backup (if configured)
-  - Changes ownership of files if needed (may require root or allow user to chown without sudo. TODO: To be improved, not the best practice)
-  - Runs restic to back up the specified paths
-  - Prunes old backups according to retention policy
-  - Restarts containers after backup
-  - Notifies via Slack on completion (if configured)
+The backup system is organized into clean, modular components:
 
-## Requirements
+### Core Files
 
-- Deno (https://deno.com/)
-- restic (https://restic.net/)
-- Docker (if using container stop/start)
-- A `.env` file with at least:
-  - `BACKUPS_PASSWORD` (restic repo password)
-  - `SLACK_WEBHOOK_URL` (optional, for notifications)
+- **`+main.ts`** - Main script containing backup orchestration logic
+- **`+lib.ts`** - Shared utilities and environment variable helpers
+
+### Source Modules (`src/`)
+
+- **`types.ts`** - TypeScript types and interfaces
+- **`config.ts`** - Configuration loading and validation logic
+- **`operations.ts`** - Core backup operations (Docker, Restic, file management)
+- **`reporting.ts`** - Notification and reporting functionality
+
+### Configuration Files
+
+- **`configs/*.backup.ts`** - Individual service backup configurations
+
+## Features
+
+- **Modular Design**: Each concern is separated into its own module
+- **Type Safety**: Full TypeScript support with comprehensive type definitions
+- **Error Handling**: Robust error handling with detailed reporting
+- **Docker Integration**: Automatic container stop/start during backups
+- **Ownership Management**: Handles file ownership for proper backup access
+- **Repository Management**: Automatic Restic repository initialization
+- **Size Reporting**: Calculates and reports backup repository sizes
+- **Slack Notifications**: Comprehensive backup reports via Slack webhook
+- **Configurable Retention**: Configurable backup retention policies
 
 ## Usage
 
-### 1. Manual Run
+### Manual Run
 
-From the project root:
+```bash
+# Run the backup process
+deno run --allow-all +main.ts
 
-```zsh
-# Run with all permissions and env file
-/absolute/path/to/deno run --env-file=/path/to/homelab/.env -A /path/to/homelab/backup/+main.ts
+# With environment file
+deno run --env-file=/path/to/.env --allow-all +main.ts
+
+# Check TypeScript compilation
+deno check +main.ts
 ```
 
-To configure chown to be used without sudo, you can allow chown command to be run without password for the user running the script. Edit the sudoers file with:
+### Automated (Cron)
 
-```zsh
-sudo visudo
+```bash
+# Daily at 2:30am
+30 2 * * * USER=username /usr/bin/deno run --env-file=/path/to/.env --allow-all /path/to/+main.ts >> /path/to/backup.log 2>&1
 ```
 
-And add the following line (replace `username` with your actual username):
+## Environment Variables
 
-```zsh
-username ALL=(ALL) NOPASSWD: /usr/bin/chown
+Required environment variables:
+
+- `PATH_SYNC` - Base path for backup storage
+- `BACKUPS_PASSWORD` - Password for restic repositories
+- `SLACK_WEBHOOK_URL` - Slack webhook URL for notifications
+- `PATH_APPS` - Path to applications directory
+- `USER` - Current user name for ownership changes
+
+## Configuration Structure
+
+Each backup configuration file should export a default `BackupConfig` object:
+
+```typescript
+import { BackupConfig, PATH_APPS } from "../+lib.ts"
+
+const backupConfig: BackupConfig = {
+  name: "service-name",
+  sourcePaths: [`${PATH_APPS}/.volumes/service-name`],
+  pathsToChangeOwnership: [`${PATH_APPS}/.volumes/service-name`],
+  containers: {
+    stop: ["container1", "container2"],
+  },
+}
+
+export default backupConfig
 ```
 
-This allows the user to run the `chown` command without needing to enter a password, which is necessary for the script to change ownership of files before backup.
-Make sure to test the command to ensure it works as expected.
-This is a security risk, so be cautious and ensure you understand the implications.
+### Configuration Options
 
-### 2. Add to Cron
+- `name` - Backup name (used for repository naming)
+- `sourcePaths` - Paths to backup (use "default" for `${PATH_APPS}/.volumes/${name}`)
+- `pathsToChangeOwnership` - Paths to change ownership before backup (optional)
+- `containers.stop` - Docker containers to stop during backup (use "default" for `[name]`)
 
-To automate backups, add a cron job. Example (daily at 2:30am):
+## Backup Process
 
-```zsh
-30 2 * * * USER=username /absolute/path/to/deno run --env-file=/path/to/homelab/.env -A /path/to/homelab/backup/+main.ts >> /path/to/homelab/backup.log 2>&1
-```
+1. **Load Configurations** - Dynamically import all `*.backup.ts` files
+2. **Validate Configurations** - Check paths exist and normalize settings
+3. **For Each Backup**:
+   - Stop Docker containers
+   - Change file ownership if configured
+   - Initialize Restic repository if needed
+   - Perform backup with integrity checks
+   - Clean up old backups (7 daily, 4 weekly, 3 monthly)
+   - Restart Docker containers
+4. **Calculate Repository Sizes** - Get disk usage for each repository
+5. **Generate Reports** - Console output and Slack notification
 
-### 3. How to Restore
+## Error Handling
+
+The system provides comprehensive error handling:
+
+- Configuration validation errors
+- Path existence checks
+- Docker command failures
+- Restic operation failures with specific exit code handling
+- Size calculation errors
+- Notification failures
+
+All errors are logged with context and reported in the final notification.
+
+## Restore Process
 
 To restore files from a restic backup:
 
-```zsh
+```bash
+# Set password environment variable
+export RESTIC_PASSWORD="your-backup-password"
+
 # List snapshots
 restic -r /path/to/repo snapshots
 
-# Restore a snapshot (replace <ID> and <target-dir>)
+# Restore a snapshot
 restic -r /path/to/repo restore <snapshot-id> --target <target-dir>
+
+# Restore specific files
+restic -r /path/to/repo restore <snapshot-id> --target <target-dir> --include "path/to/specific/file"
 ```
 
-You will need to provide the `BACKUPS_PASSWORD` as an environment variable or via prompt.
-Losing the password will make it impossible to restore backups.
+## Security Notes
 
-## Adding/Editing Backups
+For the chown operations to work without sudo prompts, configure sudoers:
 
-- Add a new config file to `backup/configs/` (see existing `.backup.ts` files for examples).
-- Use `sourcePaths: "default"` or specify an array of paths.
-- Optionally set `pathsToChangeOwnership` and `containers`.
+```bash
+sudo visudo
+```
 
-## Notes
+Add line (replace `username` with your actual username):
 
-- The script will stop/start containers if configured.
-- Ownership of files can be changed before backup (requires sudo/root/allow chown without sudo).
-- Retention policy is set in the script (see `forget` step).
-- Notifications are sent to Slack if `SLACK_WEBHOOK_URL` is set.
+```
+username ALL=(ALL) NOPASSWD: /usr/bin/chown
+```
+
+**Warning**: This is a security consideration. Ensure you understand the implications.
+
+## Refactoring Benefits
+
+The refactored architecture provides:
+
+- **Simplified Structure**: Main logic consolidated in `+main.ts` with support modules in `src/`
+- **Better Separation of Concerns**: Each module in `src/` has a single responsibility
+- **Improved Maintainability**: Easier to modify specific functionality
+- **Enhanced Testability**: Functions are focused and easier to unit test
+- **Type Safety**: Comprehensive TypeScript typing throughout
+- **Better Error Handling**: More granular error handling and reporting
+- **Code Reusability**: Modular design allows for better code reuse
+- **Cleaner Organization**: Logical file structure without redundant prefixes
+- **Easier Debugging**: Clear module boundaries make issues easier to trace
 
 ## Troubleshooting
 
-- Check `backup.log` for errors.
-- Ensure all required environment variables are set.
-- Make sure restic and Deno are installed and available in the PATH for cron/root.
+- Check logs for specific error messages
+- Ensure all required environment variables are set
+- Verify Deno and restic are installed and accessible
+- Check file permissions for backup paths
+- Validate Docker container names match actual running containers
