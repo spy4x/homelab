@@ -105,3 +105,35 @@ services:
           memory: 2048M
     security_opt:
       - no-new-privileges:true
+
+# --------- Immich Kiosk - a tool for displaying photos in a kiosk mode on a TV/tablet ---------
+
+  immich-kiosk:
+    container_name: immich_kiosk
+    image: ghcr.io/damongolding/immich-kiosk:latest
+    environment:
+      - KIOSK_IMMICH_URL=http://immich-server:2283
+      - KIOSK_IMMICH_EXTERNAL_URL=https://photos.${DOMAIN}
+      - KIOSK_BEHIND_PROXY=true
+      - TZ=${TIMEZONE:-Asia/Singapore}
+    env_file:
+      - kiosk.env
+    networks:
+      - proxy
+      - default
+    depends_on:
+      - immich-server
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - 3000:3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.immich-kiosk.rule=Host(`kiosk.${DOMAIN}`)"
+      - "traefik.http.routers.immich-kiosk.entrypoints=websecure"
+      - "traefik.http.routers.immich-kiosk.tls=true"
+      - "traefik.http.routers.immich-kiosk.tls.certresolver=myresolver"
+      - "traefik.http.services.immich-kiosk.loadbalancer.server.port=3000"
+      

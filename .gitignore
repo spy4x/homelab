@@ -9,4 +9,6 @@ node_modules
 # Configs
 .env
 .env.*
+*.env
 !.env.example
+!*.env.example
