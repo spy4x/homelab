@@ -24,6 +24,10 @@ services:
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      # Timeout settings to allow large file uploads to Immich (up to 600s)
+      - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=600s
+      - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=600s
+      - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=600s
       # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Use HTTP-01 challenge
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use 'web' entrypoint (port 80) for the challenge
@@ -104,7 +108,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1024M
+          memory: 2048M
           cpus: "1"
     security_opt:
       - no-new-privileges:true
@@ -262,6 +266,7 @@ services:
       - ./.volumes/syncthing:/var/syncthing
       - /etc/localtime:/etc/localtime:ro
       - ${PATH_SYNC}:/sync
+      - ${PATH_VIDEOS}/watch-later:/yt-watch-later
     restart: unless-stopped
     deploy:
       resources:
@@ -441,3 +446,27 @@ services:
       - "traefik.http.routers.home-assistant.entrypoints=websecure"
       - "traefik.http.routers.home-assistant.tls=true"
       - "traefik.http.routers.home-assistant.tls.certresolver=myresolver"
+
+  # YouTube downloader for my watch later list.
+  yt-watch-later-downloader:
+    image: jauderho/yt-dlp:latest
+    container_name: yt-watch-later-downloader
+    user: "1000:1000" 
+    entrypoint: /bin/sh
+    command: 
+      - -c
+      - |
+        while true; do
+          yt-dlp --download-archive /config/yt-archive.txt -o '/downloads/%(title)s.%(ext)s' -f 'bestvideo[height<=1080][ext=webm]+bestaudio[ext=webm]/best[height<=1080][ext=mp4]/best[height<=1080]' --merge-output-format mkv --sleep-requests 1 --sleep-interval 5 --max-sleep-interval 30 --no-continue '${YOUTUBE_WATCH_LATER_PLAYLIST_URL}';
+          echo "Sleeping for 1 hour before checking the playlist again...";
+          sleep 3600;
+        done
+    volumes:
+      - ./.volumes/yt-watch-later-downloader:/config:Z
+      - ${PATH_VIDEOS}/watch-later:/downloads:Z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4096M

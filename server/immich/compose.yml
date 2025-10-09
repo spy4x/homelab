@@ -36,8 +36,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 2048M
+          cpus: '4'
+          memory: 8192M
     security_opt:
       - no-new-privileges:true
     labels:
@@ -65,8 +65,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 2048M
+          cpus: '2'
+          memory: 4096M
     security_opt:
       - no-new-privileges:true
     healthcheck:
@@ -83,7 +83,7 @@ services:
       resources:
         limits:
           cpus: '1'
-          memory: 1024M
+          memory: 2048M
     security_opt:
       - no-new-privileges:true
 
@@ -101,8 +101,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 2048M
+          cpus: '4'
+          memory: 8192M
     security_opt:
       - no-new-privileges:true
 
@@ -118,6 +118,11 @@ services:
       - TZ=${TIMEZONE:-Asia/Singapore}
     env_file:
       - kiosk.env
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
     networks:
       - proxy
       - default
