@@ -471,6 +471,40 @@ services:
           cpus: '1'
           memory: 4096M
 
+  # AdGuard Home is a network-wide ad and tracker blocker that also functions as a DNS server.
+  # It provides DNS-level ad blocking, tracker blocking, and parental control features.
+  # Access the web interface to configure DNS settings, filters, and view statistics.
+  adguard:
+    container_name: adguard
+    image: adguard/adguardhome:latest
+    volumes:
+      - ./.volumes/adguard/work:/opt/adguardhome/work
+      - ./.volumes/adguard/conf:/opt/adguardhome/conf
+    ports:
+      - 53:53/tcp      # DNS
+      - 53:53/udp      # DNS
+      - 853:853/tcp    # DNS-over-TLS
+      # - 3000:3000/tcp  # Initial setup web interface (can be disabled after setup)
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.adguard.loadbalancer.server.port=80"
+      - "traefik.http.routers.adguard.rule=Host(`dns.${DOMAIN}`)"
+      - "traefik.http.routers.adguard.entrypoints=websecure"
+      - "traefik.http.routers.adguard.tls=true"
+      - "traefik.http.routers.adguard.tls.certresolver=myresolver"
+
   # Vikunja is a self-hosted to-do list and project management application.
   # It provides a clean web interface and mobile apps for managing tasks and projects.
   vikunja-db:
