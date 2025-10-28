@@ -1,5 +1,6 @@
 compose.yml
 homepage/***
 immich/***
+jitsi/***
 scripts/***
 .env

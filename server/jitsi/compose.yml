@@ -1,0 +1,171 @@
+services:
+  # Frontend
+  web:
+    image: jitsi/web:${JITSI_IMAGE_VERSION:-stable}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    volumes:
+      - ${CONFIG}/web:/config:Z
+      - ${CONFIG}/web/crontabs:/var/spool/cron/crontabs:Z
+      - ${CONFIG}/transcripts:/usr/share/jitsi-meet/transcripts:Z
+    environment:
+      - DISABLE_HTTPS
+      - ENABLE_HTTP_REDIRECT
+      - ENABLE_HSTS
+      - ENABLE_LETSENCRYPT
+      - ENABLE_AUTH
+      - ENABLE_GUESTS
+      - ENABLE_LOBBY
+      - ENABLE_BREAKOUT_ROOMS
+      - ENABLE_PREJOIN_PAGE
+      - ENABLE_WELCOME_PAGE
+      - ENABLE_P2P
+      - ENABLE_COLIBRI_WEBSOCKET
+      - ENABLE_RECORDING
+      - PUBLIC_URL
+      - TZ
+      - XMPP_DOMAIN
+      - XMPP_AUTH_DOMAIN
+      - XMPP_BOSH_URL_BASE
+      - XMPP_GUEST_DOMAIN
+      - XMPP_MUC_DOMAIN
+      - XMPP_RECORDER_DOMAIN
+      - XMPP_SERVER
+      - AMPLITUDE_ID
+      - ANALYTICS_SCRIPT_URLS
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      meet.jitsi:
+      proxy:
+    depends_on:
+      - prosody
+      - jicofo
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.jitsi.loadbalancer.server.port=80"
+      - "traefik.http.routers.jitsi.rule=Host(`meeting.${DOMAIN}`)"
+      - "traefik.http.routers.jitsi.entrypoints=websecure"
+      - "traefik.http.routers.jitsi.tls=true"
+      - "traefik.http.routers.jitsi.tls.certresolver=myresolver"
+
+  # XMPP server
+  prosody:
+    image: jitsi/prosody:${JITSI_IMAGE_VERSION:-stable}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    expose:
+      - '${XMPP_PORT:-5222}'
+      - '${PROSODY_S2S_PORT:-5269}'
+      - '5347'
+      - '${PROSODY_HTTP_PORT:-5280}'
+    volumes:
+      - ${CONFIG}/prosody/config:/config:Z
+      - ${CONFIG}/prosody/prosody-plugins-custom:/prosody-plugins-custom:Z
+    environment:
+      - ENABLE_AUTH
+      - ENABLE_GUESTS
+      - ENABLE_LOBBY
+      - ENABLE_XMPP_WEBSOCKET
+      - JICOFO_COMPONENT_SECRET
+      - JICOFO_AUTH_PASSWORD
+      - JVB_AUTH_USER
+      - JVB_AUTH_PASSWORD
+      - JIBRI_RECORDER_USER
+      - JIBRI_RECORDER_PASSWORD
+      - JIBRI_XMPP_USER
+      - JIBRI_XMPP_PASSWORD
+      - MAX_PARTICIPANTS
+      - TZ
+      - PUBLIC_URL
+      - XMPP_DOMAIN
+      - XMPP_AUTH_DOMAIN
+      - XMPP_GUEST_DOMAIN
+      - XMPP_MUC_DOMAIN
+      - XMPP_INTERNAL_MUC_DOMAIN
+      - XMPP_RECORDER_DOMAIN
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      meet.jitsi:
+        aliases:
+          - ${XMPP_SERVER:-prosody}
+
+  # Focus component
+  jicofo:
+    image: jitsi/jicofo:${JITSI_IMAGE_VERSION:-stable}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    ports:
+      - '127.0.0.1:${JICOFO_REST_PORT:-8888}:8888'
+    volumes:
+      - ${CONFIG}/jicofo:/config:Z
+    environment:
+      - ENABLE_AUTH
+      - JICOFO_COMPONENT_SECRET
+      - JICOFO_AUTH_PASSWORD
+      - JVB_BREWERY_MUC
+      - TZ
+      - XMPP_DOMAIN
+      - XMPP_AUTH_DOMAIN
+      - XMPP_INTERNAL_MUC_DOMAIN
+      - XMPP_MUC_DOMAIN
+      - XMPP_SERVER
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - prosody
+    networks:
+      meet.jitsi:
+
+  # Video bridge
+  jvb:
+    image: jitsi/jvb:${JITSI_IMAGE_VERSION:-stable}
+    restart: ${RESTART_POLICY:-unless-stopped}
+    ports:
+      - '${JVB_PORT:-10000}:${JVB_PORT:-10000}/udp'
+      - '127.0.0.1:${JVB_COLIBRI_PORT:-8080}:8080'
+    volumes:
+      - ${CONFIG}/jvb:/config:Z
+    environment:
+      - DOCKER_HOST_ADDRESS
+      - ENABLE_COLIBRI_WEBSOCKET
+      - JVB_AUTH_USER
+      - JVB_AUTH_PASSWORD
+      - JVB_BREWERY_MUC
+      - JVB_PORT
+      - JVB_STUN_SERVERS
+      - PUBLIC_URL
+      - TZ
+      - XMPP_AUTH_DOMAIN
+      - XMPP_INTERNAL_MUC_DOMAIN
+      - XMPP_SERVER
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1"
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - prosody
+    networks:
+      meet.jitsi:
+
+networks:
+  meet.jitsi:
+  proxy:
+    external: true

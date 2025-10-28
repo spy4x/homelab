@@ -26,9 +26,14 @@ up-homelab:
 up-immich:
 	ssh $(SSH_TO_SERVER) "cd $(PATH_APPS)/immich && docker compose --env-file=.env --env-file=../.env up -d"
 
+# Deploy Jitsi
+up-jitsi:
+	ssh $(SSH_TO_SERVER) "cd $(PATH_APPS)/jitsi && docker compose --env-file=../.env --env-file=.env up -d"
+
 deploy:
 	make build-homepage
 	make copy-files
 	make create-proxy-network
 	make up-homelab
 	make up-immich
+	make up-jitsi
