@@ -40,20 +40,24 @@ The backup system is organized into clean, modular components:
 
 ```bash
 # Run the backup process
-deno run --allow-all +main.ts
+deno run -A +main.ts
 
 # With environment file
-deno run --env-file=/path/to/.env --allow-all +main.ts
+deno run --env-file=/path/to/.env -A +main.ts
 
 # Check TypeScript compilation
 deno check +main.ts
 ```
 
-### Automated (Cron)
+### Cron Job
+
+It has to be installed for root via `sudo crontab -e` to allow changing ownership without password prompts.
 
 ```bash
 # Daily at 2:30am
-30 2 * * * USER=username /usr/bin/deno run --env-file=/path/to/.env --allow-all /path/to/+main.ts >> /path/to/backup.log 2>&1
+30 2 * * * USER=username /path/to/deno run --env-file=/path/to/.env -A /path/to/+main.ts >> /path/to/backup.log 2>&1
+# Example
+30 2 * * * USER=spy4x /home/spy4x/.deno/bin/deno run --env-file=/home/spy4x/ssd-2tb/apps/.env -A /home/spy4x/ssd-2tb/apps/scripts/backup/+main.ts >> /home/spy4x/backup.log 2>&1
 ```
 
 ## Environment Variables
