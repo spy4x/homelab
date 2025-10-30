@@ -1,6 +1,7 @@
 # Woodpecker CI Setup Guide
 
-Woodpecker CI is now added to your homelab! Follow these steps to get it running.
+Woodpecker CI is now added to your homelab! Follow these steps to get it
+running.
 
 ## Prerequisites
 
@@ -27,7 +28,8 @@ Choose one of the following based on your Git provider:
 2. Click "New OAuth App"
 3. Fill in:
    - **Application name**: Woodpecker CI
-   - **Homepage URL**: `https://ci.yourdomain.com` (replace with your actual domain)
+   - **Homepage URL**: `https://ci.yourdomain.com` (replace with your actual
+     domain)
    - **Authorization callback URL**: `https://ci.yourdomain.com/authorize`
 4. Save the **Client ID** and **Client Secret**
 
@@ -78,7 +80,8 @@ WOODPECKER_GITHUB_SECRET=<your-github-client-secret>
 
 If you're using Gitea or GitLab instead of GitHub, edit `compose.yml`:
 
-1. Comment out the GitHub environment variables in the `woodpecker-server` service
+1. Comment out the GitHub environment variables in the `woodpecker-server`
+   service
 2. Uncomment the Gitea or GitLab environment variables
 
 ### 5. Start the Services
@@ -107,69 +110,71 @@ Create a `.woodpecker.yml` file in your repository root:
 
 ```yaml
 pipeline:
-  build:
-    image: node:18
-    commands:
-      - npm install
-      - npm run build
-      - npm test
+    build:
+        image: node:18
+        commands:
+            - npm install
+            - npm run build
+            - npm test
 
-  deploy:
-    image: alpine
-    commands:
-      - echo "Deploying application..."
-    when:
-      branch: main
+    deploy:
+        image: alpine
+        commands:
+            - echo "Deploying application..."
+        when:
+            branch: main
 ```
 
 ### Example Workflows
 
 #### Node.js Application
+
 ```yaml
 pipeline:
-  install:
-    image: node:18
-    commands:
-      - npm ci
+    install:
+        image: node:18
+        commands:
+            - npm ci
 
-  test:
-    image: node:18
-    commands:
-      - npm run test
-      - npm run lint
+    test:
+        image: node:18
+        commands:
+            - npm run test
+            - npm run lint
 
-  build:
-    image: node:18
-    commands:
-      - npm run build
+    build:
+        image: node:18
+        commands:
+            - npm run build
 
-  deploy:
-    image: alpine
-    secrets: [deploy_key]
-    commands:
-      - apk add --no-cache openssh-client
-      - echo "Deploy to production"
-    when:
-      branch: main
-      event: push
+    deploy:
+        image: alpine
+        secrets: [deploy_key]
+        commands:
+            - apk add --no-cache openssh-client
+            - echo "Deploy to production"
+        when:
+            branch: main
+            event: push
 ```
 
 #### Docker Build
+
 ```yaml
 pipeline:
-  build:
-    image: plugins/docker
-    settings:
-      repo: myregistry/myapp
-      tags: 
-        - latest
-        - ${CI_COMMIT_SHA:0:8}
-      username:
-        from_secret: docker_username
-      password:
-        from_secret: docker_password
-    when:
-      branch: main
+    build:
+        image: plugins/docker
+        settings:
+            repo: myregistry/myapp
+            tags:
+                - latest
+                - ${CI_COMMIT_SHA:0:8}
+            username:
+                from_secret: docker_username
+            password:
+                from_secret: docker_password
+        when:
+            branch: main
 ```
 
 ## Managing Secrets
@@ -182,15 +187,18 @@ pipeline:
 ## Troubleshooting
 
 ### Cannot connect to Git provider
+
 - Verify OAuth credentials in `.env` file
 - Check that callback URL matches exactly
 - Ensure Woodpecker can reach your Git provider (network/firewall)
 
 ### Agent not connecting
+
 - Verify `WOODPECKER_AGENT_SECRET` matches between server and agent
 - Check agent logs: `docker logs woodpecker-agent`
 
 ### Pipelines not triggering
+
 - Ensure webhook is configured in your repository
 - Check Woodpecker server logs: `docker logs woodpecker-server`
 - Verify repository is activated in Woodpecker UI
@@ -204,4 +212,5 @@ pipeline:
 ## Backup
 
 Important directories to backup:
+
 - `./.volumes/woodpecker-server` - Contains database and configuration
