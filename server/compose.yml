@@ -599,3 +599,71 @@ services:
       - "traefik.http.routers.filebrowser.entrypoints=websecure"
       - "traefik.http.routers.filebrowser.tls=true"
       - "traefik.http.routers.filebrowser.tls.certresolver=myresolver"
+
+  # Woodpecker CI is a lightweight, self-hosted CI/CD platform.
+  # It provides automated testing and deployment pipelines for your repositories.
+  # Note: You need to configure WOODPECKER_GITEA_URL, WOODPECKER_GITEA_CLIENT, and WOODPECKER_GITEA_SECRET
+  # or use GitHub/GitLab integration by setting the appropriate environment variables.
+  woodpecker-server:
+    container_name: woodpecker-server
+    image: woodpeckerci/woodpecker-server:latest
+    environment:
+      - WOODPECKER_OPEN=true
+      - WOODPECKER_HOST=https://ci.${DOMAIN}
+      - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
+      # GitHub integration (comment out if using Gitea/GitLab)
+      - WOODPECKER_GITHUB=true
+      - WOODPECKER_GITHUB_CLIENT=${WOODPECKER_GITHUB_CLIENT}
+      - WOODPECKER_GITHUB_SECRET=${WOODPECKER_GITHUB_SECRET}
+      # Uncomment for Gitea integration
+      # - WOODPECKER_GITEA=true
+      # - WOODPECKER_GITEA_URL=${WOODPECKER_GITEA_URL}
+      # - WOODPECKER_GITEA_CLIENT=${WOODPECKER_GITEA_CLIENT}
+      # - WOODPECKER_GITEA_SECRET=${WOODPECKER_GITEA_SECRET}
+      # Uncomment for GitLab integration
+      # - WOODPECKER_GITLAB=true
+      # - WOODPECKER_GITLAB_URL=${WOODPECKER_GITLAB_URL}
+      # - WOODPECKER_GITLAB_CLIENT=${WOODPECKER_GITLAB_CLIENT}
+      # - WOODPECKER_GITLAB_SECRET=${WOODPECKER_GITLAB_SECRET}
+      - WOODPECKER_ADMIN=${WOODPECKER_ADMIN}
+    volumes:
+      - ./.volumes/woodpecker-server:/var/lib/woodpecker
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.woodpecker.loadbalancer.server.port=8000"
+      - "traefik.http.routers.woodpecker.rule=Host(`ci.${DOMAIN}`)"
+      - "traefik.http.routers.woodpecker.entrypoints=websecure"
+      - "traefik.http.routers.woodpecker.tls=true"
+      - "traefik.http.routers.woodpecker.tls.certresolver=myresolver"
+
+  woodpecker-agent:
+    container_name: woodpecker-agent
+    image: woodpeckerci/woodpecker-agent:latest
+    environment:
+      - WOODPECKER_SERVER=woodpecker-server:9000
+      - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
+      - WOODPECKER_BACKEND=docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - woodpecker-server
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "2"
+    security_opt:
+      - no-new-privileges:true
