@@ -1,7 +1,7 @@
 import { BackupConfig } from "../src/+lib.ts"
 
 const backupConfig: BackupConfig = {
-  name: "woodpecker-server",
+  name: "filebrowser",
   sourcePaths: "default",
   containers: {
     stop: "default",

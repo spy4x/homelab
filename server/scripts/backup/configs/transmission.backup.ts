@@ -1,7 +1,7 @@
 import { BackupConfig } from "../src/+lib.ts"
 
 const backupConfig: BackupConfig = {
-  name: "woodpecker-server",
+  name: "transmission",
   sourcePaths: "default",
   containers: {
     stop: "default",
