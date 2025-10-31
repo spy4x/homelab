@@ -625,6 +625,37 @@ services:
       - "traefik.http.routers.filebrowser.tls=true"
       - "traefik.http.routers.filebrowser.tls.certresolver=myresolver"
 
+  # FreshRSS is a self-hosted RSS feed aggregator.
+  # It allows you to follow your favorite websites and stay updated with new content.
+  freshrss:
+    container_name: freshrss
+    image: lscr.io/linuxserver/freshrss:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./.volumes/freshrss:/config:Z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.freshrss.loadbalancer.server.port=80"
+      - "traefik.http.routers.freshrss.rule=Host(`rss.${DOMAIN}`)"
+      - "traefik.http.routers.freshrss.entrypoints=websecure"
+      - "traefik.http.routers.freshrss.tls=true"
+      - "traefik.http.routers.freshrss.tls.certresolver=myresolver"
+
   # Woodpecker CI is a lightweight, self-hosted CI/CD platform.
   # It provides automated testing and deployment pipelines for your repositories.
   # Note: You need to configure WOODPECKER_GITEA_URL, WOODPECKER_GITEA_CLIENT, and WOODPECKER_GITEA_SECRET
