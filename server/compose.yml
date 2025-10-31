@@ -188,8 +188,20 @@ services:
   vaultwarden:
     container_name: vaultwarden
     image: vaultwarden/server:latest
+    user: "1000:1000" # Run as non-root user for better security
     environment:
       - DOMAIN=https://passwords.${DOMAIN}
+      # - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN} # Enable admin page only while needed and disable otherwise for better security
+      - SIGNUPS_ALLOWED=${VAULTWARDEN_SIGNUPS_ALLOWED}
+      - INVITATIONS_ALLOWED=${VAULTWARDEN_INVITATIONS_ALLOWED}
+      - SHOW_PASSWORD_HINT=${VAULTWARDEN_SHOW_PASSWORD_HINT}
+      - LOGIN_RATELIMIT_MAX_BURST=${VAULTWARDEN_LOGIN_RATELIMIT_MAX_BURST}
+      - LOGIN_RATELIMIT_SECONDS=${VAULTWARDEN_LOGIN_RATELIMIT_SECONDS}
+      - INCOMPLETE_2FA_TIME_LIMIT=${VAULTWARDEN_INCOMPLETE_2FA_TIME_LIMIT}
+      - LOG_LEVEL=${VAULTWARDEN_LOG_LEVEL}
+      - EMERGENCY_ACCESS_ALLOWED=${VAULTWARDEN_EMERGENCY_ACCESS_ALLOWED}
+      # Real client IP from Cloudflare (enables proper logging and rate limiting)
+      - IP_HEADER=CF-Connecting-IP
     volumes:
       - ./.volumes/vaultwarden:/data
     restart: unless-stopped
@@ -206,11 +218,16 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
+      # Main service (handles both HTTP and WebSocket on port 80 since v1.29.0)
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
       - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
       - "traefik.http.routers.vaultwarden.entrypoints=websecure"
       - "traefik.http.routers.vaultwarden.tls=true"
       - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
+      - "traefik.http.routers.vaultwarden.service=vaultwarden"
+      # Cloudflare real IP middleware
+      - "traefik.http.routers.vaultwarden.middlewares=vaultwarden-realip"
+      - "traefik.http.middlewares.vaultwarden-realip.headers.customrequestheaders.CF-Connecting-IP="
 
   # Watchtower is a process for automating Docker container base image updates.
   watchtower:
@@ -490,7 +507,7 @@ services:
       resources:
         limits:
           memory: 512M
-          cpus: "0.5"
+          cpus: "3"
     security_opt:
       - no-new-privileges:true
     networks:
