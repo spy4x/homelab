@@ -2,20 +2,130 @@ import { logError, logInfo } from "./+lib.ts"
 import { BackupConfigState, BackupResult, BackupStatus } from "./types.ts"
 
 export class BackupReporter {
-  private webhookUrl: string
+  private slackWebhookUrl?: string
+  private ntfyUrl?: string
+  private ntfyAuth?: string
 
-  constructor(webhookUrl: string) {
-    this.webhookUrl = webhookUrl
+  constructor(slackWebhookUrl?: string, ntfyUrl?: string, ntfyAuth?: string) {
+    this.slackWebhookUrl = slackWebhookUrl
+    this.ntfyUrl = ntfyUrl
+    this.ntfyAuth = ntfyAuth
   }
 
   /**
-   * Sends a comprehensive backup report via Slack webhook
+   * Sends a comprehensive backup report via ntfy (primary) or Slack (fallback)
    */
   async sendNotification(result: BackupResult): Promise<void> {
+    // Try ntfy first if configured
+    if (this.ntfyUrl) {
+      const ntfySuccess = await this.sendNtfyNotification(result)
+      if (ntfySuccess) {
+        logInfo("ntfy notification sent successfully")
+        return
+      }
+      logError("ntfy notification failed, falling back to Slack")
+    }
+
+    // Fall back to Slack
+    await this.sendSlackNotification(result)
+  }
+
+  /**
+   * Sends notification via ntfy
+   */
+  private async sendNtfyNotification(result: BackupResult): Promise<boolean> {
+    try {
+      const { successCount, totalCount } = result
+      const successRate = totalCount > 0 ? ((successCount / totalCount) * 100).toFixed(0) : "0"
+
+      // Headers must be ASCII-only (no emojis)
+      const title = `Homelab Backup: ${successCount}/${totalCount} (${successRate}%)`
+      const message = this.buildNtfyMessage(result)
+
+      const headers: Record<string, string> = {
+        "Title": title,
+        "Priority": successCount === totalCount ? "default" : "high",
+        "Tags": successCount === totalCount
+          ? "white_check_mark,floppy_disk"
+          : "warning,floppy_disk",
+      }
+
+      if (this.ntfyAuth) {
+        headers["Authorization"] = `Bearer ${this.ntfyAuth}`
+      }
+
+      const response = await fetch(this.ntfyUrl!, {
+        method: "POST",
+        headers,
+        body: message,
+      })
+
+      return response.ok
+    } catch (err) {
+      logError(`Failed to send ntfy notification: ${err}`)
+      return false
+    }
+  }
+
+  /**
+   * Builds the ntfy message body
+   */
+  private buildNtfyMessage(result: BackupResult): string {
+    const { backups, totalSizeGB, durationMs } = result
+    const sortedBackups = this.sortBackupsBySize(backups, totalSizeGB)
+
+    // Format duration
+    const durationMinutes = Math.floor(durationMs / 60000)
+    const durationSeconds = Math.floor((durationMs % 60000) / 1000)
+    const durationText = durationMinutes > 0
+      ? `${durationMinutes}m ${durationSeconds}s`
+      : `${durationSeconds}s`
+
+    // Start with emoji in the message body (not in headers)
+    let message = `🏠 Homelab Backup Complete\n💾 Total: ${
+      totalSizeGB.toFixed(2)
+    } GB\n⏱️ Duration: ${durationText}\n\n`
+
+    // Add table - limit to top 10 for ntfy to keep message short
+    const displayBackups = sortedBackups.slice(0, 10)
+    for (const backup of displayBackups) {
+      const statusEmoji = backup.status === BackupStatus.SUCCESS ? "✅" : "❌"
+      const { size } = this.formatBackupSize(backup, totalSizeGB)
+      const duration = this.formatDuration(backup.durationMs)
+      message += `${statusEmoji} ${backup.name}: ${size} (${duration})\n`
+    }
+
+    // Add indication if there are more backups
+    if (sortedBackups.length > 10) {
+      message += `\n...and ${sortedBackups.length - 10} more\n`
+    }
+
+    // Add errors if any
+    const failedBackups = backups.filter((b) => b.status === BackupStatus.ERROR)
+    if (failedBackups.length > 0) {
+      message += "\n⚠️ Errors:\n"
+      for (const backup of failedBackups) {
+        if (backup.error) {
+          message += `• ${backup.name}: ${backup.error}\n`
+        }
+      }
+    }
+
+    return message
+  }
+
+  /**
+   * Sends notification via Slack webhook
+   */
+  private async sendSlackNotification(result: BackupResult): Promise<void> {
+    if (!this.slackWebhookUrl) {
+      logError("Slack webhook URL not configured")
+      return
+    }
     try {
       const message = this.buildSlackMessage(result)
 
-      const response = await fetch(this.webhookUrl, {
+      const response = await fetch(this.slackWebhookUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -37,9 +147,14 @@ export class BackupReporter {
    * Prints a detailed console report of the backup results
    */
   printConsoleReport(result: BackupResult): void {
-    const { backups, successCount, totalCount, totalSizeGB } = result
+    const { backups, successCount, totalCount, totalSizeGB, durationMs } = result
+
+    // Format duration
+    const durationMinutes = Math.floor(durationMs / 60000)
+    const durationSeconds = Math.floor((durationMs % 60000) / 1000)
 
     logInfo(`--------- Backups finished: ${successCount} / ${totalCount} successful ---------`)
+    logInfo(`Duration: ${durationMinutes}m ${durationSeconds}s`)
 
     // Print size summary
     this.printSizeSummary(backups, totalSizeGB)
@@ -72,15 +187,16 @@ export class BackupReporter {
     // Sort backups by percentage descending
     const sortedBackups = this.sortBackupsBySize(backups, totalSizeGB)
 
-    logInfo("Status | Name                 | %     | Size")
-    logInfo("-------|----------------------|-------|----------")
+    logInfo("Status | Name                 | %     | Size      | Time")
+    logInfo("-------|----------------------|-------|-----------|-------")
 
     for (const backup of sortedBackups) {
       const statusEmoji = backup.status === BackupStatus.SUCCESS ? "✅" : "❌"
       const name = backup.name.padEnd(20, " ").substring(0, 20)
       const { percentage, size } = this.formatBackupSize(backup, totalSizeGB)
+      const duration = this.formatDuration(backup.durationMs)
 
-      logInfo(`${statusEmoji}     | ${name} | ${percentage} | ${size}`)
+      logInfo(`${statusEmoji}     | ${name} | ${percentage} | ${size.padEnd(9)} | ${duration}`)
     }
   }
 
@@ -88,9 +204,15 @@ export class BackupReporter {
    * Builds the complete Slack message with blocks
    */
   private buildSlackMessage(result: BackupResult): object {
-    const { backups, successCount, totalCount, totalSizeGB } = result
+    const { backups, successCount, totalCount, totalSizeGB, durationMs } = result
 
-    const headerText = this.buildHeaderText(successCount, totalCount, totalSizeGB, backups)
+    const headerText = this.buildHeaderText(
+      successCount,
+      totalCount,
+      totalSizeGB,
+      backups,
+      durationMs,
+    )
     const tableContent = this.buildTableContent(backups, totalSizeGB)
     const errorDetails = this.buildErrorDetails(backups)
 
@@ -123,10 +245,17 @@ export class BackupReporter {
     totalCount: number,
     totalSizeGB: number,
     backups: BackupConfigState[],
+    durationMs: number,
   ): string {
     const successRate = totalCount > 0 ? ((successCount / totalCount) * 100).toFixed(0) : "0"
+    const durationMinutes = Math.floor(durationMs / 60000)
+    const durationSeconds = Math.floor((durationMs % 60000) / 1000)
+    const durationText = durationMinutes > 0
+      ? `${durationMinutes}m ${durationSeconds}s`
+      : `${durationSeconds}s`
+
     let headerText =
-      `🏠 Homelab Backup Report\n${successCount}/${totalCount} successful (${successRate}%)`
+      `🏠 Homelab Backup Report\n${successCount}/${totalCount} successful (${successRate}%)\n⏱️ Duration: ${durationText}`
 
     const sizeErrors = backups.filter((b) => b.sizeError).length
 
@@ -149,15 +278,18 @@ export class BackupReporter {
     const sortedBackups = this.sortBackupsBySize(backups, totalSizeGB)
 
     let tableContent = "```\n"
-    tableContent += "Status | Name                 | %     | Size\n"
-    tableContent += "-------|----------------------|-------|----------\n"
+    tableContent += "Status | Name                 | %     | Size      | Time\n"
+    tableContent += "-------|----------------------|-------|-----------|-------\n"
 
     for (const backup of sortedBackups) {
       const statusEmoji = backup.status === BackupStatus.SUCCESS ? "✅" : "❌"
       const name = backup.name.padEnd(20, " ").substring(0, 20)
       const { percentage, size } = this.formatBackupSize(backup, totalSizeGB)
+      const duration = this.formatDuration(backup.durationMs)
 
-      tableContent += `${statusEmoji}     | ${name} | ${percentage} | ${size}\n`
+      tableContent += `${statusEmoji}     | ${name} | ${percentage} | ${
+        size.padEnd(9)
+      } | ${duration}\n`
     }
 
     tableContent += "```"
@@ -231,6 +363,25 @@ export class BackupReporter {
         percentage: "N/A  ",
         size: "N/A",
       }
+    }
+  }
+
+  /**
+   * Formats duration in milliseconds to human-readable string
+   */
+  private formatDuration(durationMs: number | undefined): string {
+    if (durationMs === undefined) {
+      return "N/A"
+    }
+
+    const seconds = Math.floor(durationMs / 1000)
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+
+    if (minutes > 0) {
+      return `${minutes}m${remainingSeconds}s`
+    } else {
+      return `${seconds}s`
     }
   }
 }

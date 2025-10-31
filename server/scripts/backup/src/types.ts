@@ -13,12 +13,15 @@ export type BackupConfigState = BackupConfig & {
   errorAtStep?: string
   sizeGB?: number
   sizeError?: string
+  durationMs?: number
 }
 
 export interface BackupContext {
   backupsOutputBasePath: string
   backupsPassword: string
-  webhookUrl: string
+  slackWebhookUrl?: string
+  ntfyUrl?: string
+  ntfyAuth?: string
   configsPath: string
 }
 
@@ -27,6 +30,7 @@ export interface BackupResult {
   successCount: number
   totalCount: number
   totalSizeGB: number
+  durationMs: number
 }
 
 export interface ResticCommandOptions {

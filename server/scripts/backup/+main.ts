@@ -15,13 +15,18 @@ class BackupRunner {
   constructor() {
     this.context = this.initializeContext()
     this.operations = new BackupOperations(this.context.backupsPassword)
-    this.reporter = new BackupReporter(this.context.webhookUrl)
+    this.reporter = new BackupReporter(
+      this.context.slackWebhookUrl,
+      this.context.ntfyUrl,
+      this.context.ntfyAuth,
+    )
   }
 
   /**
    * Main entry point for running the backup process
    */
   async run(): Promise<void> {
+    const startTime = Date.now()
     logInfo(`[${new Date().toISOString()}] Starting backup process`)
 
     try {
@@ -30,7 +35,7 @@ class BackupRunner {
 
       if (backups.length === 0) {
         console.error("No backup configs found")
-        await this.reporter.sendNotification(this.createEmptyResult())
+        await this.reporter.sendNotification(this.createEmptyResult(0))
         Deno.exit(1)
       }
 
@@ -41,8 +46,17 @@ class BackupRunner {
       logInfo("--------- Calculating repository sizes ---------")
       await this.operations.calculateRepositorySizes(backups, this.context.backupsOutputBasePath)
 
+      // Calculate total duration
+      const durationMs = Date.now() - startTime
+      const durationMinutes = Math.floor(durationMs / 60000)
+      const durationSeconds = Math.floor((durationMs % 60000) / 1000)
+
+      logInfo(
+        `--------- Total backup duration: ${durationMinutes}m ${durationSeconds}s ---------`,
+      )
+
       // Generate and send report
-      const result = this.buildResult(backups)
+      const result = this.buildResult(backups, durationMs)
       this.reporter.printConsoleReport(result)
       await this.reporter.sendNotification(result)
 
@@ -64,7 +78,9 @@ class BackupRunner {
     return {
       backupsOutputBasePath: absPath(getEnvVar("PATH_SYNC") + "/backups"),
       backupsPassword: getEnvVar("BACKUPS_PASSWORD"),
-      webhookUrl: getEnvVar("SLACK_WEBHOOK_URL"),
+      slackWebhookUrl: getEnvVar("SLACK_WEBHOOK_URL"),
+      ntfyUrl: getEnvVar("NTFY_URL"),
+      ntfyAuth: getEnvVar("NTFY_AUTH_TOKEN"),
       configsPath: absPath(`${PATH_APPS}/scripts/backup/configs`),
     }
   }
@@ -81,6 +97,7 @@ class BackupRunner {
    */
   private async processBackups(backups: BackupConfigState[]): Promise<void> {
     for (const backup of backups) {
+      const backupStartTime = Date.now()
       logInfo(`--------- ${backup.name} ---------`)
 
       // Skip if configuration is already failed
@@ -100,6 +117,11 @@ class BackupRunner {
       if (backup.status === BackupStatus.IN_PROGRESS) {
         backup.status = BackupStatus.SUCCESS
       }
+
+      // Record duration
+      backup.durationMs = Date.now() - backupStartTime
+      const durationSeconds = (backup.durationMs / 1000).toFixed(1)
+      logInfo(`Completed in ${durationSeconds}s`)
     }
   }
 
@@ -122,13 +144,15 @@ class BackupRunner {
       await this.operations.performResticBackup(backup, this.context.backupsOutputBasePath)
 
       if (this.isBackupFailed(backup)) return
-
-      // Start containers
-      await this.operations.manageContainers(backup, "start")
     } catch (error) {
       backup.status = BackupStatus.ERROR
       backup.error = `Unexpected error: ${error}`
       backup.errorAtStep = "workflow"
+    } finally {
+      // Always restart containers, even if backup failed
+      if (backup.containers?.stop && backup.containers.stop.length > 0) {
+        await this.operations.manageContainers(backup, "start")
+      }
     }
   }
 
@@ -142,7 +166,7 @@ class BackupRunner {
   /**
    * Builds the final backup result
    */
-  private buildResult(backups: BackupConfigState[]): BackupResult {
+  private buildResult(backups: BackupConfigState[], durationMs: number): BackupResult {
     const successCount = backups.filter((b) => b.status === BackupStatus.SUCCESS).length
     const backupsWithSize = backups.filter((b) => b.sizeGB !== undefined)
     const totalSizeGB = backupsWithSize.reduce((sum, backup) => sum + (backup.sizeGB || 0), 0)
@@ -152,18 +176,20 @@ class BackupRunner {
       successCount,
       totalCount: backups.length,
       totalSizeGB,
+      durationMs,
     }
   }
 
   /**
    * Creates an empty result for when no configurations are found
    */
-  private createEmptyResult(): BackupResult {
+  private createEmptyResult(durationMs: number): BackupResult {
     return {
       backups: [],
       successCount: 0,
       totalCount: 0,
       totalSizeGB: 0,
+      durationMs,
     }
   }
 }

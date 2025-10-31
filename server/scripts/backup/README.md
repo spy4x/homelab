@@ -66,9 +66,14 @@ Required environment variables:
 
 - `PATH_SYNC` - Base path for backup storage
 - `BACKUPS_PASSWORD` - Password for restic repositories
-- `SLACK_WEBHOOK_URL` - Slack webhook URL for notifications
+- `SLACK_WEBHOOK_URL` - Slack webhook URL for notifications (fallback)
 - `PATH_APPS` - Path to applications directory
 - `USER` - Current user name for ownership changes
+
+Optional environment variables:
+
+- `NTFY_URL` - ntfy topic URL for notifications (e.g., `https://ntfy.yourdomain.com/backups`)
+- `NTFY_AUTH_TOKEN` - ntfy authentication token (Bearer token from ntfy settings)
 
 ## Configuration Structure
 
