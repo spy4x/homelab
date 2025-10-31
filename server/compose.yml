@@ -672,15 +672,17 @@ services:
       - WOODPECKER_SERVER=woodpecker-server:9000
       - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
       - WOODPECKER_BACKEND=docker
+      - WOODPECKER_MAX_WORKFLOWS=4  # Parallel workflows
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./.volumes/woodpecker-agent/cache:/woodpecker/cache  # Cache for faster builds
     depends_on:
       - woodpecker-server
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 1024M
-          cpus: "2"
+          memory: 8192M  # Increased for Deno+Vite+Hono monorepos
+          cpus: "4"      # More CPU for parallel builds
     security_opt:
       - no-new-privileges:true
