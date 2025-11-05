@@ -21,10 +21,21 @@
    - Add instructions for generating values if needed
    - Group related variables with comments (e.g., `#region ServiceName`)
 
-3. **Security:**
+3. **Format for .env (actual values):**
+   - Use real, secure values that work immediately
+   - For usernames: Use `spy4x` as the default username
+   - For passwords/secrets: Generate secure random strings using:
+     ```bash
+     head -c 32 /dev/urandom | base64 | tr -d '=' | head -c 32
+     ```
+   - For tokens: Generate appropriate length (e.g., 64 chars for agent secrets)
+   - Group with same `#region` comments as `.env.example`
+
+4. **Security:**
    - Never commit actual secrets to `.env.example`
    - Use placeholders like `YOUR_SECRET_HERE` or `REPLACE_WITH_YOUR_VALUE`
    - Add generation instructions for tokens/passwords
+   - Always populate `.env` with working, secure values during setup
 
 ## When Adding New Services
 
@@ -34,7 +45,11 @@
    - See detailed guide: `server/scripts/backup/README.md` → "Adding New Services"
    - Use `"default"` for standard setups
    - Follow existing examples for similar services
-   - Obviously skip backup for transient or non-persistent services
+   - **Skip backup configs entirely** for stateless/transient services that:
+     - Don't mount any volumes for persistent data
+     - Store all configuration in compose.yml environment variables
+     - Have no user data or state to preserve
+     - Examples: NFS server, Samba, pure proxies without volumes
 
 2. **Homepage Entry** - Add service to `server/homepage/src/index.html`
    - Choose appropriate emoji icon
