@@ -1,0 +1,46 @@
+---
+# Main Site Playbook
+# This is the master playbook that can run all setup tasks
+
+- name: Complete Homelab Setup
+  hosts: homelab_servers
+
+  tasks:
+    - name: Welcome message
+      ansible.builtin.debug:
+        msg:
+          - "🏠 Starting Homelab Setup"
+          - "Target: {{ inventory_hostname }}"
+          - "User: {{ homelab_user }}"
+
+# Import all playbooks in order
+- import_playbook: initial-setup.yml
+- import_playbook: ssh-hardening.yml
+- import_playbook: fail2ban.yml
+- import_playbook: smart-monitoring.yml
+- import_playbook: maintenance.yml
+- import_playbook: backup-cronjob.yml
+- import_playbook: monitoring.yml
+
+- name: Setup Complete
+  hosts: homelab_servers
+  tasks:
+    - name: Final summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Complete homelab setup finished!"
+          - ""
+          - "Your server is now configured with:"
+          - "  ✓ Docker and Docker Compose"
+          - "  ✓ Deno runtime"
+          - "  ✓ SSH hardening (key-only auth)"
+          - "  ✓ Fail2ban (SSH + Docker logs)"
+          - "  ✓ SMART monitoring (SSD/NVMe health)"
+          - "  ✓ Automated backups via cron"
+          - "  ✓ System maintenance (updates, cleanup, log rotation)"
+          - "  ✓ Container health monitoring"
+          - "  ✓ Disk space & service availability alerts"
+          - ""
+          - "🎉 Ready to deploy your services!"
+          - ""
+          - "Next: ansible-playbook playbooks/deploy.yml"

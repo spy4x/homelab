@@ -1,0 +1,18 @@
+# Ansible-managed files - do not edit manually
+*.retry
+
+# Environment files with secrets
+.env.ansible
+
+# Ansible Vault files (if you use vault)
+*vault*.yml
+secrets.yml
+
+# Temporary files
+*.tmp
+*.bak
+.*.swp
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,204 @@
+---
+# Playbook: Fail2ban Setup with Docker Log Monitoring
+# This playbook configures Fail2ban to protect SSH and monitor Docker container logs
+# for authentication failures in services like Vaultwarden, Traefik, and Home Assistant
+
+- name: Setup Fail2ban
+  hosts: homelab_servers
+  become: true
+
+  tasks:
+    # ===== Raspberry Pi: Fix Read-Only Boot Partition =====
+    - name: Check if this is a Raspberry Pi
+      ansible.builtin.stat:
+        path: /boot/firmware
+      register: boot_firmware
+      when: ansible_os_family == "Debian"
+
+    - name: Remount boot partition as read-write (Raspberry Pi)
+      ansible.builtin.command: mount -o remount,rw /boot/firmware
+      when:
+        - ansible_os_family == "Debian"
+        - boot_firmware.stat.exists | default(false)
+      failed_when: false
+      changed_when: false
+
+    - name: Fix broken packages before installing (Raspberry Pi)
+      ansible.builtin.command: dpkg --configure -a
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      when:
+        - ansible_os_family == "Debian"
+        - boot_firmware.stat.exists | default(false)
+      failed_when: false
+      changed_when: false
+
+    # ===== Install Fail2ban =====
+    - name: Install Fail2ban
+      ansible.builtin.package:
+        name: fail2ban
+        state: present
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: Install pip (for Python docker library)
+      ansible.builtin.package:
+        name: python3-pip
+        state: present
+
+    - name: Install Python docker library (for log monitoring)
+      ansible.builtin.pip:
+        name: docker
+        state: present
+
+    - name: Create ntfy notification script for Fail2ban
+      ansible.builtin.copy:
+        dest: /usr/local/bin/fail2ban-notify
+        mode: "0755"
+        content: |
+          #!/bin/bash
+          # Fail2ban notification script for ntfy
+
+          NTFY_URL="{{ ntfy_url_security }}"
+          NTFY_TOKEN="{{ ntfy_token_security }}"
+
+          # Arguments from fail2ban
+          JAIL="$1"
+          ACTION="$2"
+          IP="$3"
+
+          if [ "$ACTION" = "ban" ]; then
+            TITLE="🚫 Fail2ban: IP Banned"
+            MESSAGE="IP $IP has been banned in jail: $JAIL"
+            PRIORITY="high"
+            TAGS="security,ban"
+          elif [ "$ACTION" = "unban" ]; then
+            TITLE="✅ Fail2ban: IP Unbanned"
+            MESSAGE="IP $IP has been unbanned from jail: $JAIL"
+            PRIORITY="default"
+            TAGS="security,unban"
+          else
+            TITLE="⚠️ Fail2ban Alert"
+            MESSAGE="Action $ACTION for IP $IP in jail: $JAIL"
+            PRIORITY="default"
+            TAGS="security"
+          fi
+
+          # Send notification
+          curl -H "Authorization: Bearer $NTFY_TOKEN" \
+               -H "Title: $TITLE" \
+               -H "Priority: $PRIORITY" \
+               -H "Tags: $TAGS" \
+               -d "$MESSAGE" \
+               "$NTFY_URL" 2>/dev/null
+
+          # Log to syslog
+          logger -t fail2ban "[$JAIL] $ACTION IP: $IP"
+
+    - name: Create Fail2ban action for ntfy
+      ansible.builtin.copy:
+        dest: /etc/fail2ban/action.d/ntfy.conf
+        content: |
+          [Definition]
+          actionstart = /usr/local/bin/fail2ban-notify "<name>" "start" "jail-started"
+          actionstop = /usr/local/bin/fail2ban-notify "<name>" "stop" "jail-stopped"
+          actionban = /usr/local/bin/fail2ban-notify "<name>" "ban" "<ip>"
+          actionunban = /usr/local/bin/fail2ban-notify "<name>" "unban" "<ip>"
+
+    - name: Configure Fail2ban local settings
+      ansible.builtin.template:
+        dest: /etc/fail2ban/jail.local
+        src: "{{ playbook_dir }}/../templates/jail.local.j2"
+        backup: yes
+      notify: restart fail2ban
+
+    - name: Create Docker jail filters
+      ansible.builtin.copy:
+        dest: "/etc/fail2ban/filter.d/{{ item.name }}.conf"
+        content: |
+          [Definition]
+          {% if item.name == 'vaultwarden' %}
+          failregex = ^.*Username or password is incorrect\. Try again\. IP: <ADDR>\. Username:.*$
+                      ^.*Invalid admin token\. IP: <ADDR>.*$
+          {% elif item.name == 'traefik-auth' %}
+          failregex = ^.*"(GET|POST|HEAD).*" (401|403) .*"<ADDR>".*$
+          {% elif item.name == 'home-assistant' %}
+          failregex = ^.*Login attempt or request with invalid authentication from <ADDR>.*$
+                      ^.*Invalid authentication.*\(<ADDR>\).*$
+          {% endif %}
+          ignoreregex =
+      loop: "{{ fail2ban_docker_jails }}"
+      when: fail2ban_docker_jails is defined
+
+    - name: Enable and start Fail2ban service
+      ansible.builtin.systemd:
+        name: fail2ban
+        enabled: yes
+        state: restarted
+        daemon_reload: yes
+
+    - name: Wait for Fail2ban to start
+      ansible.builtin.pause:
+        seconds: 5
+
+    - name: Check if Fail2ban socket exists
+      ansible.builtin.stat:
+        path: /var/run/fail2ban/fail2ban.sock
+      register: fail2ban_socket
+
+    - name: Display socket status
+      ansible.builtin.debug:
+        msg: "Socket exists: {{ fail2ban_socket.stat.exists | default(false) }}"
+
+    - name: Get Fail2ban service status
+      ansible.builtin.systemd:
+        name: fail2ban
+      register: fail2ban_service_status
+
+    - name: Display service status
+      ansible.builtin.debug:
+        msg: "Service active: {{ fail2ban_service_status.status.ActiveState }}"
+
+    - name: Get Fail2ban status (if socket exists)
+      ansible.builtin.command: fail2ban-client status
+      register: fail2ban_status
+      changed_when: false
+      when: fail2ban_socket.stat.exists | default(false)
+
+    - name: Display Fail2ban status
+      ansible.builtin.debug:
+        msg: "{{ fail2ban_status.stdout_lines }}"
+      when: fail2ban_socket.stat.exists | default(false)
+
+    - name: Get Fail2ban logs if service failed
+      ansible.builtin.command: journalctl -u fail2ban -n 30 --no-pager
+      register: fail2ban_logs
+      when: not (fail2ban_socket.stat.exists | default(false))
+      changed_when: false
+
+    - name: Display Fail2ban logs on failure
+      ansible.builtin.debug:
+        msg: "{{ fail2ban_logs.stdout_lines }}"
+      when: not (fail2ban_socket.stat.exists | default(false))
+
+    - name: Send test notification
+      ansible.builtin.shell: |
+        /usr/local/bin/fail2ban-notify "test" "start" "Fail2ban configured on {{ inventory_hostname }}"
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Build jail list for display
+      ansible.builtin.set_fact:
+        jail_display_list: "{{ jail_display_list | default([]) + ['  • ' + item.name + ': ' + (item.maxretry | default(5) | string) + ' attempts in ' + (item.findtime | default('10min')) + ' → ' + (item.bantime | default('1h')) + ' ban'] }}"
+      loop: "{{ fail2ban_docker_jails }}"
+      when: fail2ban_docker_jails is defined
+
+    - name: Display Fail2ban summary
+      ansible.builtin.debug:
+        msg: "{{ ['✅ Fail2ban configured successfully on ' + inventory_hostname + '!', '', 'Protected services:', '  • SSH' + ((' (port ' + (ansible_port | string) + ')') if ansible_port is defined else '') + ': 3 attempts in 10min → 1h ban'] + (jail_display_list | default([])) + ['', 'Notifications: ' + ntfy_url_security, '', 'Test notification sent! Check your ntfy app.', '', 'Useful commands:', '  • Check status: sudo fail2ban-client status', '  • Check jail: sudo fail2ban-client status sshd', '  • Unban IP: sudo fail2ban-client set sshd unbanip <IP>', '  • View logs: sudo tail -f /var/log/fail2ban.log'] }}"
+
+  handlers:
+    - name: restart fail2ban
+      ansible.builtin.systemd:
+        name: fail2ban
+        state: restarted

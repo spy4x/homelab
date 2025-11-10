@@ -1,0 +1,126 @@
+---
+# Playbook: Deploy Homelab Services
+# This playbook replaces the Makefile deployment process with Ansible
+# It builds the homepage, copies files, and deploys Docker services
+
+- name: Deploy Homelab Services
+  hosts: homelab_servers
+
+  vars:
+    local_repo_path: "{{ playbook_dir }}/../.."
+    server_path: "{{ apps_path }}"
+
+  tasks:
+    # ===== Build Homepage =====
+    - name: Create homepage dist directory locally
+      ansible.builtin.file:
+        path: "{{ local_repo_path }}/server/homepage/dist"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      become: false
+
+    - name: Load .env file for homepage variables
+      ansible.builtin.shell: |
+        set -a
+        source {{ local_repo_path }}/server/.env
+        envsubst < {{ local_repo_path }}/server/homepage/src/index.html > {{ local_repo_path }}/server/homepage/dist/index.html
+      args:
+        executable: /bin/bash
+      delegate_to: localhost
+      become: false
+      changed_when: true
+
+    - name: Copy homepage static files
+      ansible.builtin.copy:
+        src: "{{ local_repo_path }}/server/homepage/src/{{ item }}"
+        dest: "{{ local_repo_path }}/server/homepage/dist/{{ item }}"
+      loop:
+        - sw.js
+        - manifest.json
+      delegate_to: localhost
+      become: false
+
+    - name: Copy homepage assets
+      ansible.builtin.copy:
+        src: "{{ local_repo_path }}/server/homepage/src/assets"
+        dest: "{{ local_repo_path }}/server/homepage/dist/"
+      delegate_to: localhost
+      become: false
+
+    # ===== Sync Files to Server =====
+    - name: Read deploy.files.txt for include patterns
+      ansible.builtin.slurp:
+        src: "{{ local_repo_path }}/server/deploy.files.txt"
+      register: deploy_files
+      delegate_to: localhost
+      become: false
+
+    - name: Sync server files to remote
+      ansible.posix.synchronize:
+        src: "{{ local_repo_path }}/server/"
+        dest: "{{ server_path }}/"
+        delete: no
+        recursive: yes
+        rsync_opts:
+          - "--include-from={{ local_repo_path }}/server/deploy.files.txt"
+          - "--exclude=*"
+          - "-avhzru"
+      become: false
+
+    - name: Sync secondary files to remote
+      ansible.posix.synchronize:
+        src: "{{ local_repo_path }}/secondary/"
+        dest: "{{ server_path }}/../secondary/"
+        delete: no
+        recursive: yes
+      become: false
+      when: false # Only enable if you want to deploy secondary server
+
+    # ===== Docker Network Setup =====
+    - name: Create proxy network
+      community.docker.docker_network:
+        name: proxy
+        state: present
+      become: true
+
+    # ===== Deploy Services =====
+    - name: Deploy main homelab services
+      community.docker.docker_compose_v2:
+        project_src: "{{ server_path }}"
+        state: present
+      become: true
+      register: homelab_deploy
+
+    - name: Deploy Immich
+      community.docker.docker_compose_v2:
+        project_src: "{{ server_path }}/immich"
+        env_files:
+          - "{{ server_path }}/immich/.env"
+          - "{{ server_path }}/.env"
+        state: present
+      become: true
+      register: immich_deploy
+
+    # ===== Summary =====
+    - name: Get running containers
+      community.docker.docker_host_info:
+        containers: yes
+      become: true
+      register: docker_info
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Homelab deployment completed successfully!"
+          - ""
+          - "Deployed services:"
+          - "{{ docker_info.containers | map(attribute='Name') | list }}"
+          - ""
+          - "Changed containers:"
+          - "{{ homelab_deploy.actions | default([]) }}"
+          - ""
+          - "Next steps:"
+          - "  • Check services: docker ps"
+          - "  • View logs: docker logs <container-name>"
+          - "  • Access homepage: https://ui.{{ lookup('env', 'DOMAIN') }}"

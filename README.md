@@ -1,106 +1,286 @@
 # Homelab Server
 
 This repository contains the configuration and setup for my homelab servers. The
-services are now organized into **Primary** and **Secondary** servers, each with
-its own folder for better management. It's pretty lightweight and you can run it
-on a Raspberry Pi or any other server. Only thing you need is
-[Docker](https://get.docker.com/) installed and running.
+services are organized into **Primary** and **Secondary** servers, each with its
+own folder for better management. It's pretty lightweight and you can run it on
+a Raspberry Pi or any other server.
+
+## Prerequisites
+
+- [Docker](https://get.docker.com/) installed and running
+- Fedora/RHEL or Debian/Ubuntu server
+- SSH access with key-based authentication
+
+## Automation with Ansible
+
+This homelab uses **Ansible** for automated server configuration and deployment.
+Ansible lets you:
+
+- Set up a fresh server in minutes
+- Keep configurations consistent and documented
+- Deploy services reliably
+- Manage security settings automatically
+
+### Quick Start with Ansible
+
+1. **Install Ansible** (on your control machine - laptop/desktop):
+   ```bash
+   # Fedora/RHEL
+   sudo dnf install ansible
+
+   # Ubuntu/Debian
+   sudo apt install ansible
+
+   # macOS
+   brew install ansible
+   ```
+
+2. **Configure environment** (first time only):
+   ```bash
+   cd ansible/
+   cp .env.ansible.example .env.ansible
+   # Edit .env.ansible with your server IP, port, and ntfy tokens
+   ```
+
+3. **Load environment variables**:
+   ```bash
+   # Load before running any playbook
+   set -a && source .env.ansible && set +a
+   ```
+
+4. **Test connection**:
+   ```bash
+   ansible all -m ping
+   ```
+
+5. **Run playbooks**:
+   ```bash
+   # Complete initial setup (fresh server) - specify which server
+   ansible-playbook site.yml -K --limit homelab          # Primary server (Fedora)
+   ansible-playbook site.yml -K --limit homelab_secondary # Secondary server (Debian Pi)
+
+   # Or run individual playbooks on specific server:
+   ansible-playbook playbooks/initial-setup.yml -K --limit homelab
+   ansible-playbook playbooks/ssh-hardening.yml -K --limit homelab_secondary
+   ansible-playbook playbooks/fail2ban.yml -K --limit homelab
+   ansible-playbook playbooks/smart-monitoring.yml -K --limit homelab
+   ansible-playbook playbooks/backup-cronjob.yml -K --limit homelab
+   ansible-playbook playbooks/maintenance.yml -K --limit homelab_secondary
+   ansible-playbook playbooks/monitoring.yml -K --limit homelab
+
+   # Run on ALL servers (omit --limit):
+   ansible-playbook playbooks/ssh-hardening.yml -K
+   ansible-playbook playbooks/maintenance.yml -K
+
+   # Deploy services
+   ansible-playbook playbooks/deploy.yml --limit homelab
+   ```
+
+   **Note:** Always specify `--limit homelab` or `--limit homelab_secondary` to
+   target a specific server, or omit `--limit` to run on all servers.
+
+### Available Playbooks
+
+- **`site.yml`** - Complete server setup (runs all playbooks)
+- **`initial-setup.yml`** - Install Docker, Deno, essential tools
+- **`ssh-hardening.yml`** - Secure SSH (disable password auth, root login)
+- **`fail2ban.yml`** - Protect against brute force attacks
+- **`smart-monitoring.yml`** - Monitor SSD/NVMe health with ntfy alerts
+- **`backup-cronjob.yml`** - Automated daily backups
+- **`maintenance.yml`** - System updates, Docker cleanup, log rotation
+- **`monitoring.yml`** - Container health checks, disk space, service
+  availability
+- **`deploy.yml`** - Deploy Docker services (replaces Makefile)
+- **`fix-raspberry-pi.yml`** - Fix Raspberry Pi read-only boot partition and
+  broken packages
+
+For detailed Ansible documentation, see
+[`ansible/README.md`](ansible/README.md).
 
 ## Services
 
-### Primary Server
+### Primary Server (`server/`)
 
 #### [Traefik](https://github.com/traefik/traefik)
 
-A reverse proxy that routes incoming requests to the correct container by domain
-name. It also handles SSL certificates with Let's Encrypt.
+Reverse proxy that routes requests by domain and handles SSL certificates with
+Let's Encrypt.
 
 #### [Uptime Kuma](https://github.com/louislam/uptime-kuma)
 
-A monitoring tool to check the status of websites and APIs.
+Monitoring tool to check website and API status.
 
 #### [Transmission](https://github.com/transmission/transmission)
 
-A lightweight BitTorrent client with a web interface.
+Lightweight BitTorrent client with web interface.
 
 #### [MeTube](https://github.com/alexta69/metube)
 
-A web GUI for youtube-dl with playlist support. Allows downloading videos from
-YouTube and other supported sites.
+Web GUI for youtube-dl with playlist support for downloading videos.
 
 #### [Jellyfin](https://github.com/jellyfin/jellyfin)
 
-A media server for hosting and managing personal media libraries.
+Media server for hosting personal media libraries (movies, TV shows, music).
 
 #### [Immich](https://github.com/immich-app/immich)
 
-A self-hosted photo and video backup solution with automatic backup from mobile devices.
+Self-hosted photo and video backup with automatic mobile backup.
 
 #### [Vaultwarden](https://github.com/dani-garcia/vaultwarden)
 
-A password manager compatible with Bitwarden clients.
+Password manager compatible with Bitwarden clients.
 
 #### [Watchtower](https://github.com/containrrr/watchtower)
 
-Automates updating Docker containers to the latest version.
+Automatically updates Docker containers to latest versions.
 
-#### [Homepage](./homepage/src/index.html)
+#### [Homepage](./server/homepage/src/index.html)
 
-A simple homepage with links to all the services.
+Simple homepage with links to all services.
 
 #### [WireGuard](https://www.wireguard.com/)
 
-A modern VPN server that is easy to set up and very fast.
+Modern, fast VPN server.
 
 #### [Syncthing](https://syncthing.net/)
 
-A continuous file synchronization program.
-
-#### [Shadowbox (Outline VPN)](https://github.com/Jigsaw-Code/outline-server)
-
-A self-hosted VPN solution that integrates Shadowsocks.
+Continuous file synchronization between devices.
 
 #### [Open WebUI](https://github.com/open-webui/open-webui)
 
-An AI-powered web interface for various backend services.
+AI-powered web interface for LLM backends.
 
 #### [AudioBookshelf](https://github.com/advplyr/audiobookshelf)
 
-A self-hosted audiobook and podcast server with web and mobile app clients.
+Self-hosted audiobook and podcast server.
 
-### Secondary Server
+#### [Home Assistant](https://www.home-assistant.io/)
 
-The secondary server contains additional services and configurations. Refer to
-the `secondary/compose.yml` file for details.
+Home automation platform with local control.
 
-## Setup
+#### [ntfy](https://ntfy.sh/)
+
+Simple HTTP-based pub-sub notification service.
+
+#### [AdGuard Home](https://github.com/AdguardTeam/AdGuardHome)
+
+Network-wide ad and tracker blocker with DNS server.
+
+#### [Vikunja](https://vikunja.io/)
+
+Self-hosted to-do list and project management.
+
+#### [FileBrowser](https://filebrowser.org/)
+
+Web-based file manager.
+
+#### [FreshRSS](https://freshrss.org/)
+
+Self-hosted RSS feed aggregator.
+
+#### [Woodpecker CI](https://woodpecker-ci.org/)
+
+Lightweight CI/CD platform.
+
+### Secondary Server (`secondary/`)
+
+See `secondary/compose.yml` for additional services.
+
+## Manual Setup (Without Ansible)
+
+If you prefer manual setup:
 
 ### 1. Create the `.env` File
 
-Copy the example `.env` file and fill in the required variables:
-
 ```bash
 cp .env.example .env
+# Edit .env with your configuration
 ```
 
 ### 2. Deploy the Stack
 
-Run the following command to deploy the stack:
-
 ```bash
+cd server/
 make deploy
 ```
 
 ### 3. Access the Services
 
-Access the services using the domain names specified in the `.env` file.
+Access services using domain names specified in `.env`.
 
-### 4. Add More Services
+## Backup System
 
-To add more services, edit the `compose.yml` file and run `make deploy` again.
+Automated backup system using Deno and Restic. See
+[`server/scripts/backup/README.md`](server/scripts/backup/README.md) for
+details.
+
+Backups run daily at 2:30 AM via cron job (configured by Ansible).
+
+Manual backup:
+
+```bash
+30 2 * * * USER=spy4x /home/spy4x/.deno/bin/deno run --env-file=/home/spy4x/ssd-2tb/apps/.env -A /home/spy4x/ssd-2tb/apps/scripts/backup/+main.ts >> /home/spy4x/backup.log 2>&1
+```
+
+## Security Features
+
+- SSH hardening (key-only authentication, no root login)
+- Fail2ban protection for SSH and Docker services
+- Automated security updates
+- SMART monitoring for drive health
+- Container health monitoring
+- Service availability checks
+
+## Known Issues & Solutions
+
+### Raspberry Pi: Read-only /boot/firmware
+
+If you see errors like
+`cp: cannot create regular file '/boot/firmware/...': Read-only file system`:
+
+**Option 1: Run the fix playbook (recommended)**
+
+```bash
+ansible-playbook playbooks/fix-raspberry-pi.yml -K --limit homelab_secondary
+```
+
+This playbook will:
+
+- Remount `/boot/firmware` as read-write
+- Fix broken packages with `dpkg --configure -a`
+- Clean up package system
+- Optionally remount as read-only for safety
+
+**Option 2: Manual fix**
+
+```bash
+# SSH into the Raspberry Pi
+ssh spy4x-pi-external
+
+# Remount boot partition as read-write
+sudo mount -o remount,rw /boot/firmware
+
+# Fix broken packages
+sudo dpkg --configure -a
+
+# Remount as read-only (optional, for safety)
+sudo mount -o remount,ro /boot/firmware
+```
+
+**Note:** The `fail2ban.yml` and `maintenance.yml` playbooks now automatically
+handle this issue, but you may need to run `fix-raspberry-pi.yml` first if there
+are many broken packages.
+
+## Monitoring & Alerts
+
+All monitoring alerts are sent via ntfy:
+
+- **Hardware alerts**: SSD health, disk space, container health
+- **Security alerts**: Failed login attempts, IP bans
 
 ## Notes
 
-- Ensure Docker is installed and configured to run as a non-root user.
-- Use the `backup/` folder for managing backups.
-- Check logs for troubleshooting if any service fails to start.
+- Ensure Docker runs as non-root user
+- Use Ansible for reproducible setups
+- Check logs for troubleshooting: `docker logs <container-name>`
+- All automation configured via Ansible playbooks
