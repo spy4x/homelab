@@ -12,12 +12,14 @@ all:
   children:
     homelab_servers:
       hosts:
-        homelab:
+        home:
           # Primary server (Fedora mini PC)
-          ansible_host: "{{ lookup('env', 'ANSIBLE_HOST') }}"
-          ansible_port: "{{ lookup('env', 'ANSIBLE_PORT') }}"
+          ansible_host: spy4x-server-mini-pc-external
           ansible_user: spy4x
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+
+          # SSH Port for this server
+          ssh_port: "{{ lookup('env', 'SSH_PORT_HOME') }}"
 
           # Paths specific to this server
           deno_install_path: /home/spy4x/.deno
@@ -34,6 +36,8 @@ all:
           ntfy_token_hardware: "{{ lookup('env', 'NTFY_TOKEN_HARDWARE') }}"
           ntfy_url_security: "{{ lookup('env', 'NTFY_URL_SECURITY') }}"
           ntfy_token_security: "{{ lookup('env', 'NTFY_TOKEN_SECURITY') }}"
+          ntfy_url_uptime: "{{ lookup('env', 'NTFY_URL_UPTIME') }}"
+          ntfy_token_uptime: "{{ lookup('env', 'NTFY_TOKEN_UPTIME') }}"
 
           # SMART monitoring temperature thresholds (loaded from .env.ansible)
           smart_temp_change: "{{ lookup('env', 'SMART_TEMP_CHANGE_THRESHOLD') | default('4', true) }}"
@@ -58,12 +62,14 @@ all:
               bantime: 1h
               findtime: 10m
 
-        homelab_secondary:
+        offsite:
           # Secondary server (Debian Raspberry Pi)
           ansible_host: spy4x-pi-external
-          ansible_port: 45737
           ansible_user: spy4x
           ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+
+          # SSH Port for this server
+          ssh_port: "{{ lookup('env', 'SSH_PORT_OFFSITE') }}"
 
           # Paths specific to this server
           deno_install_path: /home/spy4x/.deno
@@ -80,6 +86,8 @@ all:
           ntfy_token_hardware: "{{ lookup('env', 'NTFY_TOKEN_HARDWARE') }}"
           ntfy_url_security: "{{ lookup('env', 'NTFY_URL_SECURITY') }}"
           ntfy_token_security: "{{ lookup('env', 'NTFY_TOKEN_SECURITY') }}"
+          ntfy_url_uptime: "{{ lookup('env', 'NTFY_URL_UPTIME') }}"
+          ntfy_token_uptime: "{{ lookup('env', 'NTFY_TOKEN_UPTIME') }}"
 
           # SMART monitoring (Raspberry Pi may not have SMART support for SD card)
           # Use default temps, adjust if needed

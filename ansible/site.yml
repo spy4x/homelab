@@ -14,13 +14,13 @@
           - "User: {{ homelab_user }}"
 
 # Import all playbooks in order
-- import_playbook: initial-setup.yml
-- import_playbook: ssh-hardening.yml
-- import_playbook: fail2ban.yml
-- import_playbook: smart-monitoring.yml
-- import_playbook: maintenance.yml
-- import_playbook: backup-cronjob.yml
-- import_playbook: monitoring.yml
+- import_playbook: playbooks/initial-setup.yml
+- import_playbook: playbooks/ssh-hardening.yml
+- import_playbook: playbooks/fail2ban.yml
+- import_playbook: playbooks/smart-monitoring.yml
+- import_playbook: playbooks/maintenance.yml
+- import_playbook: playbooks/backup-cronjob.yml
+- import_playbook: playbooks/monitoring.yml
 
 - name: Setup Complete
   hosts: homelab_servers

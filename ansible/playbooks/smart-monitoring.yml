@@ -47,18 +47,24 @@
           # Determine priority based on message content
           if echo "$MESSAGE" | grep -qi "fail\|error\|critical"; then
             PRIORITY="urgent"
-            TAGS="warning,disk"
+            TAGS="{{ inventory_hostname }},warning,disk"
+            TITLE="🚨 SMART Critical Alert: $DEVICE"
+            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n⚠️ Status: Critical\n\n'"$MESSAGE"
           elif echo "$MESSAGE" | grep -qi "warn"; then
             PRIORITY="high"
-            TAGS="warning,disk"
+            TAGS="{{ inventory_hostname }},warning,disk"
+            TITLE="⚠️ SMART Warning: $DEVICE"
+            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n⚠️ Status: Warning\n\n'"$MESSAGE"
           else
             PRIORITY="default"
-            TAGS="disk"
+            TAGS="{{ inventory_hostname }},disk"
+            TITLE="💽 SMART Status: $DEVICE"
+            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\nℹ️ Status: Info\n\n'"$MESSAGE"
           fi
 
           # Send notification
           curl -H "Authorization: Bearer $NTFY_TOKEN" \
-               -H "Title: SMART Alert: $DEVICE" \
+               -H "Title: $TITLE" \
                -H "Priority: $PRIORITY" \
                -H "Tags: $TAGS" \
                -d "$MESSAGE" \

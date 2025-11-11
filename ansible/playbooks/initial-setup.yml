@@ -13,6 +13,48 @@
     docker_repo_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
 
   tasks:
+    # ===== Raspberry Pi: Fix Read-Only Boot Partition =====
+    - name: Check if this is a Raspberry Pi
+      ansible.builtin.stat:
+        path: /boot/firmware
+      register: boot_firmware
+      when: ansible_os_family == "Debian"
+
+    - name: Check if boot partition is read-only (Raspberry Pi)
+      ansible.builtin.shell: |
+        mount | grep '/boot/firmware' | grep -q 'ro,' && echo "readonly" || echo "readwrite"
+      register: boot_mount_status
+      changed_when: false
+      when:
+        - ansible_os_family == "Debian"
+        - boot_firmware.stat.exists | default(false)
+
+    - name: Remount boot partition as read-write (Raspberry Pi)
+      ansible.builtin.command: mount -o remount,rw /boot/firmware
+      when:
+        - ansible_os_family == "Debian"
+        - boot_firmware.stat.exists | default(false)
+        - boot_mount_status.stdout == "readonly"
+      register: remount_result
+
+    - name: Fix broken packages before setup (Raspberry Pi)
+      ansible.builtin.command: dpkg --configure -a
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      when:
+        - ansible_os_family == "Debian"
+        - boot_firmware.stat.exists | default(false)
+      failed_when: false
+      changed_when: false
+
+    - name: Display Raspberry Pi fix status
+      ansible.builtin.debug:
+        msg: "✅ Raspberry Pi boot partition fixed and remounted as read-write"
+      when:
+        - ansible_os_family == "Debian"
+        - boot_firmware.stat.exists | default(false)
+        - remount_result is changed
+
     # ===== System Update =====
     - name: Update package cache (Debian/Ubuntu)
       ansible.builtin.apt:
@@ -180,9 +222,9 @@
       changed_when: false
       become_user: "{{ homelab_user }}"
 
-    - name: Display setup summary
-      ansible.builtin.debug:
-        msg:
+    - name: Build summary message
+      ansible.builtin.set_fact:
+        setup_summary:
           - "✅ Initial server setup completed!"
           - ""
           - "Installed components:"
@@ -191,6 +233,7 @@
           - "  - Restic (backup tool)"
           - ""
           - "Configured:"
+          - "{{ '  - Raspberry Pi boot partition fixed' if (ansible_os_family == 'Debian' and boot_firmware.stat.exists | default(false)) else '' }}"
           - "  - User '{{ homelab_user }}' added to docker group"
           - "  - Deno added to PATH"
           - "  - Apps directory created at {{ apps_path }}"
@@ -202,3 +245,7 @@
           - "  1. Deploy your docker-compose files to {{ apps_path }}"
           - "  2. Create .env file at {{ env_file_path }}"
           - "  3. Run 'ansible-playbook playbooks/backup-cronjob.yml' to setup backups"
+
+    - name: Display setup summary
+      ansible.builtin.debug:
+        msg: "{{ setup_summary | reject('equalto', '') | list }}"

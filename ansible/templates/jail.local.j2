@@ -17,8 +17,8 @@ ignoreip = 127.0.0.1/8 ::1 192.168.0.0/16 10.0.0.0/8
 # ===== SSH Protection =====
 [sshd]
 enabled = true
-{% if ansible_port is defined %}
-port = {{ ansible_port }}
+{% if ssh_port is defined %}
+port = {{ ssh_port }}
 {% else %}
 port = ssh
 {% endif %}
@@ -28,18 +28,3 @@ backend = systemd
 maxretry = 3
 bantime = 1h
 
-{% if fail2ban_docker_jails is defined and fail2ban_docker_jails | length > 0 %}
-# ===== Docker Container Monitoring =====
-
-{% for jail in fail2ban_docker_jails %}
-[{{ jail.name }}]
-enabled = true
-port = http,https
-filter = {{ jail.name }}
-logpath = /var/lib/docker/containers/*{{ jail.container }}*/*-json.log
-maxretry = {{ jail.maxretry | default(5) }}
-bantime = {{ jail.bantime | default('1h') }}
-findtime = {{ jail.findtime | default('10m') }}
-
-{% endfor %}
-{% endif %}

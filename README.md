@@ -56,28 +56,28 @@ Ansible lets you:
 5. **Run playbooks**:
    ```bash
    # Complete initial setup (fresh server) - specify which server
-   ansible-playbook site.yml -K --limit homelab          # Primary server (Fedora)
-   ansible-playbook site.yml -K --limit homelab_secondary # Secondary server (Debian Pi)
+   ansible-playbook site.yml -K --limit home          # Primary server (Fedora)
+   ansible-playbook site.yml -K --limit offsite # Secondary server (Debian Pi)
 
    # Or run individual playbooks on specific server:
-   ansible-playbook playbooks/initial-setup.yml -K --limit homelab
-   ansible-playbook playbooks/ssh-hardening.yml -K --limit homelab_secondary
-   ansible-playbook playbooks/fail2ban.yml -K --limit homelab
-   ansible-playbook playbooks/smart-monitoring.yml -K --limit homelab
-   ansible-playbook playbooks/backup-cronjob.yml -K --limit homelab
-   ansible-playbook playbooks/maintenance.yml -K --limit homelab_secondary
-   ansible-playbook playbooks/monitoring.yml -K --limit homelab
+   ansible-playbook playbooks/initial-setup.yml -K --limit home
+   ansible-playbook playbooks/ssh-hardening.yml -K --limit offsite
+   ansible-playbook playbooks/fail2ban.yml -K --limit home
+   ansible-playbook playbooks/smart-monitoring.yml -K --limit home
+   ansible-playbook playbooks/backup-cronjob.yml -K --limit home
+   ansible-playbook playbooks/maintenance.yml -K --limit offsite
+   ansible-playbook playbooks/monitoring.yml -K --limit home
 
    # Run on ALL servers (omit --limit):
    ansible-playbook playbooks/ssh-hardening.yml -K
    ansible-playbook playbooks/maintenance.yml -K
 
    # Deploy services
-   ansible-playbook playbooks/deploy.yml --limit homelab
+   ansible-playbook playbooks/deploy.yml --limit home
    ```
 
-   **Note:** Always specify `--limit homelab` or `--limit homelab_secondary` to
-   target a specific server, or omit `--limit` to run on all servers.
+   **Note:** Always specify `--limit home` or `--limit offsite` to target a
+   specific server, or omit `--limit` to run on all servers.
 
 ### Available Playbooks
 
@@ -241,7 +241,7 @@ If you see errors like
 **Option 1: Run the fix playbook (recommended)**
 
 ```bash
-ansible-playbook playbooks/fix-raspberry-pi.yml -K --limit homelab_secondary
+ansible-playbook playbooks/fix-raspberry-pi.yml -K --limit offsite
 ```
 
 This playbook will:

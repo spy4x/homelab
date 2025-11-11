@@ -18,7 +18,6 @@
         state: directory
         mode: "0755"
       delegate_to: localhost
-      become: false
 
     - name: Load .env file for homepage variables
       ansible.builtin.shell: |
@@ -28,7 +27,6 @@
       args:
         executable: /bin/bash
       delegate_to: localhost
-      become: false
       changed_when: true
 
     - name: Copy homepage static files
@@ -39,22 +37,11 @@
         - sw.js
         - manifest.json
       delegate_to: localhost
-      become: false
-
     - name: Copy homepage assets
       ansible.builtin.copy:
         src: "{{ local_repo_path }}/server/homepage/src/assets"
         dest: "{{ local_repo_path }}/server/homepage/dist/"
       delegate_to: localhost
-      become: false
-
-    # ===== Sync Files to Server =====
-    - name: Read deploy.files.txt for include patterns
-      ansible.builtin.slurp:
-        src: "{{ local_repo_path }}/server/deploy.files.txt"
-      register: deploy_files
-      delegate_to: localhost
-      become: false
 
     - name: Sync server files to remote
       ansible.posix.synchronize:
@@ -66,47 +53,32 @@
           - "--include-from={{ local_repo_path }}/server/deploy.files.txt"
           - "--exclude=*"
           - "-avhzru"
-      become: false
-
-    - name: Sync secondary files to remote
-      ansible.posix.synchronize:
-        src: "{{ local_repo_path }}/secondary/"
-        dest: "{{ server_path }}/../secondary/"
-        delete: no
-        recursive: yes
-      become: false
-      when: false # Only enable if you want to deploy secondary server
 
     # ===== Docker Network Setup =====
     - name: Create proxy network
       community.docker.docker_network:
         name: proxy
         state: present
-      become: true
 
     # ===== Deploy Services =====
     - name: Deploy main homelab services
-      community.docker.docker_compose_v2:
-        project_src: "{{ server_path }}"
-        state: present
-      become: true
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ server_path }}"
       register: homelab_deploy
+      changed_when: "'Started' in homelab_deploy.stderr or 'Created' in homelab_deploy.stderr"
 
-    - name: Deploy Immich
-      community.docker.docker_compose_v2:
-        project_src: "{{ server_path }}/immich"
-        env_files:
-          - "{{ server_path }}/immich/.env"
-          - "{{ server_path }}/.env"
-        state: present
-      become: true
+    - name: Deploy Immich with multiple env files
+      ansible.builtin.command:
+        cmd: docker compose --env-file=.env --env-file=../.env up -d
+        chdir: "{{ server_path }}/immich"
       register: immich_deploy
+      changed_when: "'Started' in immich_deploy.stderr or 'Created' in immich_deploy.stderr"
 
     # ===== Summary =====
     - name: Get running containers
       community.docker.docker_host_info:
         containers: yes
-      become: true
       register: docker_info
 
     - name: Display deployment summary
@@ -115,7 +87,7 @@
           - "✅ Homelab deployment completed successfully!"
           - ""
           - "Deployed services:"
-          - "{{ docker_info.containers | map(attribute='Name') | list }}"
+          - "{{ docker_info.containers | map(attribute='Names') | map('first') | list }}"
           - ""
           - "Changed containers:"
           - "{{ homelab_deploy.actions | default([]) }}"

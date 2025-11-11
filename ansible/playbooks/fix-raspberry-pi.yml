@@ -2,6 +2,9 @@
 # Playbook: Fix Raspberry Pi Broken Packages
 # This playbook fixes the common Raspberry Pi issue where /boot/firmware is read-only
 # causing package installation failures
+#
+# NOTE: Basic fix is now included in initial-setup.yml
+# This playbook provides comprehensive diagnostics and repair for troubleshooting
 
 - name: Fix Raspberry Pi Boot Partition and Broken Packages
   hosts: homelab_servers
@@ -65,7 +68,7 @@
         DEBIAN_FRONTEND: noninteractive
 
     - name: Check for remaining broken packages
-      ansible.builtin.command: dpkg -l | grep -E '^iU|^iF' || true
+      ansible.builtin.shell: dpkg -l | grep -E '^iU|^iF' || true
       register: broken_packages
       changed_when: false
       when: boot_firmware.stat.exists
@@ -91,8 +94,8 @@
           - "Boot partition: {{ 'remounted read-only' if remount_ro is changed else 'left read-write' }}"
           - ""
           - "You can now run other playbooks:"
-          - "  ansible-playbook playbooks/fail2ban.yml -K --limit homelab_secondary"
-          - "  ansible-playbook playbooks/maintenance.yml -K --limit homelab_secondary"
+          - "  ansible-playbook playbooks/fail2ban.yml -K --limit offsite"
+          - "  ansible-playbook playbooks/maintenance.yml -K --limit offsite"
           - ""
           - "Note: If you need to install more packages, remount as read-write first:"
           - "  sudo mount -o remount,rw /boot/firmware"
