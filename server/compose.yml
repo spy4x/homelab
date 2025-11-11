@@ -561,7 +561,7 @@ services:
       - VIKUNJA_DATABASE_DATABASE=${VIKUNJA_DB_NAME}
       - VIKUNJA_SERVICE_PUBLICURL=https://tasks.${DOMAIN}
       - VIKUNJA_SERVICE_TIMEZONE=${TIMEZONE}
-      - VIKUNJA_SERVICE_JWTSECRET=${VIKUNJA_JWT_SECRET}
+      - VIKUNJA_SERVICE_JWTSECRET=${VIKUNJA_SERVICE_JWTSECRET}
       - VIKUNJA_SERVICE_JWTTTL=${VIKUNJA_SERVICE_JWTTTL}
       - VIKUNJA_SERVICE_ENABLEREGISTRATION=${VIKUNJA_SERVICE_ENABLEREGISTRATION}
     volumes:
@@ -665,7 +665,7 @@ services:
   # or use GitHub/GitLab integration by setting the appropriate environment variables.
   woodpecker-server:
     container_name: woodpecker-server
-    image: woodpeckerci/woodpecker-server:latest
+    image: woodpeckerci/woodpecker-server:v3.11.0
     environment:
       - WOODPECKER_OPEN=true
       - WOODPECKER_HOST=https://ci.${DOMAIN}
@@ -709,7 +709,7 @@ services:
 
   woodpecker-agent:
     container_name: woodpecker-agent
-    image: woodpeckerci/woodpecker-agent:latest
+    image: woodpeckerci/woodpecker-agent:v3.11.0
     environment:
       - WOODPECKER_SERVER=woodpecker-server:9000
       - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
