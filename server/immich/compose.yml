@@ -13,8 +13,8 @@ networks:
 name: immich
 
 services:
-  immich-server:
-    container_name: immich_server
+  server:
+    container_name: immich-server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     extends:
       file: hwaccel.transcoding.yml
@@ -25,11 +25,16 @@ services:
     networks:
       - proxy
       - default
-    env_file:
-      - .env
+    environment:
+      - IMMICH_VERSION=${IMMICH_VERSION:-release}
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_HOSTNAME=db
+      - DB_USERNAME=postgres
+      - DB_DATABASE_NAME=immich
+      - REDIS_HOSTNAME=kv
     depends_on:
-      - redis
-      - database
+      - db
+      - kv
     restart: always
     healthcheck:
       disable: false
@@ -49,8 +54,8 @@ services:
       - "traefik.http.routers.immich.tls.certresolver=myresolver"
       - "traefik.http.services.immich.loadbalancer.server.port=2283"
 
-  immich-machine-learning:
-    container_name: immich_machine_learning
+  machine-learning:
+    container_name: immich-machine-learning
     # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
     # Example tag: ${IMMICH_VERSION:-release}-cuda
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
@@ -59,8 +64,13 @@ services:
     #  service: openvino # set to one of [armnn, cuda, openvino, openvino-wsl] for accelerated inference - use the `-wsl` version for WSL2 where applicable
     volumes:
       - ../.volumes/immich/model-cache:/cache
-    env_file:
-      - .env
+    environment:
+      - IMMICH_VERSION=${IMMICH_VERSION:-release}
+      - DB_PASSWORD=${IMMICH_DB_PASSWORD}
+      - DB_HOSTNAME=db
+      - DB_USERNAME=postgres
+      - DB_DATABASE_NAME=immich
+      - REDIS_HOSTNAME=kv
     restart: always
     deploy:
       resources:
@@ -73,8 +83,8 @@ services:
       disable: false
 
 
-  redis:
-    container_name: immich_redis
+  kv:
+    container_name: immich-kv
     image: docker.io/valkey/valkey:8-bookworm@sha256:ff21bc0f8194dc9c105b769aeabf9585fea6a8ed649c0781caeac5cb3c247884
     healthcheck:
       test: redis-cli ping || exit 1
@@ -87,13 +97,13 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  database:
-    container_name: immich_postgres
+  db:
+    container_name: immich-db
     image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_DB: ${DB_DATABASE_NAME}
+      POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
       POSTGRES_INITDB_ARGS: '--data-checksums'
     volumes:
       - ../.volumes/immich/postgres:/var/lib/postgresql/data
@@ -108,16 +118,32 @@ services:
 
 # --------- Immich Kiosk - a tool for displaying photos in a kiosk mode on a TV/tablet ---------
 
-  immich-kiosk:
-    container_name: immich_kiosk
+  kiosk:
+    container_name: immich-kiosk
     image: ghcr.io/damongolding/immich-kiosk:latest
     environment:
-      - KIOSK_IMMICH_URL=http://immich-server:2283
+      - KIOSK_IMMICH_URL=http://server:2283
       - KIOSK_IMMICH_EXTERNAL_URL=https://photos.${DOMAIN}
       - KIOSK_BEHIND_PROXY=true
       - TZ=${TIMEZONE:-Asia/Singapore}
-    env_file:
-      - kiosk.env
+      - KIOSK_IMMICH_API_KEY=${IMMICH_KIOSK_API_KEY}
+      - KIOSK_PASSWORD=${IMMICH_KIOSK_PASSWORD}
+      - KIOSK_SHOW_TIME=true
+      - KIOSK_TIME_FORMAT=24
+      - KIOSK_SHOW_DATE=true
+      - KIOSK_DATE_FORMAT=YYYY.MM.DD
+      - KIOSK_DURATION=60
+      - KIOSK_DISABLE_SCREENSAVER=true
+      - KIOSK_SHOW_ARCHIVED=false
+      - KIOSK_SHOW_ALBUM_NAME=true
+      - KIOSK_SHOW_IMAGE_TIME=true
+      - KIOSK_IMAGE_TIME_FORMAT=24
+      - KIOSK_SHOW_IMAGE_DATE=true
+      - KIOSK_IMAGE_DATE_FORMAT=YYYY.MM.DD
+      - KIOSK_SHOW_IMAGE_DESCRIPTION=true
+      - KIOSK_SHOW_IMAGE_LOCATION=true
+      - KIOSK_LIKE_BUTTON_ACTION=favorite
+      - KIOSK_HIDE_BUTTON_ACTION=tag
     deploy:
       resources:
         limits:
@@ -127,7 +153,7 @@ services:
       - proxy
       - default
     depends_on:
-      - immich-server
+      - server
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
