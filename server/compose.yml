@@ -659,6 +659,38 @@ services:
       - "traefik.http.routers.freshrss.tls=true"
       - "traefik.http.routers.freshrss.tls.certresolver=myresolver"
 
+  # Radicale is a CalDAV and CardDAV server for calendars, contacts, and tasks.
+  # It provides synchronization for calendar and contact clients like Thunderbird and Tasks.org.
+  # Access via CalDAV/CardDAV protocol at https://cal.${DOMAIN}
+  radicale:
+    container_name: radicale
+    image: tomsquest/docker-radicale:latest
+    user: "1000:1000"
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - ./.volumes/radicale/data:/data
+      - ./.volumes/radicale/config:/config
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.radicale.loadbalancer.server.port=5232"
+      - "traefik.http.routers.radicale.rule=Host(`cal.${DOMAIN}`)"
+      - "traefik.http.routers.radicale.entrypoints=websecure"
+      - "traefik.http.routers.radicale.tls=true"
+      - "traefik.http.routers.radicale.tls.certresolver=myresolver"
+
   # Woodpecker CI is a lightweight, self-hosted CI/CD platform.
   # It provides automated testing and deployment pipelines for your repositories.
   # Note: You need to configure WOODPECKER_GITEA_URL, WOODPECKER_GITEA_CLIENT, and WOODPECKER_GITEA_SECRET

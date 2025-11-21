@@ -1,0 +1,114 @@
+---
+# Playbook: Setup Backup Cronjob for Cloud Server
+# This playbook configures automated backups using Deno script and restic
+
+- name: Setup Cloud Backup Cronjob
+  hosts: cloud_servers
+  become: true
+
+  vars:
+    backup_script_path: "{{ apps_path }}/scripts/backup/+main.ts"
+    backup_time: "0 3 * * *"  # 3 AM daily
+
+  tasks:
+    # ===== Verify Prerequisites =====
+    - name: Check if backup script exists
+      ansible.builtin.stat:
+        path: "{{ backup_script_path }}"
+      register: backup_script
+
+    - name: Fail if backup script is missing
+      ansible.builtin.fail:
+        msg: |
+          ❌ Backup script not found at {{ backup_script_path }}!
+          
+          Please deploy services first:
+            ansible-playbook playbooks/deploy.yml
+      when: not backup_script.stat.exists
+
+    - name: Check if Deno is installed
+      ansible.builtin.command: "{{ deno_install_path }}/bin/deno --version"
+      register: deno_check
+      failed_when: false
+      changed_when: false
+      become_user: "{{ homelab_user }}"
+
+    - name: Fail if Deno is not installed
+      ansible.builtin.fail:
+        msg: |
+          ❌ Deno is not installed!
+          
+          Please run initial setup first:
+            ansible-playbook playbooks/initial-setup.yml
+      when: deno_check.rc != 0
+
+    - name: Check if restic is installed
+      ansible.builtin.command: which restic
+      register: restic_check
+      failed_when: false
+      changed_when: false
+
+    - name: Fail if restic is not installed
+      ansible.builtin.fail:
+        msg: "❌ Restic is not installed! Run initial-setup.yml first."
+      when: restic_check.rc != 0
+
+    # ===== Configure Backup Cronjob =====
+    - name: Create backup cronjob
+      ansible.builtin.cron:
+        name: "Cloud server backup"
+        minute: "{{ backup_time.split()[0] }}"
+        hour: "{{ backup_time.split()[1] }}"
+        day: "{{ backup_time.split()[2] }}"
+        month: "{{ backup_time.split()[3] }}"
+        weekday: "{{ backup_time.split()[4] }}"
+        job: "cd {{ apps_path }} && {{ deno_install_path }}/bin/deno run --allow-all {{ backup_script_path }} >> /var/log/cloud-backup.log 2>&1"
+        user: "{{ homelab_user }}"
+        state: present
+
+    - name: Create log directory
+      ansible.builtin.file:
+        path: /var/log
+        state: directory
+        mode: "0755"
+
+    - name: Create log file with correct permissions
+      ansible.builtin.file:
+        path: /var/log/cloud-backup.log
+        state: touch
+        owner: "{{ homelab_user }}"
+        group: "{{ homelab_user }}"
+        mode: "0644"
+
+    # ===== Test Backup =====
+    - name: Test backup script (dry run)
+      ansible.builtin.command:
+        cmd: "{{ deno_install_path }}/bin/deno run --allow-all {{ backup_script_path }}"
+        chdir: "{{ apps_path }}"
+      register: backup_test
+      become_user: "{{ homelab_user }}"
+      changed_when: false
+      failed_when: false
+
+    # ===== Summary =====
+    - name: Display backup setup summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Cloud backup cronjob configured!"
+          - ""
+          - "Schedule: Daily at 3:00 AM ({{ backup_time }})"
+          - "Script: {{ backup_script_path }}"
+          - "Log file: /var/log/cloud-backup.log"
+          - "User: {{ homelab_user }}"
+          - ""
+          - "Backup test result: {{ 'Success' if backup_test.rc == 0 else 'Failed - check manually' }}"
+          - ""
+          - "Manual backup commands:"
+          - "  cd {{ apps_path }}"
+          - "  deno run --allow-all {{ backup_script_path }}"
+          - ""
+          - "View logs:"
+          - "  tail -f /var/log/cloud-backup.log"
+          - ""
+          - "Cron jobs:"
+          - "  crontab -l -u {{ homelab_user }}"

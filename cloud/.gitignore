@@ -1,0 +1,25 @@
+# Environment file with secrets
+.env
+
+# Docker volumes (data directories)
+.volumes/
+
+# Logs
+*.log
+
+# Backup temporary files
+backups/
+*.restic
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+*~

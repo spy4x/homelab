@@ -1,0 +1,17 @@
+# List of files to deploy to cloud server
+# Used by ansible/playbooks/deploy.yml for rsync
+
+# Core files
+compose.yml
+.env
+Makefile
+
+# Docker Mail Server config
+.volumes/mailserver/config/**
+
+# Backup scripts
+scripts/
+
+# Exclude
+!.volumes/
+!.git/

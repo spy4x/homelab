@@ -1,60 +1,17 @@
 ---
-# Playbook: Initial Server Setup
-# This playbook handles fresh server setup after OS installation
-# It installs essential tools (Docker, Deno) and configures the system
+# Playbook: Initial Cloud Server Setup
+# This playbook configures a fresh Hetzner VPS for mail server hosting
+# Run this once after creating the VPS
 
-- name: Initial Server Setup
-  hosts: homelab_servers
+- name: Initial Cloud Server Setup
+  hosts: cloud_servers
   become: true
 
   vars:
-    # Docker GPG key and repository
     docker_gpg_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg"
     docker_repo_url: "https://download.docker.com/linux/{{ ansible_distribution | lower }}"
 
   tasks:
-    # ===== Raspberry Pi: Fix Read-Only Boot Partition =====
-    - name: Check if this is a Raspberry Pi
-      ansible.builtin.stat:
-        path: /boot/firmware
-      register: boot_firmware
-      when: ansible_os_family == "Debian"
-
-    - name: Check if boot partition is read-only (Raspberry Pi)
-      ansible.builtin.shell: |
-        mount | grep '/boot/firmware' | grep -q 'ro,' && echo "readonly" || echo "readwrite"
-      register: boot_mount_status
-      changed_when: false
-      when:
-        - ansible_os_family == "Debian"
-        - boot_firmware.stat.exists | default(false)
-
-    - name: Remount boot partition as read-write (Raspberry Pi)
-      ansible.builtin.command: mount -o remount,rw /boot/firmware
-      when:
-        - ansible_os_family == "Debian"
-        - boot_firmware.stat.exists | default(false)
-        - boot_mount_status.stdout == "readonly"
-      register: remount_result
-
-    - name: Fix broken packages before setup (Raspberry Pi)
-      ansible.builtin.command: dpkg --configure -a
-      environment:
-        DEBIAN_FRONTEND: noninteractive
-      when:
-        - ansible_os_family == "Debian"
-        - boot_firmware.stat.exists | default(false)
-      failed_when: false
-      changed_when: false
-
-    - name: Display Raspberry Pi fix status
-      ansible.builtin.debug:
-        msg: "✅ Raspberry Pi boot partition fixed and remounted as read-write"
-      when:
-        - ansible_os_family == "Debian"
-        - boot_firmware.stat.exists | default(false)
-        - remount_result is changed
-
     # ===== System Update =====
     - name: Update package cache (Debian/Ubuntu)
       ansible.builtin.apt:
@@ -65,6 +22,12 @@
     - name: Update package cache (RedHat/Fedora)
       ansible.builtin.dnf:
         update_cache: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Upgrade all packages
+      ansible.builtin.package:
+        name: "*"
+        state: latest
       when: ansible_os_family == "RedHat"
 
     # ===== Essential Packages =====
@@ -81,8 +44,10 @@
           - htop
           - tmux
           - unzip
-          - restic # For backups
-          - httpd-tools # For htpasswd command to use with basic auth in Radicale
+          - restic
+          - httpd-tools
+          - fail2ban
+          - ufw
         state: present
       when: ansible_os_family == "Debian"
 
@@ -97,8 +62,10 @@
           - htop
           - tmux
           - unzip
-          - restic # For backups
-          - httpd-tools # For htpasswd command to use with basic auth in Radicale
+          - restic
+          - httpd-tools
+          - fail2ban
+          - firewalld
         state: present
       when: ansible_os_family == "RedHat"
 
@@ -118,11 +85,13 @@
       args:
         creates: /usr/bin/docker
 
-    - name: Add user to docker group
+    - name: Create cloud user
       ansible.builtin.user:
         name: "{{ homelab_user }}"
         groups: docker
         append: yes
+        shell: /bin/bash
+        create_home: yes
 
     - name: Enable Docker service
       ansible.builtin.systemd:
@@ -161,43 +130,104 @@
         create: yes
       become_user: "{{ homelab_user }}"
 
-    - name: Add Deno to PATH in .zshrc
-      ansible.builtin.lineinfile:
-        path: "/home/{{ homelab_user }}/.zshrc"
-        line: 'export PATH="{{ deno_install_path }}/bin:$PATH"'
-        state: present
-        create: yes
-      become_user: "{{ homelab_user }}"
-      ignore_errors: yes # User might not use zsh
+    # ===== Firewall Configuration =====
+    - name: Configure firewall (Debian/Ubuntu - ufw)
+      block:
+        - name: Enable ufw
+          community.general.ufw:
+            state: enabled
+            policy: deny
 
-    # ===== System Configuration =====
-    - name: Disable swap (recommended for Docker/Kubernetes)
-      ansible.builtin.command: swapoff -a
-      when: ansible_swaptotal_mb > 0
-      changed_when: false
+        - name: Allow SSH
+          community.general.ufw:
+            rule: allow
+            port: '22'
+            proto: tcp
 
-    - name: Remove swap from fstab
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        regexp: ".*swap.*"
-        state: absent
+        - name: Allow HTTP
+          community.general.ufw:
+            rule: allow
+            port: '80'
+            proto: tcp
 
-    - name: Set timezone to UTC
-      community.general.timezone:
-        name: UTC
-      ignore_errors: yes # Module might not be available
+        - name: Allow HTTPS
+          community.general.ufw:
+            rule: allow
+            port: '443'
+            proto: tcp
 
-    - name: Configure firewall for Docker (if firewalld is active)
-      ansible.builtin.command: firewall-cmd --permanent --zone=public --add-masquerade
+        - name: Allow SMTP
+          community.general.ufw:
+            rule: allow
+            port: '25'
+            proto: tcp
+
+        - name: Allow SMTP Submission
+          community.general.ufw:
+            rule: allow
+            port: '587'
+            proto: tcp
+
+        - name: Allow SMTPS
+          community.general.ufw:
+            rule: allow
+            port: '465'
+            proto: tcp
+
+        - name: Allow IMAPS
+          community.general.ufw:
+            rule: allow
+            port: '993'
+            proto: tcp
+      when: ansible_os_family == "Debian"
+
+    - name: Configure firewall (RedHat/Fedora - firewalld)
+      block:
+        - name: Enable firewalld
+          ansible.builtin.systemd:
+            name: firewalld
+            enabled: yes
+            state: started
+
+        - name: Allow HTTP
+          ansible.posix.firewalld:
+            service: http
+            permanent: yes
+            state: enabled
+
+        - name: Allow HTTPS
+          ansible.posix.firewalld:
+            service: https
+            permanent: yes
+            state: enabled
+
+        - name: Allow SMTP
+          ansible.posix.firewalld:
+            service: smtp
+            permanent: yes
+            state: enabled
+
+        - name: Allow SMTP Submission
+          ansible.posix.firewalld:
+            service: smtp-submission
+            permanent: yes
+            state: enabled
+
+        - name: Allow SMTPS
+          ansible.posix.firewalld:
+            service: smtps
+            permanent: yes
+            state: enabled
+
+        - name: Allow IMAPS
+          ansible.posix.firewalld:
+            service: imaps
+            permanent: yes
+            state: enabled
+
+        - name: Reload firewalld
+          ansible.builtin.command: firewall-cmd --reload
       when: ansible_os_family == "RedHat"
-      failed_when: false
-      changed_when: false
-
-    - name: Reload firewall
-      ansible.builtin.command: firewall-cmd --reload
-      when: ansible_os_family == "RedHat"
-      failed_when: false
-      changed_when: false
 
     # ===== Directory Structure =====
     - name: Create apps directory structure
@@ -224,30 +254,29 @@
       changed_when: false
       become_user: "{{ homelab_user }}"
 
-    - name: Build summary message
-      ansible.builtin.set_fact:
-        setup_summary:
-          - "✅ Initial server setup completed!"
+    - name: Display setup summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Cloud server initial setup completed!"
           - ""
           - "Installed components:"
           - "  - {{ docker_version.stdout }}"
           - "  - Deno {{ deno_version.stdout_lines[0] }}"
           - "  - Restic (backup tool)"
+          - "  - Fail2ban (brute force protection)"
           - ""
           - "Configured:"
-          - "{{ '  - Raspberry Pi boot partition fixed' if (ansible_os_family == 'Debian' and boot_firmware.stat.exists | default(false)) else '' }}"
-          - "  - User '{{ homelab_user }}' added to docker group"
-          - "  - Deno added to PATH"
+          - "  - User '{{ homelab_user }}' created with docker access"
+          - "  - Firewall configured for mail server"
           - "  - Apps directory created at {{ apps_path }}"
-          - "  - Swap disabled"
           - ""
-          - "⚠️  IMPORTANT: Log out and back in for docker group membership to take effect!"
+          - "Firewall rules:"
+          - "  - SSH (22), HTTP (80), HTTPS (443)"
+          - "  - SMTP (25), Submission (587), SMTPS (465)"
+          - "  - IMAPS (993)"
           - ""
           - "Next steps:"
-          - "  1. Deploy your docker-compose files to {{ apps_path }}"
-          - "  2. Create .env file at {{ env_file_path }}"
-          - "  3. Run 'ansible-playbook playbooks/backup-cronjob.yml' to setup backups"
-
-    - name: Display setup summary
-      ansible.builtin.debug:
-        msg: "{{ setup_summary | reject('equalto', '') | list }}"
+          - "  1. Update DNS records (see README.md)"
+          - "  2. Copy .env.example to .env and configure"
+          - "  3. Run 'ansible-playbook playbooks/deploy.yml'"
+          - "  4. Configure DKIM (see README.md)"
