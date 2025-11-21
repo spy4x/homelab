@@ -1,4 +1,6 @@
-const CACHE_NAME = "homelab-v1";
+// Cache version is auto-generated during build to ensure fresh updates
+const CACHE_VERSION = "__CACHE_VERSION__"; // Replaced during build
+const CACHE_NAME = `homelab-v${CACHE_VERSION}`;
 const urlsToCache = [
     "/",
     "/index.html",
@@ -8,6 +10,9 @@ const urlsToCache = [
 ];
 
 self.addEventListener("install", function (event) {
+    // Force the waiting service worker to become the active service worker
+    self.skipWaiting();
+
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(function (cache) {
@@ -28,15 +33,19 @@ self.addEventListener("fetch", function (event) {
 });
 
 self.addEventListener("activate", function (event) {
+    // Take control of all clients immediately
     event.waitUntil(
-        caches.keys().then(function (cacheNames) {
-            return Promise.all(
-                cacheNames.map(function (cacheName) {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                }),
-            );
+        clients.claim().then(() => {
+            return caches.keys().then(function (cacheNames) {
+                return Promise.all(
+                    cacheNames.map(function (cacheName) {
+                        if (cacheName !== CACHE_NAME) {
+                            console.log("Deleting old cache:", cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    }),
+                );
+            });
         }),
     );
 });
