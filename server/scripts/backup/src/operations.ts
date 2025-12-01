@@ -114,12 +114,14 @@ export class BackupOperations {
     const forgetArgs = [
       "forget",
       "--prune",
-      "--keep-last",
+      "--keep-daily", // last 7 daily backups
       "7",
-      "--keep-weekly",
+      "--keep-weekly", // last 4 weekly backups
       "4",
-      "--keep-monthly",
+      "--keep-monthly", // last 3 monthly backups
       "3",
+      "--group-by",
+      "paths,tags", // group by paths and tags to avoid treating different hosts as separate backups (i.e. when hostname changes)
       "-r",
       repoPath,
     ]
