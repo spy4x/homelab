@@ -82,6 +82,7 @@
           - tmux
           - unzip
           - restic # For backups
+          - httpd-tools # For htpasswd command to use with basic auth in Radicale
         state: present
       when: ansible_os_family == "Debian"
 
@@ -97,6 +98,7 @@
           - tmux
           - unzip
           - restic # For backups
+          - httpd-tools # For htpasswd command to use with basic auth in Radicale
         state: present
       when: ansible_os_family == "RedHat"
 
