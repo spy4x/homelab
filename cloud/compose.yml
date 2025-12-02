@@ -291,6 +291,35 @@ services:
       - "traefik.http.routers.healthchecks.tls=true"
       - "traefik.http.routers.healthchecks.tls.certresolver=myresolver"
 
+  # Syncthing - File synchronization for backups
+  # Used to sync backup files between cloud and home servers
+  syncthing:
+    container_name: syncthing
+    image: syncthing/syncthing:latest
+    volumes:
+      - ./.volumes/syncthing:/var/syncthing
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/cloud/.volumes:/sync-backups
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
+      - "traefik.http.routers.syncthing.rule=Host(`sync-cloud.${DOMAIN}`)"
+      - "traefik.http.routers.syncthing.entrypoints=websecure"
+      - "traefik.http.routers.syncthing.tls=true"
+      - "traefik.http.routers.syncthing.tls.certresolver=myresolver"
+
   # Watchtower - Automatic container updates
   watchtower:
     container_name: watchtower
