@@ -36,13 +36,13 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
-          memory: 512M
+          cpus: "0.5"
+          memory: 256M
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.http.routers.traefik.rule=Host(`proxy.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.rule=Host(`proxy-cloud.${DOMAIN}`)"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
       - "traefik.http.routers.traefik.tls.certresolver=myresolver"
@@ -75,12 +75,12 @@ services:
       - ENABLE_CLAMAV=1                    # Antivirus scanning
       - ENABLE_FAIL2BAN=1                  # Brute force protection
       - ENABLE_POSTGREY=0                  # Greylisting (optional, can cause delays)
-      - ENABLE_OPENDKIM=1                  # DKIM signing
-      - ENABLE_OPENDMARC=1                 # DMARC validation
-      - ENABLE_POLICYD_SPF=1               # SPF checking
+      - ENABLE_OPENDKIM=0                  # DISABLED - Using Rspamd for DKIM signing
+      - ENABLE_OPENDMARC=0                 # DISABLED - Using Rspamd for DMARC validation
+      - ENABLE_POLICYD_SPF=0               # DISABLED - Using Rspamd for SPF checking
       
       # SSL/TLS settings
-      - SSL_TYPE=letsencrypt               # Use Let's Encrypt certificates
+      - SSL_TYPE=self-signed               # Use self-signed certificates
       - SSL_DOMAIN=${DOMAIN}               # Main domain
       
       # Dovecot (IMAP) settings
@@ -113,8 +113,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "2"
-          memory: 3072M
+          cpus: "1.5"
+          memory: 2048M
     security_opt:
       - no-new-privileges:true
     networks:
@@ -154,8 +154,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1"
-          memory: 512M
+          cpus: "0.5"
+          memory: 256M
     security_opt:
       - no-new-privileges:true
     networks:
@@ -181,7 +181,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 192M
           cpus: "0.25"
     security_opt:
       - no-new-privileges:true
@@ -223,7 +223,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 128M
           cpus: "0.25"
     security_opt:
       - no-new-privileges:true
@@ -249,8 +249,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: 256M
+          cpus: "0.1"
+          memory: 64M
     security_opt:
       - no-new-privileges:true
     command: --interval 86400 --cleanup
