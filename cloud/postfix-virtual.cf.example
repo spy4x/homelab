@@ -1,0 +1,38 @@
+# Docker Mail Server - Email Aliases Configuration
+# This file maps virtual email addresses to real mailboxes
+
+## RFC 2142 Required Aliases
+# These aliases are required by RFC 2142 for internet mail services
+# https://www.rfc-editor.org/rfc/rfc2142.html
+
+# Postmaster - General mailbox for mail system issues
+postmaster@antonshubin.com anton@antonshubin.com
+
+# Abuse - Complaints about inappropriate public behavior  
+abuse@antonshubin.com anton@antonshubin.com
+
+# Hostmaster - DNS and domain administration
+hostmaster@antonshubin.com anton@antonshubin.com
+
+# Webmaster - Website administration
+webmaster@antonshubin.com anton@antonshubin.com
+
+## Common Professional Aliases
+
+# Admin - General administration
+admin@antonshubin.com anton@antonshubin.com
+
+# Info - General information requests
+info@antonshubin.com anton@antonshubin.com
+
+# Support - Technical support
+support@antonshubin.com anton@antonshubin.com
+
+# Hello - Friendly contact address
+hello@antonshubin.com anton@antonshubin.com
+
+## How to Apply
+# 1. Copy this file to server:
+#    scp postfix-virtual.cf.example root@server:/opt/cloud/.volumes/mailserver/config/postfix-virtual.cf
+# 2. Restart mailserver:
+#    docker compose restart mailserver
