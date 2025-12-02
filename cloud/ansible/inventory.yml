@@ -7,13 +7,13 @@ all:
     cloud_servers:
       hosts:
         hetzner_mail:
-          ansible_host: REPLACE_WITH_HETZNER_IP
+          ansible_host: 23.88.101.28
           ansible_user: root
           homelab_user: cloud
           apps_path: /opt/cloud
           env_file_path: /opt/cloud/.env
-          deno_install_path: /home/cloud/.deno
-      
+          deno_install_path: /root/.deno
+
       vars:
         ansible_python_interpreter: /usr/bin/python3
-        ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+        ansible_ssh_common_args: "-o StrictHostKeyChecking=no"
