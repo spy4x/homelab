@@ -9,6 +9,9 @@ Makefile
 # Docker Mail Server config
 .volumes/mailserver/config/**
 
+# Gatus monitoring config
+.volumes/gatus/config.yaml
+
 # Backup scripts
 scripts/
 
