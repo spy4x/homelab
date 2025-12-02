@@ -452,50 +452,6 @@ services:
           cpus: '1'
           memory: 4096M
 
-  # ntfy is a simple HTTP-based pub-sub notification service.
-  # It allows you to send push notifications to your phone or desktop via scripts.
-  # Configured with authentication - only authorized users can publish/subscribe.
-  # User management: https://docs.ntfy.sh/config/#users-and-roles
-  ntfy:
-    container_name: ntfy
-    image: binwiederhier/ntfy
-    command:
-      - serve
-    environment:
-      - TZ=${TIMEZONE}
-      - NTFY_BASE_URL=https://ntfy.${DOMAIN}
-      - NTFY_UPSTREAM_BASE_URL=https://ntfy.sh
-      - NTFY_CACHE_FILE=/var/lib/ntfy/cache.db
-      - NTFY_AUTH_FILE=/var/lib/ntfy/auth.db
-      - NTFY_ATTACHMENT_CACHE_DIR=/var/lib/ntfy/attachments
-      - NTFY_AUTH_DEFAULT_ACCESS=deny-all
-      - NTFY_BEHIND_PROXY=true
-      - NTFY_ENABLE_SIGNUP=false
-      - NTFY_ENABLE_LOGIN=true
-    user: "1000:1000"
-    volumes:
-      - ./.volumes/ntfy/cache:/var/lib/ntfy
-      - ./.volumes/ntfy/etc:/etc/ntfy
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "0.5"
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - proxy
-      - default
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.services.ntfy.loadbalancer.server.port=80"
-      - "traefik.http.routers.ntfy.rule=Host(`ntfy.${DOMAIN}`)"
-      - "traefik.http.routers.ntfy.entrypoints=websecure"
-      - "traefik.http.routers.ntfy.tls=true"
-      - "traefik.http.routers.ntfy.tls.certresolver=myresolver"
-
   # AdGuard Home is a network-wide ad and tracker blocker that also functions as a DNS server.
   # It provides DNS-level ad blocking, tracker blocking, and parental control features.
   # Access the web interface to configure DNS settings, filters, and view statistics.
