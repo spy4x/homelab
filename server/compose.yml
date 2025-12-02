@@ -530,64 +530,6 @@ services:
       - "traefik.http.routers.adguard.tls=true"
       - "traefik.http.routers.adguard.tls.certresolver=myresolver"
 
-  # Vikunja is a self-hosted to-do list and project management application.
-  # It provides a clean web interface and mobile apps for managing tasks and projects.
-  vikunja-db:
-    container_name: vikunja-db
-    image: postgres:15-alpine
-    environment:
-      - POSTGRES_PASSWORD=${VIKUNJA_DB_PASSWORD}
-      - POSTGRES_USER=${VIKUNJA_DB_USER}
-      - POSTGRES_DB=${VIKUNJA_DB_NAME}
-    volumes:
-      - ./.volumes/vikunja/db:/var/lib/postgresql/data
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.5"
-    security_opt:
-      - no-new-privileges:true
-
-  vikunja:
-    container_name: vikunja
-    image: vikunja/vikunja:latest
-    environment:
-      - VIKUNJA_DATABASE_HOST=vikunja-db
-      - VIKUNJA_DATABASE_PASSWORD=${VIKUNJA_DB_PASSWORD}
-      - VIKUNJA_DATABASE_TYPE=postgres
-      - VIKUNJA_DATABASE_USER=${VIKUNJA_DB_USER}
-      - VIKUNJA_DATABASE_DATABASE=${VIKUNJA_DB_NAME}
-      - VIKUNJA_SERVICE_PUBLICURL=https://tasks.${DOMAIN}
-      - VIKUNJA_SERVICE_TIMEZONE=${TIMEZONE}
-      - VIKUNJA_SERVICE_JWTSECRET=${VIKUNJA_SERVICE_JWTSECRET}
-      - VIKUNJA_SERVICE_JWTTTL=${VIKUNJA_SERVICE_JWTTTL}
-      - VIKUNJA_SERVICE_ENABLEREGISTRATION=${VIKUNJA_SERVICE_ENABLEREGISTRATION}
-    volumes:
-      - ./.volumes/vikunja/files:/app/vikunja/files
-    depends_on:
-      - vikunja-db
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpus: "1"
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - proxy
-      - default
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.services.vikunja.loadbalancer.server.port=3456"
-      - "traefik.http.routers.vikunja.rule=Host(`tasks.${DOMAIN}`)"
-      - "traefik.http.routers.vikunja.entrypoints=websecure"
-      - "traefik.http.routers.vikunja.tls=true"
-      - "traefik.http.routers.vikunja.tls.certresolver=myresolver"
-
   # FileBrowser is a web-based file manager that provides a simple interface for managing files.
   # It allows you to upload, download, edit, and organize files through a web interface.
   filebrowser:
@@ -659,9 +601,8 @@ services:
       - "traefik.http.routers.freshrss.tls=true"
       - "traefik.http.routers.freshrss.tls.certresolver=myresolver"
 
-  # Radicale is a CalDAV and CardDAV server for calendars, contacts, and tasks.
-  # It provides synchronization for calendar and contact clients like Thunderbird and Tasks.org.
-  # Access via CalDAV/CardDAV protocol at https://cal.${DOMAIN}
+  # Radicale is a lightweight CalDAV and CardDAV server for calendars, contacts, and tasks.
+  # It provides a simple interface for syncing your calendar and contacts across devices.
   radicale:
     container_name: radicale
     image: tomsquest/docker-radicale:latest

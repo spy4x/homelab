@@ -166,10 +166,6 @@ Simple HTTP-based pub-sub notification service.
 
 Network-wide ad and tracker blocker with DNS server.
 
-#### [Vikunja](https://vikunja.io/)
-
-Self-hosted to-do list and project management.
-
 #### [FileBrowser](https://filebrowser.org/)
 
 Web-based file manager.

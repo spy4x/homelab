@@ -41,25 +41,53 @@
           NTFY_URL="{{ ntfy_url_hardware }}"
           NTFY_TOKEN="{{ ntfy_token_hardware }}"
 
-          DEVICE="$1"
-          MESSAGE="$2"
+          DEVICE="$SMARTD_DEVICE"
+          MESSAGE="$SMARTD_FULLMESSAGE"
+
+          # Get current temperature if available
+          TEMP=$(smartctl -A "$DEVICE" 2>/dev/null | grep -i temperature | head -1 | awk '{print $10}')
+          if [ -z "$TEMP" ]; then
+            TEMP_INFO="N/A"
+          else
+            # Determine temperature status and safe ranges
+            if [ "$TEMP" -le 70 ]; then
+              TEMP_STATUS="✅ Safe"
+              TEMP_RANGE="(0-70°C)"
+            elif [ "$TEMP" -le 85 ]; then
+              TEMP_STATUS="⚠️ Warm"
+              TEMP_RANGE="(70-85°C)"
+            else
+              TEMP_STATUS="🔥 Hot"
+              TEMP_RANGE="(>85°C)"
+            fi
+            TEMP_INFO="${TEMP}°C $TEMP_STATUS $TEMP_RANGE"
+          fi
+
+          # Get device model
+          MODEL=$(smartctl -i "$DEVICE" 2>/dev/null | grep "Device Model" | cut -d: -f2 | xargs)
+          if [ -z "$MODEL" ]; then
+            MODEL=$(smartctl -i "$DEVICE" 2>/dev/null | grep "Model Number" | cut -d: -f2 | xargs)
+          fi
+          if [ -z "$MODEL" ]; then
+            MODEL="Unknown"
+          fi
 
           # Determine priority based on message content
           if echo "$MESSAGE" | grep -qi "fail\|error\|critical"; then
             PRIORITY="urgent"
             TAGS="{{ inventory_hostname }},warning,disk"
             TITLE="🚨 SMART Critical Alert: $DEVICE"
-            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n⚠️ Status: Critical\n\n'"$MESSAGE"
+            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n🏷️ Model: '"$MODEL"$'\n🌡️ Temperature: '"$TEMP_INFO"$'\n⚠️ Status: Critical\n\n'"$MESSAGE"
           elif echo "$MESSAGE" | grep -qi "warn"; then
             PRIORITY="high"
             TAGS="{{ inventory_hostname }},warning,disk"
             TITLE="⚠️ SMART Warning: $DEVICE"
-            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n⚠️ Status: Warning\n\n'"$MESSAGE"
+            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n🏷️ Model: '"$MODEL"$'\n🌡️ Temperature: '"$TEMP_INFO"$'\n⚠️ Status: Warning\n\n'"$MESSAGE"
           else
             PRIORITY="default"
             TAGS="{{ inventory_hostname }},disk"
             TITLE="💽 SMART Status: $DEVICE"
-            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\nℹ️ Status: Info\n\n'"$MESSAGE"
+            MESSAGE=$'📍 Server: {{ inventory_hostname }}\n💽 Device: '"$DEVICE"$'\n🏷️ Model: '"$MODEL"$'\n🌡️ Temperature: '"$TEMP_INFO"$'\nℹ️ Status: Info\n\n'"$MESSAGE"
           fi
 
           # Send notification
@@ -71,7 +99,7 @@
                "$NTFY_URL" 2>/dev/null
 
           # Log to syslog
-          logger -t smartd "SMART alert for $DEVICE: $MESSAGE"
+          logger -t smartd "SMART alert for $DEVICE ($MODEL, $TEMP_INFO): $MESSAGE"
 
     - name: Configure smartd
       ansible.builtin.copy:

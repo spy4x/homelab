@@ -40,12 +40,12 @@
         with open('{{ local_repo_path }}/server/homepage/src/index.html', 'r') as f:
             content = f.read()
 
-        # Substitute ${VAR} patterns
+        # Substitute $VAR patterns
         def replace_var(match):
             var_name = match.group(1)
             return env_vars.get(var_name, match.group(0))
 
-        content = re.sub(r'\$\{([^}]+)\}', replace_var, content)
+        content = re.sub(r'\$([A-Z_]+)', replace_var, content)
 
         # Write result
         with open('{{ local_repo_path }}/server/homepage/dist/index.html', 'w') as f:
