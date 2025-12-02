@@ -59,32 +59,6 @@ services:
       - "traefik.http.routers.traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"
 
-  # Uptime Kuma is a monitoring tool, that checks the status of your websites and APIs.
-  uptime-kuma:
-    container_name: uptime-kuma
-    image: louislam/uptime-kuma
-    volumes:
-      - ./.volumes/uptime-kuma:/app/data
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.25"
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - proxy
-      - default
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime.${DOMAIN}`)"
-      - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
-      - "traefik.http.routers.uptime-kuma.tls=true"
-      - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
-
   # Transmission is a BitTorrent client with a web interface.
   # It is a lightweight, works on the server in background and has zero configuration.
   transmission:

@@ -170,19 +170,21 @@ services:
       - "traefik.http.routers.webmail.tls=true"
       - "traefik.http.routers.webmail.tls.certresolver=myresolver"
 
-  # Uptime Kuma - Monitoring for mail server and home services
-  # Monitors your Singapore server from the cloud
-  uptime-kuma:
-    container_name: uptime-kuma
-    image: louislam/uptime-kuma:latest
+  # Gatus - Modern, lightweight health check & status page
+  # YAML-configured monitoring with ntfy alerting
+  # https://github.com/TwiN/gatus
+  gatus:
+    container_name: gatus
+    image: twinproduction/gatus:latest
     volumes:
-      - ./.volumes/uptime-kuma:/app/data
+      - ./.volumes/gatus/config.yaml:/config/config.yaml
+      - ./.volumes/gatus/data:/data
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 192M
-          cpus: "0.25"
+          memory: 64M
+          cpus: "0.1"
     security_opt:
       - no-new-privileges:true
     networks:
@@ -191,11 +193,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`monitor.${DOMAIN}`)"
-      - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
-      - "traefik.http.routers.uptime-kuma.tls=true"
-      - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
+      - "traefik.http.services.gatus.loadbalancer.server.port=8080"
+      - "traefik.http.routers.gatus.rule=Host(`monitor.${DOMAIN}`)"
+      - "traefik.http.routers.gatus.entrypoints=websecure"
+      - "traefik.http.routers.gatus.tls=true"
+      - "traefik.http.routers.gatus.tls.certresolver=myresolver"
 
   # ntfy - Notification service for alerts
   # Can be used for mail server alerts and backup notifications
