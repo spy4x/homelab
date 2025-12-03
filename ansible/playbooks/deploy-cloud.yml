@@ -1,0 +1,121 @@
+---
+# Playbook: Deploy Cloud Services
+# This playbook deploys Docker Mail Server and supporting services to Hetzner VPS
+
+- name: Deploy Cloud Services
+  hosts: cloud
+  become: false
+
+  vars:
+    local_repo_path: "{{ playbook_dir }}/../.."
+    cloud_path: "{{ apps_path }}"
+    cloud_source: "{{ local_repo_path }}/servers/cloud"
+
+  tasks:
+    # ===== Verify Prerequisites =====
+    - name: Check if Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      failed_when: false
+      changed_when: false
+
+    - name: Fail if Docker is not installed
+      ansible.builtin.fail:
+        msg: |
+          ❌ Docker is not installed!
+
+          Please run initial setup first:
+            ansible-playbook playbooks/initial-setup.yml
+      when: docker_check.rc != 0
+
+    - name: Check if .env file exists locally
+      ansible.builtin.stat:
+        path: "{{ local_repo_path }}/.env"
+      delegate_to: localhost
+      register: env_file
+
+    - name: Fail if .env file is missing
+      ansible.builtin.fail:
+        msg: |
+          ❌ .env file not found!
+
+          Please create .env from .env.example:
+            cp {{ local_repo_path }}/.env.example {{ local_repo_path }}/.env
+            nano {{ local_repo_path }}/.env
+      when: not env_file.stat.exists
+
+    # ===== Sync Files to Server =====
+    - name: Sync cloud files to remote server
+      ansible.posix.synchronize:
+        src: "{{ cloud_source }}/"
+        dest: "{{ cloud_path }}/"
+        delete: no
+        recursive: yes
+        rsync_opts:
+          - "--include-from={{ cloud_source }}/deploy.files.txt"
+          - "--exclude=*"
+          - "-avhzru"
+
+    # ===== Docker Network Setup =====
+    - name: Create proxy network
+      community.docker.docker_network:
+        name: proxy
+        state: present
+
+    # ===== Deploy Services =====
+    - name: Deploy cloud services
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ cloud_path }}"
+      register: cloud_deploy
+      changed_when: "'Started' in cloud_deploy.stderr or 'Created' in cloud_deploy.stderr"
+
+    # ===== Wait for Services =====
+    - name: Wait for mail server to be ready
+      ansible.builtin.wait_for:
+        port: 25
+        delay: 5
+        timeout: 60
+
+    - name: Wait for Traefik to be ready
+      ansible.builtin.wait_for:
+        port: 443
+        delay: 3
+        timeout: 30
+
+    # ===== Summary =====
+    - name: Get running containers
+      community.docker.docker_host_info:
+        containers: yes
+      register: docker_info
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Cloud services deployment completed successfully!"
+          - ""
+          - "Deployed containers:"
+          - "{{ docker_info.containers | map(attribute='Names') | map('first') | list }}"
+          - ""
+          - "Web interfaces:"
+          - "  • Webmail: https://webmail.{{ lookup('env', 'DOMAIN') }}"
+          - "  • Rspamd: https://rspamd.{{ lookup('env', 'DOMAIN') }}"
+          - "  • Monitoring: https://monitor.{{ lookup('env', 'DOMAIN') }}"
+          - "  • Proxy: https://proxy.{{ lookup('env', 'DOMAIN') }}"
+          - ""
+          - "Next steps:"
+          - "  1. Configure DKIM:"
+          - "       ssh {{ ansible_user }}@{{ ansible_host }}"
+          - "       cd {{ cloud_path }}"
+          - "       make mail-dkim-show"
+          - "       # Add output to DNS as TXT record: mail._domainkey"
+          - ""
+          - "  2. Create email accounts:"
+          - "       make mail-user-add EMAIL=your@{{ lookup('env', 'DOMAIN') }}"
+          - ""
+          - "  3. Test email:"
+          - "       Send test to check-auth@verifier.port25.com"
+          - "       Or use https://www.mail-tester.com"
+          - ""
+          - "  4. Check logs:"
+          - "       docker compose logs -f mailserver"

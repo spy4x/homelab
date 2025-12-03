@@ -1,0 +1,156 @@
+---
+# Playbook: Deploy Homelab Services (Home Server Only)
+# This playbook builds the homepage, copies files, and deploys Docker services
+# For secondary/offsite server, use a separate playbook
+
+- name: Deploy Homelab Services
+  hosts: home
+
+  vars:
+    local_repo_path: "{{ playbook_dir }}/../.."
+    server_path: "{{ apps_path }}"
+    server_source: "{{ local_repo_path }}/servers/home"
+
+  tasks:
+    # ===== Build Homepage =====
+    - name: Create homepage dist directory locally
+      ansible.builtin.file:
+        path: "{{ server_source }}/homepage/dist"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+
+    - name: Load .env file for homepage variables
+      ansible.builtin.shell: |
+        # Use Python to safely substitute env vars from .env file
+        python3 << 'PYEOF'
+        import os
+        import re
+
+        # Read .env file
+        env_vars = {}
+        with open('{{ local_repo_path }}/.env', 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    # Simple key=value parsing without shell evaluation
+                    key, _, value = line.partition('=')
+                    env_vars[key.strip()] = value.strip()
+
+        # Read index.html template
+        with open('{{ server_source }}/homepage/src/index.html', 'r') as f:
+            content = f.read()
+
+        # Substitute $VAR patterns
+        def replace_var(match):
+            var_name = match.group(1)
+            return env_vars.get(var_name, match.group(0))
+
+        content = re.sub(r'\$([A-Z_]+)', replace_var, content)
+
+        # Write result
+        with open('{{ server_source }}/homepage/dist/index.html', 'w') as f:
+            f.write(content)
+        PYEOF
+      args:
+        executable: /bin/bash
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Generate cache version for service worker
+      ansible.builtin.shell: |
+        CACHE_VERSION="$(date +%s)-$(openssl rand -hex 4)"
+        sed "s/__CACHE_VERSION__/${CACHE_VERSION}/g" {{ server_source }}/homepage/src/sw.js > {{ server_source }}/homepage/dist/sw.js
+      args:
+        executable: /bin/bash
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Copy homepage manifest
+      ansible.builtin.copy:
+        src: "{{ server_source }}/homepage/src/manifest.json"
+        dest: "{{ server_source }}/homepage/dist/manifest.json"
+      delegate_to: localhost
+    - name: Copy homepage assets
+      ansible.builtin.copy:
+        src: "{{ server_source }}/homepage/src/assets"
+        dest: "{{ server_source }}/homepage/dist/"
+      delegate_to: localhost
+
+    - name: Sync server files to remote
+      ansible.posix.synchronize:
+        src: "{{ server_source }}/"
+        dest: "{{ server_path }}/"
+        delete: no
+        recursive: yes
+        rsync_opts:
+          - "--include-from={{ server_source }}/deploy.files.txt"
+          - "--exclude=*"
+          - "-avhzru"
+
+    # ===== Docker Network Setup =====
+    - name: Create proxy network
+      community.docker.docker_network:
+        name: proxy
+        state: present
+
+    # ===== Deploy Services =====
+    - name: Deploy main homelab services
+      ansible.builtin.command:
+        cmd: docker compose up -d
+        chdir: "{{ server_path }}"
+      register: homelab_deploy
+      changed_when: "'Started' in homelab_deploy.stderr or 'Created' in homelab_deploy.stderr"
+
+    - name: Deploy Immich with multiple env files
+      ansible.builtin.command:
+        cmd: docker compose --env-file=../.env up -d
+        chdir: "{{ server_path }}/immich"
+      register: immich_deploy
+      changed_when: "'Started' in immich_deploy.stderr or 'Created' in immich_deploy.stderr"
+
+    - name: Read .env variables from remote server
+      ansible.builtin.slurp:
+        src: "{{ server_path }}/.env"
+      register: env_file_content
+
+    - name: Parse .env file into variables
+      ansible.builtin.set_fact:
+        env_vars: "{{ dict((env_file_content.content | b64decode).split('\n') | select('match', '^[A-Z_]+=') | map('regex_replace', '^([A-Z_]+)=(.*)$', '\\1||\\2') | map('split', '||')) }}"
+
+    - name: Generate Piped config.properties from template
+      ansible.builtin.template:
+        src: "{{ server_source }}/piped/config.properties.j2"
+        dest: "{{ server_path }}/piped/config.properties"
+        mode: "0644"
+      vars:
+        DOMAIN: "{{ env_vars.DOMAIN }}"
+        PIPED_DB_NAME: "{{ env_vars.PIPED_DB_NAME }}"
+        PIPED_DB_USER: "{{ env_vars.PIPED_DB_USER }}"
+        PIPED_DB_PASSWORD: "{{ env_vars.PIPED_DB_PASSWORD }}"
+
+    - name: Deploy Piped
+      ansible.builtin.command:
+        cmd: docker compose --env-file=../.env up -d
+        chdir: "{{ server_path }}/piped"
+      register: piped_deploy
+      changed_when: "'Started' in piped_deploy.stderr or 'Created' in piped_deploy.stderr"
+
+    # ===== Summary =====
+    - name: Get running containers
+      community.docker.docker_host_info:
+        containers: yes
+      register: docker_info
+
+    - name: Display deployment summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Homelab deployment completed successfully!"
+          - ""
+          - "Deployed services:"
+          - "{{ docker_info.containers | map(attribute='Names') | map('first') | list }}"
+          - ""
+          - "Next steps:"
+          - "  • Check services: docker ps"
+          - "  • View logs: docker logs <container-name>"
+          - "  • Access homepage: https://ui.{{ lookup('env', 'DOMAIN') }}"

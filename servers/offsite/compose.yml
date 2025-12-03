@@ -1,0 +1,7 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
