@@ -53,32 +53,6 @@ services:
       - "traefik.http.routers.traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"
 
-  # Uptime Kuma is a monitoring tool, that checks the status of your websites and APIs.
-  uptime-kuma:
-    container_name: uptime-kuma
-    image: louislam/uptime-kuma
-    volumes:
-      - ./.volumes/uptime-kuma:/app/data
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-          cpus: "0.25"
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - proxy
-      - default
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.routers.uptime-kuma.rule=Host(`uptime-2.${DOMAIN}`)"
-      - "traefik.http.routers.uptime-kuma.entrypoints=websecure"
-      - "traefik.http.routers.uptime-kuma.tls=true"
-      - "traefik.http.routers.uptime-kuma.tls.certresolver=myresolver"
-      - "traefik.http.services.uptime-kuma.loadbalancer.server.port=3001"
-
   # Watchtower is a process for automating Docker container base image updates.
   watchtower:
     container_name: watchtower

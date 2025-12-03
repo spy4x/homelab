@@ -19,7 +19,6 @@ export type BackupConfigState = BackupConfig & {
 export interface BackupContext {
   backupsOutputBasePath: string
   backupsPassword: string
-  slackWebhookUrl?: string
   ntfyUrl?: string
   ntfyAuth?: string
   configsPath: string

@@ -16,7 +16,6 @@ class BackupRunner {
     this.context = this.initializeContext()
     this.operations = new BackupOperations(this.context.backupsPassword)
     this.reporter = new BackupReporter(
-      this.context.slackWebhookUrl,
       this.context.ntfyUrl,
       this.context.ntfyAuth,
     )
@@ -78,7 +77,6 @@ class BackupRunner {
     return {
       backupsOutputBasePath: absPath(getEnvVar("PATH_SYNC") + "/backups"),
       backupsPassword: getEnvVar("BACKUPS_PASSWORD"),
-      slackWebhookUrl: getEnvVar("SLACK_WEBHOOK_URL", true),
       ntfyUrl: getEnvVar("NTFY_URL"),
       ntfyAuth: getEnvVar("NTFY_AUTH_TOKEN"),
       configsPath: absPath(`${PATH_APPS}/scripts/backup/configs`),
