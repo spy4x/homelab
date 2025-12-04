@@ -1,3 +1,4 @@
 {
-  "stacks": ["proxy", "watchtower", "syncthing", "gatus"]
+  "stacks": ["proxy", "watchtower", "syncthing", "gatus", "ntfy"],
+  "localStacks": ["./immich", "./piped"]
 }

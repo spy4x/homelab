@@ -1,0 +1,80 @@
+# Gatus Configuration for Cloud Server
+# Monitors cloud services and home server (cross-check)
+
+storage:
+  type: sqlite
+  path: /data/data.db
+
+web:
+  port: 8080
+
+alerting:
+  ntfy:
+    topic: ${NTFY_URL}
+    priority: 3
+    default-alert:
+      enabled: true
+      failure-threshold: 3
+      success-threshold: 2
+
+endpoints:
+  # Cloud Server Services
+  - name: Mail Server (SMTP)
+    url: "mail.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: ntfy
+
+  - name: Webmail (Roundcube)
+    url: "https://webmail.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Rspamd
+    url: "https://rspamd.${DOMAIN}"
+    interval: 5m
+    client:
+      username: ${RSPAMD_USERNAME}
+      password: ${RSPAMD_PASSWORD}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ntfy
+    url: "https://ntfy.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # Home Server Monitoring (cross-check)
+  - name: Home Server - Homepage
+    url: "https://ui.${DOMAIN}"
+    interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home Server - Vaultwarden
+    url: "https://passwords.${DOMAIN}"
+    interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home Server - Jellyfin
+    url: "https://movies.${DOMAIN}"
+    interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy

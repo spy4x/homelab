@@ -4,4 +4,6 @@ networks:
   proxy:
     external: true
 
-services:
+# No server-specific services defined
+# All services come from stacks defined in config.json
+services: {}

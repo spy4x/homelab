@@ -37,7 +37,7 @@ if (!SSH_ADDRESS || !PATH_APPS) {
 
 // Load target's config.json to get required stacks
 const configPath = `${targetPath}/config.json`
-let config: { stacks?: string[] } = {}
+let config: { stacks?: string[]; localStacks?: string[] } = {}
 try {
   const configContent = await Deno.readTextFile(configPath)
   config = JSON.parse(configContent)
@@ -50,6 +50,7 @@ try {
 }
 
 const requiredStacks = config.stacks || []
+const localStacks = config.localStacks || []
 
 // Create temporary directory for deployment files
 const tempDir = await Deno.makeTempDir({ prefix: "deploy_" })
@@ -93,10 +94,6 @@ try {
     }
   }
 
-  // Create a merged compose file that includes all stacks
-  const mergedComposePath = `${tempDir}/docker-compose.yml`
-  await createMergedCompose(tempDir, requiredStacks, mergedComposePath)
-
   // Rsync temp directory to remote server
   log(`Syncing files to ${SSH_ADDRESS}:${PATH_APPS}...`)
   const rsyncArgs = [
@@ -122,9 +119,29 @@ try {
   }
 
   // Run docker compose on remote server
-  // Using 'up -d' instead of 'down && up' to avoid recreating unchanged containers
+  // First, ensure proxy network exists
+  log("Ensuring proxy network exists on remote server...")
+  const createNetworkCmd = `docker network inspect proxy >/dev/null 2>&1 || docker network create proxy`
+  
+  const networkCommand = new Deno.Command("ssh", {
+    args: [SSH_ADDRESS, createNetworkCmd],
+    stdout: "inherit",
+    stderr: "inherit",
+  })
+  await networkCommand.output()
+
+  // Deploy services using multiple -f flags to compose stacks without merging/concatenating
+  // This preserves relative paths and allows server compose.yml to override stack settings
   log("Starting Docker Compose on remote server...")
-  const remoteCmd = `cd ${PATH_APPS} && docker compose -f docker-compose.yml up -d --remove-orphans`
+  
+  // Build compose file arguments: start with stacks, end with server's compose.yml for overrides
+  const composeFileArgs = [
+    ...requiredStacks.map((stack) => `-f ${stack}.yml`),
+    ...localStacks.map((stack) => `-f ${stack}/compose.yml`),
+    "-f compose.yml",
+  ].join(" ")
+  
+  const remoteCmd = `cd ${PATH_APPS} && docker compose --env-file .env ${composeFileArgs} up -d --remove-orphans`
 
   const sshCommand = new Deno.Command("ssh", {
     args: [SSH_ADDRESS, remoteCmd],
@@ -200,52 +217,4 @@ async function copyDirectory(src: string, dest: string): Promise<void> {
       await Deno.copyFile(srcPath, destPath)
     }
   }
-}
-
-// Helper function to create merged docker-compose.yml
-async function createMergedCompose(
-  tempDir: string,
-  stacks: string[],
-  outputPath: string,
-): Promise<void> {
-  // Check if the main compose file has any services defined
-  const mainComposeContent = await Deno.readTextFile(`${tempDir}/compose.yml`)
-  const hasServices = mainComposeContent.includes("services:") && 
-                      !mainComposeContent.match(/services:\s*$/m)
-
-  const composeFiles = []
-  
-  // Only include main compose if it has services
-  if (hasServices) {
-    composeFiles.push(`${tempDir}/compose.yml`)
-  }
-  
-  // Add stack files
-  composeFiles.push(...stacks.map((stack) => `${tempDir}/${stack}.yml`))
-
-  if (composeFiles.length === 0) {
-    error("No compose files to merge")
-    Deno.exit(1)
-  }
-
-  // Build docker compose command that merges all files
-  const mergeArgs = composeFiles.flatMap((file) => ["-f", file])
-
-  // Use docker compose config to merge all compose files with --env-file
-  const configCommand = new Deno.Command("docker", {
-    args: ["compose", "--env-file", `${tempDir}/.env`, ...mergeArgs, "config"],
-    stdout: "piped",
-    stderr: "inherit",
-  })
-
-  const configResult = await configCommand.output()
-
-  if (configResult.code !== 0) {
-    error("Failed to merge compose files")
-    Deno.exit(configResult.code)
-  }
-
-  // Write merged compose to output file
-  await Deno.writeFile(outputPath, configResult.stdout)
-  log(`Created merged docker-compose.yml with ${composeFiles.length} file(s)`)
 }

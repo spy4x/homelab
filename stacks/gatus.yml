@@ -17,8 +17,10 @@ services:
       - TRANSMISSION_USERNAME=${MONITORING_BASIC_AUTH_USER}
       - TRANSMISSION_PASSWORD=${TRANSMISSION_PASSWORD}
       - NTFY_TOKEN=${NTFY_AUTH_TOKEN}
+      - NTFY_URL=${NTFY_URL}
+      - DOMAIN=${DOMAIN}
     volumes:
-      - ./.volumes/gatus/config.yaml:/config/config.yaml
+      - ${GATUS_CONFIG_PATH}:/config/config.yaml:ro
       - ./.volumes/gatus/data:/data
     restart: unless-stopped
     deploy:

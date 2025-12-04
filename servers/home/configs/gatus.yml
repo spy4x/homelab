@@ -1,0 +1,85 @@
+# Gatus Configuration for Home Server
+# Monitors home services and provides status page
+
+storage:
+  type: sqlite
+  path: /data/data.db
+
+web:
+  port: 8080
+
+alerting:
+  ntfy:
+    topic: ${NTFY_URL}
+    priority: 3
+    default-alert:
+      enabled: true
+      failure-threshold: 3
+      success-threshold: 2
+
+endpoints:
+  # Home Server Services
+  - name: Homepage
+    url: "https://ui.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Vaultwarden
+    url: "https://passwords.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Jellyfin
+    url: "https://movies.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Immich
+    url: "https://photos.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home Assistant
+    url: "https://home.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: AdGuard Home
+    url: "https://dns.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # Cloud Server Monitoring (cross-check)
+  - name: Cloud Mail Server
+    url: "https://mail.${DOMAIN}"
+    interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Cloud Webmail
+    url: "https://webmail.${DOMAIN}"
+    interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
