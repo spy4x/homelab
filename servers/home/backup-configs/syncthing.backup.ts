@@ -1,7 +1,8 @@
 import { BackupConfig } from "@scripts/backup/+lib.ts"
 
 const backupConfig: BackupConfig = {
-  name: "syncthing-home", // Suffix added because syncthing is shared across servers
+  name: "syncthing",
+  destName: "syncthing-home", // Suffix added because syncthing is shared across servers
   sourcePaths: "default",
   containers: {
     stop: "default",

@@ -8,6 +8,11 @@
     "deploy": "deno run -A ./scripts/deploy/+main.ts",
     // #endregion Deploy
 
+    // #region Backup
+    "backup": "deno run --env-file=.env -A ./scripts/backup/+main.ts",
+    "backup:restore": "deno run -A ./scripts/backup/restore.ts",
+    // #endregion Backup
+
     // #region Checks
     "check": {
       "command": "echo 'Checks passed!'",

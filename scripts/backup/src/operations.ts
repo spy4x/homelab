@@ -81,7 +81,8 @@ export class BackupOperations {
       return
     }
 
-    const repoPath = absPath(`${backupsOutputBasePath}/${config.name}`)
+    const destName = config.destName || config.name
+    const repoPath = absPath(`${backupsOutputBasePath}/${destName}`)
 
     // Check if repository exists and initialize if needed
     if (!(await this.ensureRepository(config, repoPath))) {
@@ -248,7 +249,8 @@ export class BackupOperations {
   ): Promise<void> {
     for (const backup of backups) {
       try {
-        const repoPath = absPath(`${backupsOutputBasePath}/${backup.name}`)
+        const destName = backup.destName || backup.name
+        const repoPath = absPath(`${backupsOutputBasePath}/${destName}`)
 
         // Check if repository directory exists
         if (!(await this.isValidRepository(backup, repoPath))) {

@@ -5,6 +5,7 @@ export const PATH_SYNC = getEnvVar("PATH_SYNC")
 
 export interface BackupConfig {
   name: string
+  destName?: string // Optional: override destination folder/repo name (e.g., "gatus-home" for shared services)
   sourcePaths: "default" | string[]
   pathsToChangeOwnership?: "default" | string[]
   containers?: {
