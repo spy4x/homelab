@@ -1,4 +1,4 @@
-import { BackupConfig, PATH_APPS, PATH_MEDIA } from "@scripts/backup/+lib.ts"
+import { BackupConfig, PATH_APPS, PATH_MEDIA } from "../scripts/backup/src/+lib.ts"
 
 const backupConfig: BackupConfig = {
   name: "immich",

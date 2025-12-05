@@ -1,4 +1,4 @@
-import { BackupConfig, PATH_APPS } from "@scripts/backup/+lib.ts"
+import { BackupConfig, PATH_APPS } from "../scripts/backup/src/+lib.ts"
 
 const backupConfig: BackupConfig = {
   name: "traefik",
