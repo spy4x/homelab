@@ -1,7 +1,7 @@
 import { BackupConfig } from "@scripts/backup/+lib.ts"
 
 const backupConfig: BackupConfig = {
-  name: "ntfy-cloud", // Suffix added because ntfy is shared across servers
+  name: "gatus-home", // Suffix added because gatus is shared across servers
   sourcePaths: "default",
   containers: {
     stop: "default",

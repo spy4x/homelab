@@ -108,6 +108,7 @@ deno task ansible ansible/playbooks/monitoring.yml <server>
 ```
 
 The ansible wrapper script (`scripts/ansible/+main.ts`) automatically:
+
 - Loads environment variables from root `.env`
 - Loads Ansible-specific variables from `ansible/.env`
 - Loads server-specific variables from `servers/<server>/.env`
@@ -125,6 +126,7 @@ deno task deploy offsite
 ```
 
 The deploy script (`scripts/deploy/+main.ts`) automatically:
+
 - Merges root `.env` with server-specific `.env` (server overrides root)
 - Reads `config.json` to determine required stacks
 - Merges `compose.yml` with stack files from `./stacks/` directory

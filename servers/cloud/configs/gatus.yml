@@ -1,5 +1,5 @@
 # Gatus Configuration for Cloud Server
-# Monitors cloud services and home server (cross-check)
+# Monitors home and offsite services (cross-check monitoring)
 
 storage:
   type: sqlite
@@ -11,6 +11,7 @@ web:
 alerting:
   ntfy:
     topic: ${NTFY_URL}
+    token: ${NTFY_TOKEN}
     priority: 3
     default-alert:
       enabled: true
@@ -18,61 +19,85 @@ alerting:
       success-threshold: 2
 
 endpoints:
-  # Cloud Server Services
-  - name: Mail Server (SMTP)
-    url: "mail.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[CONNECTED] == true"
-    alerts:
-      - type: ntfy
-
-  - name: Webmail (Roundcube)
-    url: "https://webmail.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: Rspamd
-    url: "https://rspamd.${DOMAIN}"
-    interval: 5m
-    client:
-      username: ${RSPAMD_USERNAME}
-      password: ${RSPAMD_PASSWORD}
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: ntfy
-    url: "https://ntfy.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  # Home Server Monitoring (cross-check)
-  - name: Home Server - Homepage
+  # Home Server Services (cross-check)
+  - name: Home - Homepage
     url: "https://ui.${DOMAIN}"
-    interval: 10m
+    interval: 5m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Home Server - Vaultwarden
+  - name: Home - Vaultwarden
     url: "https://passwords.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home - Jellyfin
+    url: "https://movies.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home - Immich
+    url: "https://photos.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home - Home Assistant
+    url: "https://home.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home - AdGuard Home
+    url: "https://dns.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home - ntfy
+    url: "https://ntfy-home.${DOMAIN}"
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home - Gatus
+    url: "https://uptime-home.${DOMAIN}"
     interval: 10m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Home Server - Jellyfin
-    url: "https://movies.${DOMAIN}"
+  # Offsite Server Services (cross-check)
+  - name: Offsite - Proxy
+    url: "https://proxy-offsite.${DOMAIN}"
+    interval: 10m
+    client:
+      username: ${BASIC_AUTH_USER}
+      password: ${BASIC_AUTH_PASSWORD}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Offsite - Syncthing
+    url: "https://sync-offsite.${DOMAIN}"
     interval: 10m
     conditions:
       - "[STATUS] == 200"

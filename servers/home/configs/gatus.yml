@@ -1,5 +1,5 @@
 # Gatus Configuration for Home Server
-# Monitors home services and provides status page
+# Monitors cloud and offsite services (cross-check monitoring)
 
 storage:
   type: sqlite
@@ -11,6 +11,7 @@ web:
 alerting:
   ntfy:
     topic: ${NTFY_URL}
+    token: ${NTFY_TOKEN}
     priority: 3
     default-alert:
       enabled: true
@@ -18,66 +19,64 @@ alerting:
       success-threshold: 2
 
 endpoints:
-  # Home Server Services
-  - name: Homepage
-    url: "https://ui.${DOMAIN}"
+  # Cloud Server Services (cross-check)
+  - name: Cloud - Mail Server (SMTP)
+    url: "tcp://mail.${DOMAIN}:587"
+    interval: 5m
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: ntfy
+
+  - name: Cloud - Webmail
+    url: "https://webmail.${DOMAIN}"
     interval: 5m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Vaultwarden
-    url: "https://passwords.${DOMAIN}"
+  - name: Cloud - Rspamd
+    url: "https://rspamd.${DOMAIN}"
+    interval: 5m
+    client:
+      username: ${RSPAMD_USERNAME}
+      password: ${RSPAMD_PASSWORD}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Cloud - ntfy
+    url: "https://ntfy-cloud.${DOMAIN}"
     interval: 5m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Jellyfin
-    url: "https://movies.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: Immich
-    url: "https://photos.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: Home Assistant
-    url: "https://home.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: AdGuard Home
-    url: "https://dns.${DOMAIN}"
-    interval: 5m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  # Cloud Server Monitoring (cross-check)
-  - name: Cloud Mail Server
-    url: "https://mail.${DOMAIN}"
+  - name: Cloud - Gatus
+    url: "https://uptime.${DOMAIN}"
     interval: 10m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Cloud Webmail
-    url: "https://webmail.${DOMAIN}"
+  # Offsite Server Services (cross-check)
+  - name: Offsite - Proxy
+    url: "https://proxy-offsite.${DOMAIN}"
+    interval: 10m
+    client:
+      username: ${BASIC_AUTH_USER}
+      password: ${BASIC_AUTH_PASSWORD}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Offsite - Syncthing
+    url: "https://sync-offsite.${DOMAIN}"
     interval: 10m
     conditions:
       - "[STATUS] == 200"

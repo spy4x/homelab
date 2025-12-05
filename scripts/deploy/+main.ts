@@ -37,7 +37,7 @@ if (!SSH_ADDRESS || !PATH_APPS) {
 
 // Load target's config.json to get required stacks
 const configPath = `${targetPath}/config.json`
-let config: { stacks?: string[]; localStacks?: string[] } = {}
+let config: { sharedStacks?: string[]; localStacks?: string[] } = {}
 try {
   const configContent = await Deno.readTextFile(configPath)
   config = JSON.parse(configContent)
@@ -49,7 +49,7 @@ try {
   }
 }
 
-const requiredStacks = config.stacks || []
+const sharedStacks = config.sharedStacks || []
 const localStacks = config.localStacks || []
 
 // Create temporary directory for deployment files
@@ -74,13 +74,13 @@ try {
   await Deno.writeTextFile(`${tempDir}/.env`, mergedEnvContent)
   log(`Created merged .env file with ${Object.keys({ ...rootEnv, ...targetEnv }).length} variables`)
 
-  // Copy required stacks to temp directory
-  if (requiredStacks.length > 0) {
-    log(`Copying required stacks: ${requiredStacks.join(", ")}`)
-    for (const stack of requiredStacks) {
+  // Copy required shared stacks to temp directory
+  if (sharedStacks.length > 0) {
+    log(`Copying shared stacks: ${sharedStacks.join(", ")}`)
+    for (const stack of sharedStacks) {
       const stackPath = `./stacks/${stack}.yml`
       const destPath = `${tempDir}/${stack}.yml`
-      
+
       try {
         await Deno.copyFile(stackPath, destPath)
         log(`  ✓ Copied ${stack}.yml`)
@@ -112,7 +112,7 @@ try {
     stderr: "inherit",
   })
   const rsyncResult = await rsyncCommand.output()
-  
+
   if (rsyncResult.code !== 0) {
     error("rsync failed")
     Deno.exit(rsyncResult.code)
@@ -121,8 +121,9 @@ try {
   // Run docker compose on remote server
   // First, ensure proxy network exists
   log("Ensuring proxy network exists on remote server...")
-  const createNetworkCmd = `docker network inspect proxy >/dev/null 2>&1 || docker network create proxy`
-  
+  const createNetworkCmd =
+    `docker network inspect proxy >/dev/null 2>&1 || docker network create proxy`
+
   const networkCommand = new Deno.Command("ssh", {
     args: [SSH_ADDRESS, createNetworkCmd],
     stdout: "inherit",
@@ -133,15 +134,16 @@ try {
   // Deploy services using multiple -f flags to compose stacks without merging/concatenating
   // This preserves relative paths and allows server compose.yml to override stack settings
   log("Starting Docker Compose on remote server...")
-  
-  // Build compose file arguments: start with stacks, end with server's compose.yml for overrides
+
+  // Build compose file arguments: start with shared stacks, add local stacks, end with server's compose.yml for overrides
   const composeFileArgs = [
-    ...requiredStacks.map((stack) => `-f ${stack}.yml`),
+    ...sharedStacks.map((stack) => `-f ${stack}.yml`),
     ...localStacks.map((stack) => `-f ${stack}/compose.yml`),
     "-f compose.yml",
   ].join(" ")
-  
-  const remoteCmd = `cd ${PATH_APPS} && docker compose --env-file .env ${composeFileArgs} up -d --remove-orphans`
+
+  const remoteCmd =
+    `cd ${PATH_APPS} && docker compose --env-file .env ${composeFileArgs} up -d --remove-orphans`
 
   const sshCommand = new Deno.Command("ssh", {
     args: [SSH_ADDRESS, remoteCmd],
@@ -149,7 +151,7 @@ try {
     stderr: "inherit",
   })
   const sshResult = await sshCommand.output()
-  
+
   if (sshResult.code !== 0) {
     error("Remote Docker Compose command failed")
     Deno.exit(sshResult.code)
