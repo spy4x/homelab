@@ -18,8 +18,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${SYNCTHING_CPU_LIMIT}
-          memory: ${SYNCTHING_MEM_LIMIT}
+          cpus: ${SYNCTHING_CPU_LIMIT:-1}
+          memory: ${SYNCTHING_MEM_LIMIT:-1024M}
     security_opt:
       - no-new-privileges:true
     networks:

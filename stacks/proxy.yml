@@ -46,8 +46,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${PROXY_CPU_LIMIT}
-          memory: ${PROXY_MEM_LIMIT}
+          cpus: ${PROXY_CPU_LIMIT:-1}
+          memory: ${PROXY_MEM_LIMIT:-512M}
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

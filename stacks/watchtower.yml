@@ -11,8 +11,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: ${WATCHTOWER_CPU_LIMIT}
-          memory: ${WATCHTOWER_MEM_LIMIT}
+          cpus: ${WATCHTOWER_CPU_LIMIT:-0.5}
+          memory: ${WATCHTOWER_MEM_LIMIT:-256M}
     security_opt:
       - no-new-privileges:true
     command: --interval 86400 --cleanup

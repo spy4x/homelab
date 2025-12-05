@@ -1,6 +1,6 @@
 export const USER = getEnvVar("USER")
 export const PATH_APPS = getEnvVar("PATH_APPS")
-export const PATH_MEDIA = getEnvVar("PATH_MEDIA")
+export const PATH_MEDIA = getEnvVar("PATH_MEDIA", true) // Optional - only on home server
 export const PATH_SYNC = getEnvVar("PATH_SYNC")
 
 export interface BackupConfig {

@@ -13,7 +13,7 @@ services:
     command:
       - serve
     environment:
-      - TZ=${TIMEZONE}
+      - TZ=${TIMEZONE:-UTC}
       - NTFY_BASE_URL=https://ntfy.${DOMAIN}
       - NTFY_UPSTREAM_BASE_URL=https://ntfy.sh
       - NTFY_CACHE_FILE=/var/lib/ntfy/cache.db

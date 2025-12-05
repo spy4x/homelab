@@ -65,6 +65,14 @@ try {
   log(`Copying root .env to temp directory...`)
   await Deno.copyFile("./.env", `${tempDir}/.env.root`)
 
+  // Copy scripts folder to temp directory
+  log(`Copying ./scripts to temp directory...`)
+  await copyDirectory("./scripts", `${tempDir}/scripts`)
+
+  // Copy deno.jsonc to temp directory
+  log(`Copying ./deno.jsonc to temp directory...`)
+  await Deno.copyFile("./deno.jsonc", `${tempDir}/deno.jsonc`)
+
   // Merge root .env and target .env into a single .env file
   const rootEnv = await loadEnvFile("./.env")
   const mergedEnvContent = [
