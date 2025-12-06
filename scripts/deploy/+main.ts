@@ -2,7 +2,7 @@
 // Usage: deno run -A scripts/deploy/+main.ts <target>
 // Example: deno run -A scripts/deploy/+main.ts offsite
 
-import { error, log, success } from "../+lib.ts"
+import { error, loadEnvFile, log, success } from "../+lib.ts"
 
 // Parse command line arguments
 const args = Deno.args
@@ -174,42 +174,6 @@ try {
   } catch (err) {
     log(`Warning: Failed to clean up temp directory: ${err}`)
   }
-}
-
-// Helper function to load and parse .env file
-async function loadEnvFile(path: string): Promise<Record<string, string>> {
-  const content = await Deno.readTextFile(path)
-  const env: Record<string, string> = {}
-
-  for (const line of content.split("\n")) {
-    const trimmedLine = line.trim()
-
-    // Skip empty lines and comments
-    if (!trimmedLine || trimmedLine.startsWith("#")) {
-      continue
-    }
-
-    // Parse key=value pairs
-    const equalsIndex = trimmedLine.indexOf("=")
-    if (equalsIndex === -1) {
-      continue
-    }
-
-    const key = trimmedLine.substring(0, equalsIndex).trim()
-    let value = trimmedLine.substring(equalsIndex + 1).trim()
-
-    // Remove quotes if present
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1)
-    }
-
-    env[key] = value
-  }
-
-  return env
 }
 
 // Helper function to recursively copy a directory

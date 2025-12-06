@@ -6,6 +6,7 @@
 
     // #region Deploy
     "deploy": "deno run -A ./scripts/deploy/+main.ts",
+    "ssh": "deno run -A ./scripts/ssh/+main.ts",
     // #endregion Deploy
 
     // #region Backup
