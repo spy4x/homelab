@@ -15,10 +15,10 @@ services:
     domainname: ${DOMAIN}
     restart: unless-stopped
     ports:
-      - "25:25"     # SMTP - incoming mail from other servers
-      - "465:465"   # SMTPS - secure SMTP submission
-      - "587:587"   # SMTP - submission with STARTTLS
-      - "993:993"   # IMAPS - secure IMAP
+      - "25:25" # SMTP - incoming mail from other servers
+      - "465:465" # SMTPS - secure SMTP submission
+      - "587:587" # SMTP - submission with STARTTLS
+      - "993:993" # IMAPS - secure IMAP
     volumes:
       - ./.volumes/mailserver/mail-data:/var/mail
       - ./.volumes/mailserver/mail-state:/var/mail-state
@@ -27,45 +27,45 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       # Basic settings
-      - ENABLE_RSPAMD=1                    # Modern spam filtering
-      - ENABLE_CLAMAV=1                    # Antivirus scanning
-      - ENABLE_FAIL2BAN=1                  # Brute force protection
-      - ENABLE_POSTGREY=0                  # Greylisting (optional, can cause delays)
-      - ENABLE_OPENDKIM=0                  # DISABLED - Using Rspamd for DKIM signing
-      - ENABLE_OPENDMARC=0                 # DISABLED - Using Rspamd for DMARC validation
-      - ENABLE_POLICYD_SPF=0               # DISABLED - Using Rspamd for SPF checking
-      
+      - ENABLE_RSPAMD=1 # Modern spam filtering
+      - ENABLE_CLAMAV=1 # Antivirus scanning
+      - ENABLE_FAIL2BAN=1 # Brute force protection
+      - ENABLE_POSTGREY=0 # Greylisting (optional, can cause delays)
+      - ENABLE_OPENDKIM=0 # DISABLED - Using Rspamd for DKIM signing
+      - ENABLE_OPENDMARC=0 # DISABLED - Using Rspamd for DMARC validation
+      - ENABLE_POLICYD_SPF=0 # DISABLED - Using Rspamd for SPF checking
+
       # SSL/TLS settings
-      - SSL_TYPE=self-signed               # Use self-signed certificates
-      - SSL_DOMAIN=${DOMAIN}               # Main domain
-      
+      - SSL_TYPE=self-signed # Use self-signed certificates
+      - SSL_DOMAIN=${DOMAIN} # Main domain
+
       # Dovecot (IMAP) settings
-      - DOVECOT_MAILBOX_FORMAT=maildir     # Mailbox format
-      - DOVECOT_TLS=yes                    # Enable TLS
-      
+      - DOVECOT_MAILBOX_FORMAT=maildir # Mailbox format
+      - DOVECOT_TLS=yes # Enable TLS
+
       # Postfix (SMTP) settings
-      - POSTFIX_MESSAGE_SIZE_LIMIT=52428800  # 50MB attachment limit
+      - POSTFIX_MESSAGE_SIZE_LIMIT=52428800 # 50MB attachment limit
       - POSTMASTER_ADDRESS=postmaster@${DOMAIN}
-      
+
       # Security
-      - SPOOF_PROTECTION=1                 # Prevent spoofing
-      - ENABLE_SRS=1                       # Sender Rewriting Scheme
-      
+      - SPOOF_PROTECTION=1 # Prevent spoofing
+      - ENABLE_SRS=1 # Sender Rewriting Scheme
+
       # Performance
-      - ONE_DIR=1                          # Single volume for all data
-      
+      - ONE_DIR=1 # Single volume for all data
+
       # Logging
       - LOG_LEVEL=info
       - SUPERVISOR_LOGLEVEL=warn
-      
+
       # Account provisioning
-      - ACCOUNT_PROVISIONER=FILE           # Use file-based accounts
-      - PERMIT_DOCKER=network              # Allow docker network
-      
+      - ACCOUNT_PROVISIONER=FILE # Use file-based accounts
+      - PERMIT_DOCKER=network # Allow docker network
+
       # Override hostname
       - OVERRIDE_HOSTNAME=mail.${DOMAIN}
     cap_add:
-      - NET_ADMIN                          # Required for fail2ban
+      - NET_ADMIN # Required for fail2ban
     deploy:
       resources:
         limits:
@@ -126,8 +126,6 @@ services:
       - "traefik.http.routers.webmail.tls=true"
       - "traefik.http.routers.webmail.tls.certresolver=myresolver"
 
-
-
   # Healthchecks - Cron job and scheduled task monitoring
   # Receives HTTP/email pings from scheduled tasks, alerts when they don't check in
   # https://github.com/healthchecks/healthchecks
@@ -171,4 +169,3 @@ services:
       - "traefik.http.routers.healthchecks.entrypoints=websecure"
       - "traefik.http.routers.healthchecks.tls=true"
       - "traefik.http.routers.healthchecks.tls.certresolver=myresolver"
-

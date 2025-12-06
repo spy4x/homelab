@@ -68,7 +68,9 @@ class RestoreRunner {
 
     // Confirm restore
     const confirm = prompt(
-      `\nThis will restore ${config.name} from snapshot ${snapshot.id.substring(0, 8)}.\nType 'yes' to continue: `,
+      `\nThis will restore ${config.name} from snapshot ${
+        snapshot.id.substring(0, 8)
+      }.\nType 'yes' to continue: `,
     )
     if (confirm?.toLowerCase() !== "yes") {
       logInfo("Restore cancelled")

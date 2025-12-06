@@ -3,46 +3,53 @@
 Multi-server homelab infrastructure with automated configuration, monitoring,
 and backups.
 
+## 📚 Documentation
+
+- **[Get Started in 5 Minutes](docs/get-started-5min.md)** - Quick setup guide
+- **[Architecture Overview](docs/architecture.md)** - System design & topology
+- **[Adding Services](docs/adding-services.md)** - Step-by-step service guide
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues & solutions
+
 ## Architecture
 
 - **Home Server**: Primary services (Fedora, media, automation)
 - **Cloud Server**: Email, monitoring, external services (Hetzner VPS)
 - **Offsite Server**: Backup & sync replication (Raspberry Pi)
 
+> 💡 **New to this homelab?** Start with the [5-minute quick start guide](docs/get-started-5min.md)
+
 ## Quick Start
 
 ### Prerequisites
 
 - Deno installed locally
-- Ansible installed locally
+- Ansible installed locally (optional but recommended)
 - SSH key-based authentication configured
 
 ### Initial Setup
 
 ```bash
-# 1. Configure environment
-cp .env.example .env
-# Edit .env with your values (PROJECT, BACKUPS_PASSWORD, DOMAIN, CONTACT_EMAIL)
+# 1. Clone repository
+git clone <your-repo-url> ~/homelab
+cd ~/homelab
 
-# 2. Configure server-specific environment
-# Edit servers/{home|cloud|offsite}/.env with server-specific values
+# 2. Configure environment
+cp servers/home/.env.example servers/home/.env
+# Edit servers/home/.env with your values
 
-# 3. Test connectivity
-ansible all -m ping
+# 3. (Optional) Run Ansible initial setup
+deno task ansible initial-setup
 
-# 4. Run initial setup (choose server)
-deno task ansible ansible/playbooks/initial-setup.yml home
-deno task ansible ansible/playbooks/initial-setup.yml cloud
-deno task ansible ansible/playbooks/initial-setup.yml offsite
-
-# Or run complete setup
-deno task ansible ansible/site.yml home
-
-# 5. Deploy services
+# 4. Deploy services
 deno task deploy home
-deno task deploy cloud
-deno task deploy offsite
+
+# 5. SSH to server and start services
+deno task ssh home
+cd ~/ssd-2tb/apps
+docker compose up -d
 ```
+
+For detailed instructions, see [Get Started in 5 Minutes](docs/get-started-5min.md).
 
 ## Repository Structure
 
@@ -286,9 +293,13 @@ curl -I https://<service-domain>
 
 ## Documentation
 
-- **Backup System**: `scripts/backup/README.md`
-- **Cloud/Email Setup**: `servers/cloud/README.md`
-- **Fedora Networking**: `servers/home/README_FEDORA.md`
+- **[Get Started in 5 Minutes](docs/get-started-5min.md)** - Quick setup for new servers
+- **[Architecture Overview](docs/architecture.md)** - System design, topology & data flow
+- **[Adding Services Guide](docs/adding-services.md)** - Complete service deployment workflow
+- **[Troubleshooting Guide](docs/troubleshooting.md)** - Common issues & debugging
+- **Backup System**: `scripts/backup/README.md` - Backup implementation details
+- **Cloud/Email Setup**: `servers/cloud/README.md` - Mail server configuration
+- **Fedora Networking**: `servers/home/README_FEDORA.md` - Fedora-specific fixes
 
 ## Contributing
 

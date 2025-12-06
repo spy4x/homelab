@@ -19,7 +19,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 512M
     security_opt:
       - no-new-privileges:true
@@ -49,7 +49,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 2048M
     security_opt:
       - no-new-privileges:true
@@ -72,7 +72,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 1024M
     security_opt:
       - no-new-privileges:true
@@ -94,7 +94,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 256M
     security_opt:
       - no-new-privileges:true
@@ -114,7 +114,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 2048M
     security_opt:
       - no-new-privileges:true

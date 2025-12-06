@@ -23,7 +23,7 @@
       ansible.builtin.fail:
         msg: |
           ❌ Radicale container is not running!
-          
+
           Please deploy Radicale first:
             ansible-playbook playbooks/deploy.yml
       when: "'radicale' not in radicale_running.stdout"
@@ -82,7 +82,7 @@
         htpasswd -B {{ '-c' if not users_file.stat.exists else '' }} {{ radicale_users_file }} {{ radicale_username }}
       register: htpasswd_result
       changed_when: true
-      no_log: false  # Show output for password prompt
+      no_log: false # Show output for password prompt
 
     - name: Set correct permissions on users file
       ansible.builtin.file:

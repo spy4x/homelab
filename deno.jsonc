@@ -1,23 +1,38 @@
 {
   "tasks": {
     // #region Ansible
-    "ansible": "deno run -A ./scripts/ansible/+main.ts",
+    "ansible": {
+      "command": "deno run -A ./scripts/ansible/+main.ts",
+      "description": "🔧 Run Ansible playbooks (auto-loads env vars)"
+    },
     // #endregion Ansible
 
     // #region Deploy
-    "deploy": "deno run -A ./scripts/deploy/+main.ts",
-    "ssh": "deno run -A ./scripts/ssh/+main.ts",
+    "deploy": {
+      "command": "deno run -A ./scripts/deploy/+main.ts",
+      "description": "🚀 Deploy services to remote server (merges compose + stacks)"
+    },
+    "ssh": {
+      "command": "deno run -A ./scripts/ssh/+main.ts",
+      "description": "🔐 SSH into server by name (home|cloud|offsite)"
+    },
     // #endregion Deploy
 
     // #region Backup
-    "backup": "deno run --env-file=.env -A ./scripts/backup/+main.ts",
-    "backup:restore": "deno run -A ./scripts/backup/restore.ts",
+    "backup": {
+      "command": "deno run --env-file=.env -A ./scripts/backup/+main.ts",
+      "description": "💾 Run backup for all services using Restic"
+    },
+    "backup:restore": {
+      "command": "deno run -A ./scripts/backup/restore.ts",
+      "description": "📥 Restore service data from backup (interactive)"
+    },
     // #endregion Backup
 
     // #region Checks
     "check": {
-      "command": "echo 'Checks passed!'",
-      "description": "Run all checks",
+      "command": "echo '✅ All checks passed!'",
+      "description": "✅ Run all checks (lint, fmt, types, tests)",
       "dependencies": [
         "lint:check",
         "fmt:check",
@@ -25,15 +40,33 @@
         "test"
       ]
     },
-    "fmt:fix": "deno fmt",
-    "fmt:check": "deno fmt --check",
-    "lint:fix": "deno lint --fix",
-    "lint:check": "deno lint",
-    "ts:check": "deno check **/*.ts",
-    "test": "deno test",
+    "fmt:fix": {
+      "command": "deno fmt",
+      "description": "✨ Auto-format code"
+    },
+    "fmt:check": {
+      "command": "deno fmt --check",
+      "description": "📝 Check code formatting"
+    },
+    "lint:fix": {
+      "command": "deno lint --fix",
+      "description": "🔍 Auto-fix linting issues"
+    },
+    "lint:check": {
+      "command": "deno lint",
+      "description": "🔍 Check for linting issues"
+    },
+    "ts:check": {
+      "command": "deno check **/*.ts",
+      "description": "📘 Type-check TypeScript files"
+    },
+    "test": {
+      "command": "deno test",
+      "description": "🧪 Run tests"
+    },
     "fix": {
-      "command": "echo 'Fixes applied!'",
-      "description": "Run all fixes",
+      "command": "echo '🔧 All fixes applied!'",
+      "description": "🔧 Auto-fix all issues (lint + format)",
       "dependencies": [
         "lint:fix",
         "fmt:fix"

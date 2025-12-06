@@ -5,6 +5,7 @@ This document contains instructions to fix Docker external networking issues on 
 ## Problem Description
 
 After migrating from Ubuntu to Fedora Server 42, Docker containers running behind Traefik reverse proxy become inaccessible from external networks, even though:
+
 - SSH access works fine
 - Local requests to `localhost:80/443` work
 - Docker containers are running properly
@@ -31,6 +32,7 @@ sudo iptables -I DOCKER-USER -j ACCEPT
 ```
 
 Test immediately:
+
 ```bash
 curl -I http://YOUR_DOMAIN_OR_IP
 ```
@@ -57,6 +59,7 @@ EOF
 ```
 
 Enable the service:
+
 ```bash
 sudo systemctl enable docker-external-access.service
 ```
@@ -79,6 +82,7 @@ sudo firewall-cmd --reload
 ## Verification
 
 Test external connectivity:
+
 ```bash
 # Test HTTP (should redirect to HTTPS)
 curl -v http://YOUR_DOMAIN
@@ -88,6 +92,7 @@ curl -I https://YOUR_DOMAIN
 ```
 
 Check Docker logs to confirm requests are reaching Traefik:
+
 ```bash
 docker logs proxy --tail 50
 ```
@@ -95,11 +100,13 @@ docker logs proxy --tail 50
 ## Troubleshooting
 
 ### Check if the rule is applied:
+
 ```bash
 sudo iptables -L DOCKER-USER -v
 ```
 
 You should see:
+
 ```
 Chain DOCKER-USER (1 references)
  pkts bytes target     prot opt in     out     source               destination
@@ -107,6 +114,7 @@ Chain DOCKER-USER (1 references)
 ```
 
 ### Check NAT rules are working:
+
 ```bash
 sudo iptables -t nat -L DOCKER -v
 ```
@@ -114,6 +122,7 @@ sudo iptables -t nat -L DOCKER -v
 Look for your container's DNAT rules with packet counters > 0.
 
 ### Check nftables (informational):
+
 ```bash
 sudo nft list table ip filter
 sudo nft list table ip nat
@@ -143,5 +152,5 @@ sudo nft list table ip nat
 
 ---
 
-*Last updated: August 5, 2025*
-*Fedora Server 42, Docker 28.3.3*
+_Last updated: August 5, 2025_
+_Fedora Server 42, Docker 28.3.3_

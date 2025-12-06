@@ -250,7 +250,7 @@ services:
       - ./.volumes/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
     devices:
-      - /dev/ttyUSB0:/dev/ttyUSB0  # Zigbee USB dongle
+      - /dev/ttyUSB0:/dev/ttyUSB0 # Zigbee USB dongle
     environment:
       - TZ=${TIMEZONE}
     restart: unless-stopped
@@ -283,10 +283,10 @@ services:
       - ./.volumes/adguard/work:/opt/adguardhome/work
       - ./.volumes/adguard/conf:/opt/adguardhome/conf
     ports:
-      - 53:53/tcp      # DNS
-      - 53:53/udp      # DNS
-      - 853:853/tcp    # DNS-over-TLS
-      # - 3000:3000/tcp  # Initial setup web interface (can be disabled after setup)
+      - 53:53/tcp # DNS
+      - 53:53/udp # DNS
+      - 853:853/tcp # DNS-over-TLS
+    # - 3000:3000/tcp  # Initial setup web interface (can be disabled after setup)
     restart: unless-stopped
     deploy:
       resources:
@@ -464,17 +464,17 @@ services:
       - WOODPECKER_SERVER=woodpecker-server:9000
       - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
       - WOODPECKER_BACKEND=docker
-      - WOODPECKER_MAX_WORKFLOWS=4  # Parallel workflows
+      - WOODPECKER_MAX_WORKFLOWS=4 # Parallel workflows
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./.volumes/woodpecker-agent/cache:/woodpecker/cache  # Cache for faster builds
+      - ./.volumes/woodpecker-agent/cache:/woodpecker/cache # Cache for faster builds
     depends_on:
       - woodpecker-server
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 8192M  # Increased for Deno+Vite+Hono monorepos
-          cpus: "4"      # More CPU for parallel builds
+          memory: 8192M # Increased for Deno+Vite+Hono monorepos
+          cpus: "4" # More CPU for parallel builds
     security_opt:
       - no-new-privileges:true

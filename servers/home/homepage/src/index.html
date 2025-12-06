@@ -1,414 +1,413 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="theme-color" content="#2979ff">
-        <meta
-            name="description"
-            content="Anton Shubin's home servers dashboard"
-        >
-        <link rel="manifest" href="manifest.json">
-        <link
-            rel="icon"
-            type="image/png"
-            sizes="192x192"
-            href="assets/icon-192.png"
-        >
-        <link rel="apple-touch-icon" href="assets/icon-192.png">
-        <style>
-            body {
-                font-family: Arial, sans-serif;
-                background-color: #121212;
-                color: #ffffff;
-                margin: 0;
-                padding: 20px;
-            }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2979ff">
+    <meta
+      name="description"
+      content="Anton Shubin's home servers dashboard"
+    >
+    <link rel="manifest" href="manifest.json">
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="assets/icon-192.png"
+    >
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        color: #ffffff;
+        margin: 0;
+        padding: 20px;
+      }
 
-            h1 {
-                text-align: center;
-            }
+      h1 {
+        text-align: center;
+      }
 
-            .container {
-                max-width: 1200px;
-                margin: 0 auto;
-            }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
 
-            .section {
-                margin-bottom: 40px;
-            }
+      .section {
+        margin-bottom: 40px;
+      }
 
-            .section-title {
-                font-size: 24px;
-                margin-bottom: 20px;
-                text-align: center;
-                color: #2979ff;
-                border-bottom: 2px solid #2979ff;
-                padding-bottom: 10px;
-            }
+      .section-title {
+        font-size: 24px;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #2979ff;
+        border-bottom: 2px solid #2979ff;
+        padding-bottom: 10px;
+      }
 
-            .services-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 20px;
-                padding: 0;
-                list-style-type: none;
-            }
+      .services-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        padding: 0;
+        list-style-type: none;
+      }
 
-            .service-item {
-                margin: 0;
-            }
+      .service-item {
+        margin: 0;
+      }
 
-            .service-link {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                padding: 18px 12px;
-                text-decoration: none;
-                color: white;
-                background-color: #1e1e1e;
-                border-radius: 12px;
-                transition: all 0.3s ease;
-                min-height: 100px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            }
+      .service-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 18px 12px;
+        text-decoration: none;
+        color: white;
+        background-color: #1e1e1e;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        min-height: 100px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
 
-            .service-link:hover, .service-link:focus {
-                background-color: #2979ff;
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(41, 121, 255, 0.3);
-            }
+      .service-link:hover, .service-link:focus {
+        background-color: #2979ff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(41, 121, 255, 0.3);
+      }
 
-            .service-icon {
-                font-size: 48px;
-                margin-bottom: 10px;
-                line-height: 1;
-            }
+      .service-icon {
+        font-size: 48px;
+        margin-bottom: 10px;
+        line-height: 1;
+      }
 
-            .service-name {
-                font-size: 16px;
-                font-weight: 500;
-                text-align: center;
-                line-height: 1.2;
-            }
+      .service-name {
+        font-size: 16px;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+      }
 
-            @media (max-width: 600px) {
-                .services-grid {
-                    grid-template-columns:
-                        repeat(auto-fit, minmax(150px, 1fr));
-                    gap: 15px;
-                }
+      @media (max-width: 600px) {
+        .services-grid {
+          grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+          gap: 15px;
+        }
 
-                .service-link {
-                    padding: 15px 8px;
-                    min-height: 80px;
-                }
+        .service-link {
+          padding: 15px 8px;
+          min-height: 80px;
+        }
 
-                .service-icon {
-                    font-size: 36px;
-                }
+        .service-icon {
+          font-size: 36px;
+        }
 
-                .service-name {
-                    font-size: 14px;
-                }
-            }
-        </style>
-        <title>Anton Shubin's home servers</title>
-    </head>
+        .service-name {
+          font-size: 14px;
+        }
+      }
+    </style>
+    <title>Anton Shubin's home servers</title>
+  </head>
 
-    <body>
-        <h1>Anton Shubin's home servers</h1>
+  <body>
+    <h1>Anton Shubin's home servers</h1>
 
-        <div class="container">
-            <div class="section">
-                <h2 class="section-title">Cloud Services</h2>
-                <ul class="services-grid">
-                    <li class="service-item">
-                        <a
-                            href="https://webmail.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📧</div>
-                            <div class="service-name">Webmail</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://mail.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">✉️</div>
-                            <div class="service-name">Mail Server</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://rspamd.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🛡️</div>
-                            <div class="service-name">Rspamd</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://uptime.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">⏱️</div>
-                            <div class="service-name">Uptime</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://ntfy.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🔔</div>
-                            <div class="service-name">Notifications</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://healthchecks.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">✅</div>
-                            <div class="service-name">Healthchecks</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://sync-cloud.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🔄</div>
-                            <div class="service-name">Sync (Cloud)</div>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+    <div class="container">
+      <div class="section">
+        <h2 class="section-title">Cloud Services</h2>
+        <ul class="services-grid">
+          <li class="service-item">
+            <a
+              href="https://webmail.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📧</div>
+              <div class="service-name">Webmail</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://mail.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">✉️</div>
+              <div class="service-name">Mail Server</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://rspamd.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🛡️</div>
+              <div class="service-name">Rspamd</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://uptime.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">⏱️</div>
+              <div class="service-name">Uptime</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ntfy.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔔</div>
+              <div class="service-name">Notifications</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://healthchecks.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">✅</div>
+              <div class="service-name">Healthchecks</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://sync-cloud.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔄</div>
+              <div class="service-name">Sync (Cloud)</div>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-            <div class="section">
-                <h2 class="section-title">Home Services</h2>
-                <ul class="services-grid">
-                    <li class="service-item">
-                        <a
-                            href="https://sage.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🧠</div>
-                            <div class="service-name">Sage</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://photos.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📷</div>
-                            <div class="service-name">Photos</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://movies.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🎬</div>
-                            <div class="service-name">Movies</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://torrents.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">⬇️</div>
-                            <div class="service-name">Torrents</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://metube.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📺</div>
-                            <div class="service-name">YouTube DL</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://passwords.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🔑</div>
-                            <div class="service-name">Passwords</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://sync.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🔄</div>
-                            <div class="service-name">Sync</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://ai.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🤖</div>
-                            <div class="service-name">AI Chat</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://books.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📚</div>
-                            <div class="service-name">Audiobooks</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://home.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🏠</div>
-                            <div class="service-name">Home Assistant</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://dns.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🛡️</div>
-                            <div class="service-name">AdGuard DNS</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://files.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📁</div>
-                            <div class="service-name">Files</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://ci.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🔧</div>
-                            <div class="service-name">CI/CD</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://rss.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📰</div>
-                            <div class="service-name">RSS Reader</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://cal.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📅</div>
-                            <div class="service-name">Calendar & Contacts</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://piped.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">📺</div>
-                            <div class="service-name">YouTube</div>
-                        </a>
-                    </li>
-                </ul>
-            </div>
+      <div class="section">
+        <h2 class="section-title">Home Services</h2>
+        <ul class="services-grid">
+          <li class="service-item">
+            <a
+              href="https://sage.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🧠</div>
+              <div class="service-name">Sage</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://photos.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📷</div>
+              <div class="service-name">Photos</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://movies.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🎬</div>
+              <div class="service-name">Movies</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://torrents.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">⬇️</div>
+              <div class="service-name">Torrents</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://metube.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📺</div>
+              <div class="service-name">YouTube DL</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://passwords.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔑</div>
+              <div class="service-name">Passwords</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://sync.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔄</div>
+              <div class="service-name">Sync</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ai.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🤖</div>
+              <div class="service-name">AI Chat</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://books.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📚</div>
+              <div class="service-name">Audiobooks</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://home.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🏠</div>
+              <div class="service-name">Home Assistant</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://dns.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🛡️</div>
+              <div class="service-name">AdGuard DNS</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://files.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📁</div>
+              <div class="service-name">Files</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ci.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔧</div>
+              <div class="service-name">CI/CD</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://rss.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📰</div>
+              <div class="service-name">RSS Reader</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://cal.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📅</div>
+              <div class="service-name">Calendar & Contacts</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://piped.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📺</div>
+              <div class="service-name">YouTube</div>
+            </a>
+          </li>
+        </ul>
+      </div>
 
-            <div class="section">
-                <h2 class="section-title">Offsite Services</h2>
-                <ul class="services-grid">
-                    <li class="service-item">
-                        <a
-                            href="https://sync-2.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🔄</div>
-                            <div class="service-name">Syncthing</div>
-                        </a>
-                    </li>
-                    <li class="service-item">
-                        <a
-                            href="https://proxy-2.$DOMAIN"
-                            target="_blank"
-                            class="service-link"
-                        >
-                            <div class="service-icon">🚦</div>
-                            <div class="service-name">Proxy</div>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+      <div class="section">
+        <h2 class="section-title">Offsite Services</h2>
+        <ul class="services-grid">
+          <li class="service-item">
+            <a
+              href="https://sync-2.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔄</div>
+              <div class="service-name">Syncthing</div>
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://proxy-2.$DOMAIN"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🚦</div>
+              <div class="service-name">Proxy</div>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
 
-        <script>
-            // Register service worker
-            if ("serviceWorker" in navigator) {
-                window.addEventListener("load", function () {
-                    navigator.serviceWorker.register("sw.js")
-                        .then(function (registration) {
-                            console.log(
-                                "ServiceWorker registration successful with scope: ",
-                                registration.scope,
-                            );
-                        })
-                        .catch(function (err) {
-                            console.log(
-                                "ServiceWorker registration failed: ",
-                                err,
-                            );
-                        });
-                });
-            }
-        </script>
-    </body>
+    <script>
+      // Register service worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("sw.js")
+            .then(function (registration) {
+              console.log(
+                "ServiceWorker registration successful with scope: ",
+                registration.scope,
+              )
+            })
+            .catch(function (err) {
+              console.log(
+                "ServiceWorker registration failed: ",
+                err,
+              )
+            })
+        })
+      }
+    </script>
+  </body>
 </html>
