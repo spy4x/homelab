@@ -225,7 +225,7 @@ deno task deploy home
 Add service to `/servers/home/homepage/src/index.html`:
 
 ```html
-<a href="https://myservice.yourdomain.com" target="_blank" rel="noopener noreferrer">
+<a href="https://myservice.$DOMAIN" target="_blank" rel="noopener noreferrer">
   <div class="card">
     <span class="icon">🎯</span>
     <h2>MyService</h2>

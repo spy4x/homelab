@@ -27,6 +27,10 @@
       "command": "deno run -A ./scripts/backup/restore.ts",
       "description": "📥 Restore service data from backup (interactive)"
     },
+    "offline-backup": {
+      "command": "deno run --env-file=.env -A ./scripts/offline-backup/+main.ts",
+      "description": "🗄️ Backup/restore to/from external drive (monthly offline backups)"
+    },
     // #endregion Backup
 
     // #region Checks
