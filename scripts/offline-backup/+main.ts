@@ -40,10 +40,10 @@ async function listDrives(): Promise<DriveInfo[]> {
 
 async function checkDriveExists(driveName: string): Promise<boolean> {
   try {
-    const stat = await Deno.stat(`/dev/${driveName}`);
-    return stat.isBlockDevice ?? false;
+    const stat = await Deno.stat(`/dev/${driveName}`)
+    return stat.isBlockDevice ?? false
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -139,7 +139,7 @@ async function formatDrive(device: string): Promise<void> {
 }
 
 async function createBackupStructure(mountPoint: string): Promise<void> {
-  console.log("📁 Creating backup directory structure...")
+  console.log("📁 Ensuring backup directory structure...")
 
   const dirs = [
     `${mountPoint}/${REPOS_DIR}`,
@@ -154,6 +154,29 @@ async function createBackupStructure(mountPoint: string): Promise<void> {
   console.log("✅ Directory structure created")
 }
 
+async function getBackupSize(path: string): Promise<{ bytes: number; human: string }> {
+  const result = await runCommand(["du", "-sb", path])
+  if (!result.success) {
+    return { bytes: 0, human: "unknown" }
+  }
+
+  const bytes = parseInt(result.output.split("\t")[0])
+
+  // Convert to human readable
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let size = bytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+
+  const human = `${size.toFixed(2)} ${units[unitIndex]}`
+
+  return { bytes, human }
+}
+
 async function writeMetadata(
   mountPoint: string,
   localBackupsPath: string,
@@ -162,6 +185,10 @@ async function writeMetadata(
 
   const now = new Date()
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
+
+  // Calculate backup size
+  const reposDir = `${mountPoint}/${REPOS_DIR}`
+  const backupSize = await getBackupSize(reposDir)
 
   const backupInfo = `# Homelab Offline Backup
 
@@ -173,6 +200,7 @@ async function writeMetadata(
 **Encryption:** Yes (Restic native encryption)
 **Schedule:** Monthly offline backup
 **Next Update Due:** ${nextMonth.toISOString().split("T")[0]}
+**Backup Size:** ${backupSize.human} (${backupSize.bytes.toLocaleString()} bytes)
 
 ## Important Notes
 
@@ -326,13 +354,20 @@ async function verifyBackups(
   mountPoint: string,
   resticPassword: string,
 ): Promise<void> {
-  console.log("\\n🔍 Verifying backup integrity (5% data sample)...")
+  console.log("\n🔍 Verifying backup integrity (100% data verification)...")
 
   // Check if restic is installed
   const resticCheck = await runCommand(["which", "restic"])
   if (!resticCheck.success) {
-    console.log("⚠️  Restic not found, skipping verification")
-    console.log("   Install restic to enable backup verification")
+    console.log("\n⚠️  WARNING: Restic not found!")
+    console.log("   Backup verification is HIGHLY RECOMMENDED for data integrity.")
+    console.log("   Install restic: https://restic.net/")
+    console.log("   Without verification, corrupted backups may go undetected.")
+    const skip = prompt("\n❓ Skip verification anyway? (yes/no) [no]: ")
+    if (skip?.toLowerCase() !== "yes") {
+      console.log("\n❌ Verification cancelled. Please install restic and try again.")
+      throw new Error("Restic verification required but restic not installed")
+    }
     return
   }
 
@@ -343,7 +378,15 @@ async function verifyBackups(
   try {
     for await (const entry of Deno.readDir(reposDir)) {
       if (entry.isDirectory) {
-        repos.push(`${reposDir}/${entry.name}`)
+        // Check if it's a valid restic repo (has config file)
+        const configPath = `${reposDir}/${entry.name}/config`
+        try {
+          await Deno.stat(configPath)
+          repos.push(`${reposDir}/${entry.name}`)
+        } catch {
+          // Skip directories without config file (not restic repos)
+          console.log(`\n  ⏭️  Skipping ${entry.name} (not a restic repository)`)
+        }
       }
     }
   } catch (error) {
@@ -363,7 +406,7 @@ async function verifyBackups(
     console.log(`\n  Checking: ${name}...`)
 
     const cmd = new Deno.Command("restic", {
-      args: ["-r", repo, "check", "--read-data-subset=5%"],
+      args: ["-r", repo, "check", "--read-data"],
       env: {
         ...Deno.env.toObject(),
         RESTIC_PASSWORD: resticPassword,
@@ -417,6 +460,88 @@ ${
     console.warn(
       `\n⚠️  Warning: ${failed.length} repository verification(s) failed`,
     )
+  }
+}
+
+async function runSmartCheck(
+  device: string,
+  checkType: "short" | "long",
+): Promise<void> {
+  console.log(`\n🔍 Running SMART ${checkType} test on ${device}...`)
+  console.log("   This will check the drive's health and detect potential issues.")
+
+  // Check if smartctl is installed
+  const smartctlCheck = await runCommand(["which", "smartctl"])
+  if (!smartctlCheck.success) {
+    console.log("\n⚠️  smartctl not found!")
+    console.log("   Install smartmontools: sudo dnf install smartmontools")
+    return
+  }
+
+  // Run the test
+  const testArgs = checkType === "short" ? ["-t", "offline"] : ["-t", "long"]
+  const startResult = await runCommand(
+    ["smartctl", ...testArgs, device],
+    { sudo: true },
+  )
+
+  // smartctl often returns non-zero exit codes even on success, check output
+  if (
+    startResult.output.includes("Self-test execution status") ||
+    startResult.output.includes("Test has begun")
+  ) {
+    console.log("\n✅ SMART test started")
+    console.log("   Test is running in the background...")
+
+    // Get estimated completion time from output
+    const lines = (startResult.output + startResult.error).split("\n")
+    const completeLine = lines.find((l) => l.includes("Please wait"))
+    if (completeLine) {
+      console.log(`   ${completeLine.trim()}`)
+    }
+  } else {
+    console.log("\\n⚠️  Warning: Could not start SMART test")
+    console.log("   Error output:")
+    console.log(startResult.error || startResult.output)
+    return
+  }
+
+  // Remove newline reference
+  console.log("\n   Waiting for test to complete...")
+  const waitTime = checkType === "short" ? 120000 : 600000 // 2 min or 10 min
+  await new Promise((resolve) => setTimeout(resolve, waitTime))
+
+  // Get results
+  console.log("\n📊 Fetching SMART test results...")
+  const resultCmd = await runCommand(
+    ["smartctl", "-a", device],
+    { sudo: true },
+  )
+
+  if (resultCmd.success || resultCmd.output) {
+    // Extract relevant sections
+    const output = resultCmd.output
+    const healthLine = output.split("\\n").find((l) => l.includes("SMART overall-health"))
+    const testResultsStart = output.indexOf("SMART Self-test log")
+
+    if (healthLine) {
+      console.log("\\n   " + healthLine.trim())
+    }
+
+    if (testResultsStart > -1) {
+      const testSection = output.substring(
+        testResultsStart,
+        testResultsStart + 800,
+      )
+      console.log("\\n   Recent test results:")
+      testSection.split("\\n").slice(0, 10).forEach((line) => {
+        if (line.trim()) console.log("   " + line)
+      })
+    }
+
+    console.log("\n✅ SMART check completed")
+  } else {
+    console.log("\n⚠️  Could not retrieve SMART results")
   }
 }
 
@@ -490,13 +615,13 @@ async function create(envVars: Record<string, string>): Promise<void> {
   })
 
   // Get drive selection
-  const driveInput = prompt("\n🔍 Enter drive name (e.g., 'sda'): ");
+  const driveInput = prompt("\n🔍 Enter drive name (e.g., 'sda'): ")
   if (!driveInput) {
-    console.log("❌ No drive selected");
-    Deno.exit(0);
+    console.log("❌ No drive selected")
+    Deno.exit(0)
   }
 
-  const driveName = driveInput.trim();
+  const driveName = driveInput.trim()
   const device = `/dev/${driveName}`
   const partition = `${device}1`
 
@@ -536,11 +661,8 @@ async function create(envVars: Record<string, string>): Promise<void> {
       await mountDrive(partition, MOUNT_POINT)
     }
 
-    // Create structure
+    // Ensure directory structure
     await createBackupStructure(MOUNT_POINT)
-
-    // Write metadata
-    await writeMetadata(MOUNT_POINT, localBackupsPath)
 
     // Check for repositories that will be deleted
     if (!(await checkDeletedRepos(localBackupsPath, MOUNT_POINT))) {
@@ -555,10 +677,28 @@ async function create(envVars: Record<string, string>): Promise<void> {
     // Verify backups
     await verifyBackups(MOUNT_POINT, resticPassword)
 
+    // Write metadata (after verification to include accurate size)
+    await writeMetadata(MOUNT_POINT, localBackupsPath)
+
     // Log sync
     await logSync(MOUNT_POINT)
 
     console.log("\n✅ Backup completed successfully!")
+
+    // Ask about SMART check
+    console.log("\n🔍 Drive Health Check (SMART)")
+    console.log("   short: ~2 minutes  - Quick electrical/mechanical check")
+    console.log("   long:  ~10 minutes - Comprehensive surface scan")
+    console.log("   no:    Skip health check")
+    const smartChoice = prompt(
+      "\n❓ Would you like a SMART check of the drive's health? (short/long/no) [short]: ",
+    ) || "short"
+
+    if (smartChoice.toLowerCase() === "short" || smartChoice.toLowerCase() === "long") {
+      await runSmartCheck(device, smartChoice.toLowerCase() as "short" | "long")
+    } else {
+      console.log("\n⏭️  Skipping SMART check")
+    }
     console.log(
       `\n📊 Drive usage: ${(await runCommand(["df", "-h", MOUNT_POINT])).output.split("\n")[1]}`,
     )
@@ -634,8 +774,8 @@ async function restore(envVars: Record<string, string>): Promise<void> {
       if (mountLine) {
         const currentMount = mountLine.split(" ")[2]
         console.log(`   Current mount point: ${currentMount}`)
-        const useExisting = prompt("Use this mount point? (yes/no): ")
-        if (useExisting?.toLowerCase() !== "yes") {
+        const useExisting = prompt("Use this mount point? (yes/no) [yes]: ")
+        if (useExisting && useExisting.toLowerCase() !== "yes") {
           await unmountDrive(currentMount)
           await mountDrive(partition, MOUNT_POINT)
         } else {
@@ -758,11 +898,13 @@ Examples:
 
 Features:
   - Automatic drive detection and selection
-  - BTRFS formatting wit compression
-  - Rsync with progress display
-  - Restic integrity verification (5% data sample)
-  - Metadata ad documentation generation
+  - BTRFS formatting with compression
+  - Rsync with progress display (size, speed, percentage)
+  - Restic integrity verification (100% data verification)
+  - SMART health check (short/long tests)
+  - Metadata and documentation generation (with backup size)
   - Safe mount/umount handling
+  - Deletion warnings before removing repos
 
 Storage Recommendations for Singapore:
   - Store in dry cabinet 40-50% RH) or sealed container with desiccant
