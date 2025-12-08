@@ -144,12 +144,41 @@ async function createBackupStructure(mountPoint: string): Promise<void> {
   const dirs = [
     `${mountPoint}/${REPOS_DIR}`,
     `${mountPoint}/${METADATA_DIR}`,
+    `${mountPoint}/${METADATA_DIR}/logs`,
     `${mountPoint}/${DOCS_DIR}`,
   ]
 
   for (const dir of dirs) {
     await runCommand(["mkdir", "-p", dir], { sudo: true })
   }
+
+  // Create comprehensive README.md in documentation folder
+  const readmePath = `${mountPoint}/${DOCS_DIR}/README.md`
+  const readmeContent = `# Homelab Offline Backup Drive
+
+This drive contains encrypted backups of critical homelab services.
+
+## Quick Start
+
+**Restore Command:**  
+\`\`\`bash
+cd ~/dev/homelab && deno task offline-backup restore
+\`\`\`
+
+**Password Location:** \`~/sync/essentials/restic-password.txt\`
+
+## Storage (Singapore Climate)
+
+Store in dry cabinet ($50-200 SGD) or sealed container with desiccant.  
+Keep at 20-25°C, <60% humidity, elevated from floor.
+
+**See metadata/backup-info.md for detailed information.**
+`
+
+  const tempPath = `/tmp/offline-backup-readme-${Date.now()}.md`
+  await Deno.writeTextFile(tempPath, readmeContent)
+  await runCommand(["cp", tempPath, readmePath], { sudo: true })
+  await runCommand(["rm", tempPath])
 
   console.log("✅ Directory structure created")
 }
@@ -353,8 +382,22 @@ async function syncBackups(
 async function verifyBackups(
   mountPoint: string,
   resticPassword: string,
-): Promise<void> {
+): Promise<
+  {
+    passed: number
+    failed: number
+    skipped: number
+    details: Array<{ name: string; status: "passed" | "failed" | "skipped"; error?: string }>
+  }
+> {
   console.log("\n🔍 Verifying backup integrity (100% data verification)...")
+
+  const results = {
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    details: [] as Array<{ name: string; status: "passed" | "failed" | "skipped"; error?: string }>,
+  }
 
   // Check if restic is installed
   const resticCheck = await runCommand(["which", "restic"])
@@ -368,7 +411,7 @@ async function verifyBackups(
       console.log("\n❌ Verification cancelled. Please install restic and try again.")
       throw new Error("Restic verification required but restic not installed")
     }
-    return
+    return results
   }
 
   const reposDir = `${mountPoint}/${REPOS_DIR}`
@@ -386,20 +429,20 @@ async function verifyBackups(
         } catch {
           // Skip directories without config file (not restic repos)
           console.log(`\n  ⏭️  Skipping ${entry.name} (not a restic repository)`)
+          results.skipped++
+          results.details.push({ name: entry.name, status: "skipped" })
         }
       }
     }
   } catch (error) {
     console.warn(`⚠️  Warning: Could not list repos: ${error}`)
-    return
+    return results
   }
 
   if (repos.length === 0) {
     console.log("ℹ️  No repositories found to verify")
-    return
+    return results
   }
-
-  const results: Array<{ name: string; success: boolean; error?: string }> = []
 
   for (const repo of repos) {
     const name = repo.split("/").pop() || "unknown"
@@ -420,47 +463,26 @@ async function verifyBackups(
 
     if (success) {
       console.log(`  ✅ ${name}: OK`)
+      results.passed++
+      results.details.push({ name, status: "passed" })
     } else {
       const error = new TextDecoder().decode(output.stderr)
       console.log(`  ❌ ${name}: FAILED`)
       console.log(`     ${error.split("\n")[0]}`)
-      results.push({ name, success: false, error })
-      continue
+      results.failed++
+      results.details.push({ name, status: "failed", error: error.split("\n")[0] })
     }
-
-    results.push({ name, success: true })
   }
-
-  // Write verification log
-  const logPath = `${mountPoint}/${METADATA_DIR}/verification-log.txt`
-  const log = `Verification Date: ${new Date().toISOString()}
-Total Repositories: ${repos.length}
-Successful: ${results.filter((r) => r.success).length}
-Failed: ${results.filter((r) => !r.success).length}
-
-Details:
-${
-    results.map((r) =>
-      `  ${r.name}: ${
-        r.success ? "OK" : "FAILED" + (r.error ? ` - ${r.error.split("\n")[0]}` : "")
-      }`
-    ).join("\n")
-  }
-`
-
-  const tempPath = `/tmp/verification-log-${Date.now()}.txt`
-  await Deno.writeTextFile(tempPath, log)
-  await runCommand(["mv", tempPath, logPath], { sudo: true })
-  await runCommand(["chown", "root:root", logPath], { sudo: true })
 
   console.log("\n✅ Verification complete")
 
-  const failed = results.filter((r) => !r.success)
-  if (failed.length > 0) {
+  if (results.failed > 0) {
     console.warn(
-      `\n⚠️  Warning: ${failed.length} repository verification(s) failed`,
+      `\n⚠️  Warning: ${results.failed} repository verification(s) failed`,
     )
   }
+
+  return results
 }
 
 async function runSmartCheck(
@@ -478,124 +500,198 @@ async function runSmartCheck(
     return
   }
 
-  // Run the test
-  const testArgs = checkType === "short" ? ["-t", "offline"] : ["-t", "long"]
+  // Get estimated time before starting
+  const checkInfo = await runCommand(["smartctl", "-c", device], { sudo: true })
+  const estimatedMinutes = checkType === "short" ? 2 : 390
+
+  console.log(`   Estimated duration: ~${estimatedMinutes} minutes`)
+
+  // Start the test (use 'short' or 'long', not 'offline')
+  const testType = checkType === "short" ? "short" : "long"
   const startResult = await runCommand(
-    ["smartctl", ...testArgs, device],
+    ["smartctl", "-t", testType, device],
     { sudo: true },
   )
 
-  // smartctl often returns non-zero exit codes even on success, check output
   if (
     startResult.output.includes("Self-test execution status") ||
-    startResult.output.includes("Test has begun")
+    startResult.output.includes("has begun") ||
+    startResult.output.includes("Testing has begun")
   ) {
-    console.log("\n✅ SMART test started")
-    console.log("   Test is running in the background...")
-
-    // Get estimated completion time from output
-    const lines = (startResult.output + startResult.error).split("\n")
-    const completeLine = lines.find((l) => l.includes("Please wait"))
-    if (completeLine) {
-      console.log(`   ${completeLine.trim()}`)
-    }
+    console.log("✅ SMART test started successfully")
   } else {
-    console.log("\\n⚠️  Warning: Could not start SMART test")
-    console.log("   Error output:")
-    console.log(startResult.error || startResult.output)
+    console.log("\n⚠️  Warning: Could not start SMART test")
+    console.log("   Output:", startResult.output)
+    console.log("   Error:", startResult.error)
     return
   }
 
-  // Remove newline reference
-  console.log("\n   Waiting for test to complete...")
-  const waitTime = checkType === "short" ? 120000 : 600000 // 2 min or 10 min
-  await new Promise((resolve) => setTimeout(resolve, waitTime))
+  // Wait for test to complete with progress updates
+  const checkIntervalMs = 5 * 60 * 1000 // Check every 5 minutes
+  const totalWaitMs = estimatedMinutes * 60 * 1000
+  const startTime = Date.now()
 
-  // Get results
-  console.log("\n📊 Fetching SMART test results...")
-  const resultCmd = await runCommand(
-    ["smartctl", "-a", device],
-    { sudo: true },
-  )
+  console.log("\n⏳ Waiting for test to complete...")
+
+  while (true) {
+    const elapsed = Date.now() - startTime
+    const elapsedMinutes = Math.floor(elapsed / 60000)
+
+    // Check test status
+    const statusResult = await runCommand(["smartctl", "-a", device], { sudo: true })
+    const statusOutput = statusResult.output + statusResult.error
+
+    // Look for completion indicators
+    const isComplete = statusOutput.includes("Self-test routine completed without error") ||
+      statusOutput.includes("# 1  ") || // Recent completed test in log
+      (statusOutput.includes("Self-test execution status:") &&
+        statusOutput.includes("(   0)"))
+
+    const isRunning = statusOutput.includes("Self-test routine in progress") ||
+      statusOutput.includes("% of test remaining")
+
+    if (isComplete) {
+      console.log(`\n✅ Test completed after ${elapsedMinutes} minutes`)
+      break
+    }
+
+    if (isRunning) {
+      // Extract remaining percentage if available
+      const percentMatch = statusOutput.match(/(\d+)% of test remaining/)
+      const remaining = percentMatch
+        ? `${percentMatch[1]}% remaining`
+        : `${elapsedMinutes}/${estimatedMinutes} min elapsed`
+      console.log(`   [${new Date().toLocaleTimeString()}] Still running... ${remaining}`)
+    } else if (elapsed < totalWaitMs) {
+      console.log(
+        `   [${
+          new Date().toLocaleTimeString()
+        }] In progress: ${elapsedMinutes}/${estimatedMinutes} min elapsed`,
+      )
+    }
+
+    // Stop if we've exceeded estimated time by 50%
+    if (elapsed > totalWaitMs * 1.5) {
+      console.log(
+        "\n⚠️  Test taking longer than expected, check manually with: sudo smartctl -a " + device,
+      )
+      break
+    }
+
+    // Wait before next check
+    await new Promise((resolve) => setTimeout(resolve, checkIntervalMs))
+  }
+
+  // Get final results
+  console.log("\n📊 SMART Test Results:")
+  const resultCmd = await runCommand(["smartctl", "-a", device], { sudo: true })
 
   if (resultCmd.success || resultCmd.output) {
-    // Extract relevant sections
     const output = resultCmd.output
-    const healthLine = output.split("\\n").find((l) => l.includes("SMART overall-health"))
-    const testResultsStart = output.indexOf("SMART Self-test log")
 
-    if (healthLine) {
-      console.log("\\n   " + healthLine.trim())
+    // Show overall health
+    const healthMatch = output.match(/SMART overall-health.*:\s*(.+)/)
+    if (healthMatch) {
+      const health = healthMatch[1].trim()
+      const icon = health.includes("PASSED") ? "✅" : "❌"
+      console.log(`   ${icon} Health: ${health}`)
     }
 
-    if (testResultsStart > -1) {
-      const testSection = output.substring(
-        testResultsStart,
-        testResultsStart + 800,
-      )
-      console.log("\\n   Recent test results:")
-      testSection.split("\\n").slice(0, 10).forEach((line) => {
-        if (line.trim()) console.log("   " + line)
-      })
+    // Show recent test results
+    const testLogStart = output.indexOf("SMART Self-test log")
+    if (testLogStart > -1) {
+      const lines = output.substring(testLogStart).split("\n")
+      console.log("\n   Recent Tests:")
+      for (let i = 0; i < Math.min(lines.length, 8); i++) {
+        if (lines[i].trim()) {
+          console.log("   " + lines[i])
+        }
+      }
     }
 
-    console.log("\n✅ SMART check completed")
+    console.log("\n✅ SMART check completed successfully")
   } else {
     console.log("\n⚠️  Could not retrieve SMART results")
+    console.log("   Check manually with: sudo smartctl -a " + device)
+  }
+}
+
+async function saveBackupLog(
+  mountPoint: string,
+  logContent: string,
+  success: boolean,
+): Promise<void> {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
+  const status = success ? "success" : "failed"
+  const logDir = `${mountPoint}/${METADATA_DIR}/logs`
+  const logFile = `${logDir}/${timestamp}_${status}.log`
+
+  try {
+    // Ensure logs directory exists
+    await runCommand(["mkdir", "-p", logDir], { sudo: true })
+
+    // Write log file
+    const tempPath = `/tmp/backup-log-${Date.now()}.txt`
+    await Deno.writeTextFile(tempPath, logContent)
+    await runCommand(["cp", tempPath, logFile], { sudo: true })
+    await runCommand(["rm", tempPath])
+
+    console.log(`\n📝 Log saved: ${logFile}`)
+  } catch (error) {
+    console.error("Warning: Could not save backup log:", error)
   }
 }
 
 async function logSync(mountPoint: string): Promise<void> {
-  const logPath = `${mountPoint}/${METADATA_DIR}/sync-log.txt`
-  const entry = `${new Date().toISOString()} - Backup sync completed successfully\n`
-
-  try {
-    // Write to temp file then append with sudo
-    const tempPath = `/tmp/sync-log-${Date.now()}.txt`
-    await Deno.writeTextFile(tempPath, entry)
-
-    // Check if log file exists
-    try {
-      await Deno.stat(logPath)
-      // Append to existing file
-      await runCommand(["sh", "-c", `cat ${tempPath} >> ${logPath}`], { sudo: true })
-    } catch {
-      // Create new file
-      await runCommand(["mv", tempPath, logPath], { sudo: true })
-    }
-
-    await runCommand(["chown", "root:root", logPath], { sudo: true })
-
-    // Clean up temp file
-    try {
-      await Deno.remove(tempPath)
-    } catch {
-      // Ignore
-    }
-  } catch (error) {
-    console.warn(`⚠️  Warning: Could not write sync log: ${error}`)
-  }
+  // This function is deprecated - logs are now saved via saveBackupLog()
+  // Kept for backwards compatibility but does nothing
+  console.log("   (Legacy sync log skipped - using new log format)")
 }
 
 async function create(envVars: Record<string, string>): Promise<void> {
   const localBackupsPath = envVars.LOCAL_BACKUPS_PATH
   const resticPassword = envVars.BACKUPS_PASSWORD
 
+  // Track backup session for logging
+  const backupLog: string[] = []
+  const startTime = Date.now()
+  let syncSuccess = false
+  let verifyResults: {
+    passed: number
+    failed: number
+    skipped: number
+    details: Array<{ name: string; status: "passed" | "failed" | "skipped"; error?: string }>
+  } = {
+    passed: 0,
+    failed: 0,
+    skipped: 0,
+    details: [],
+  }
+
+  const addLog = (message: string) => {
+    backupLog.push(`[${new Date().toISOString()}] ${message}`)
+  }
+
+  addLog("=== Offline Backup Session Started ===")
+
   // Expand path
   const expanded = localBackupsPath.replace(
     /^~/,
     Deno.env.get("HOME") || "~",
   )
+  addLog(`Source: ${expanded}`)
 
   // Check if source exists
   try {
     const stat = await Deno.stat(expanded)
     if (!stat.isDirectory) {
       console.error(`❌ Error: ${expanded} is not a directory`)
+      addLog(`ERROR: ${expanded} is not a directory`)
       Deno.exit(1)
     }
   } catch {
     console.error(`❌ Error: ${expanded} does not exist`)
+    addLog(`ERROR: ${expanded} does not exist`)
     Deno.exit(1)
   }
 
@@ -672,41 +768,101 @@ async function create(envVars: Record<string, string>): Promise<void> {
     }
 
     // Sync backups
+    addLog(`Starting sync from ${expanded} to ${MOUNT_POINT}`)
     await syncBackups(localBackupsPath, MOUNT_POINT)
+    syncSuccess = true
+    addLog("Sync completed successfully")
 
     // Verify backups
-    await verifyBackups(MOUNT_POINT, resticPassword)
+    addLog("Starting verification (100% data check)")
+    verifyResults = await verifyBackups(MOUNT_POINT, resticPassword)
+    addLog(
+      `Verification complete: ${verifyResults.passed} passed, ${verifyResults.failed} failed, ${verifyResults.skipped} skipped`,
+    )
 
     // Write metadata (after verification to include accurate size)
     await writeMetadata(MOUNT_POINT, localBackupsPath)
+    addLog("Metadata written")
 
-    // Log sync
-    await logSync(MOUNT_POINT)
+    // Save session log
+    const duration = Math.round((Date.now() - startTime) / 1000)
+    addLog(`=== Backup Session Complete (${Math.floor(duration / 60)}m ${duration % 60}s) ===`)
+    await saveBackupLog(
+      MOUNT_POINT,
+      backupLog.join("\n"),
+      syncSuccess && verifyResults.failed === 0,
+    )
 
-    console.log("\n✅ Backup completed successfully!")
+    // Display summary
+    console.log("\n" + "=".repeat(60))
+    console.log("📊 BACKUP SUMMARY")
+    console.log("=".repeat(60))
+    console.log(`\n✅ Backup completed successfully!`)
+    console.log(`   Duration: ${Math.floor(duration / 60)}m ${duration % 60}s`)
+    console.log(`   Source: ${expanded}`)
+    console.log(`   Destination: ${MOUNT_POINT}`)
+    console.log(`\n📦 Verification Results:`)
+    console.log(`   ✅ Passed:  ${verifyResults.passed}`)
+    if (verifyResults.failed > 0) {
+      console.log(`   ❌ Failed:  ${verifyResults.failed}`)
+      verifyResults.details.filter((d) => d.status === "failed").forEach((d) => {
+        console.log(`      - ${d.name}: ${d.error || "unknown error"}`)
+      })
+    }
+    if (verifyResults.skipped > 0) {
+      console.log(`   ⏭️  Skipped: ${verifyResults.skipped} (not restic repos)`)
+    }
+
+    // Get backup size
+    const sizeInfo = await getBackupSize(MOUNT_POINT)
+    console.log(`\n💾 Backup Size: ${sizeInfo.human}`)
+
+    // Get drive usage
+    const dfOutput = await runCommand(["df", "-h", MOUNT_POINT])
+    const usageLine = dfOutput.output.split("\n")[1]
+    if (usageLine) {
+      const parts = usageLine.trim().split(/\s+/)
+      console.log(`   Drive Total: ${parts[1]}`)
+      console.log(`   Drive Used:  ${parts[2]} (${parts[4]})`)
+      console.log(`   Drive Free:  ${parts[3]}`)
+    }
+
+    console.log("=".repeat(60))
 
     // Ask about SMART check
     console.log("\n🔍 Drive Health Check (SMART)")
     console.log("   short: ~2 minutes  - Quick electrical/mechanical check")
-    console.log("   long:  ~10 minutes - Comprehensive surface scan")
+    console.log("   long:  ~390 minutes - Comprehensive surface scan")
     console.log("   no:    Skip health check")
     const smartChoice = prompt(
       "\n❓ Would you like a SMART check of the drive's health? (short/long/no) [short]: ",
     ) || "short"
 
     if (smartChoice.toLowerCase() === "short" || smartChoice.toLowerCase() === "long") {
+      addLog(`Starting SMART ${smartChoice} test`)
       await runSmartCheck(device, smartChoice.toLowerCase() as "short" | "long")
+      addLog(`SMART ${smartChoice} test completed`)
     } else {
       console.log("\n⏭️  Skipping SMART check")
+      addLog("SMART check skipped by user")
     }
-    console.log(
-      `\n📊 Drive usage: ${(await runCommand(["df", "-h", MOUNT_POINT])).output.split("\n")[1]}`,
-    )
-    console.log(`\nTo safely remove drive:`)
+
+    console.log(`\n🔒 To safely remove drive:`)
     console.log(`  sudo umount ${MOUNT_POINT}`)
     console.log(`  sudo eject ${device}`)
   } catch (error) {
     console.error(`\n❌ Error during backup: ${error}`)
+    addLog(`ERROR: ${error}`)
+
+    // Save error log
+    try {
+      await saveBackupLog(MOUNT_POINT, backupLog.join("\n"), false)
+    } catch {
+      // If we can't save to mount, save locally
+      const localLog = `/tmp/offline-backup-error-${Date.now()}.log`
+      await Deno.writeTextFile(localLog, backupLog.join("\n"))
+      console.error(`\n📝 Error log saved to: ${localLog}`)
+    }
 
     // Try to unmount on error
     try {

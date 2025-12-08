@@ -140,6 +140,36 @@ export class BackupOperations {
     ) {
       return
     }
+
+    // Fix repository ownership for Syncthing sync
+    // The cron job runs as root, so repos are created with root ownership
+    // Change to user ownership so Syncthing can sync them
+    await this.changeRepoOwnership(repoPath)
+  }
+
+  /**
+   * Changes ownership of the backup repository to allow Syncthing sync
+   */
+  async changeRepoOwnership(repoPath: string): Promise<void> {
+    logInfo(`Changing repository ownership to ${USER}:${USER}`)
+
+    const cmd = new Deno.Command("sudo", {
+      args: ["chown", "-R", `${USER}:${USER}`, repoPath],
+      stdout: "piped",
+      stderr: "piped",
+    })
+
+    const { code, stderr } = await cmd.output()
+
+    if (code !== 0) {
+      const errorMsg = `Warning: Could not change repository ownership:\n${
+        new TextDecoder().decode(stderr)
+      }`
+      logError(errorMsg)
+      // Don't fail the backup for this, just warn
+    } else {
+      logInfo("Repository ownership changed successfully")
+    }
   }
 
   /**
