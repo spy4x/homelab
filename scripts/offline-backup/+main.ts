@@ -5,7 +5,6 @@ import { loadEnvFile, runCommand } from "../+lib.ts"
 const MOUNT_POINT = "/tmp/offline-backups-mount"
 const METADATA_DIR = "metadata"
 const REPOS_DIR = "restic-repos"
-const DOCS_DIR = "documentation"
 
 interface DriveInfo {
   name: string
@@ -145,15 +144,14 @@ async function createBackupStructure(mountPoint: string): Promise<void> {
     `${mountPoint}/${REPOS_DIR}`,
     `${mountPoint}/${METADATA_DIR}`,
     `${mountPoint}/${METADATA_DIR}/logs`,
-    `${mountPoint}/${DOCS_DIR}`,
   ]
 
   for (const dir of dirs) {
     await runCommand(["mkdir", "-p", dir], { sudo: true })
   }
 
-  // Create comprehensive README.md in documentation folder
-  const readmePath = `${mountPoint}/${DOCS_DIR}/README.md`
+  // Create comprehensive README.md in root of drive
+  const readmePath = `${mountPoint}/README.md`
   const readmeContent = `# Homelab Offline Backup Drive
 
 This drive contains encrypted backups of critical homelab services.
