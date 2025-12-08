@@ -527,12 +527,12 @@ async function runSmartCheck(
   // Wait for test to complete with progress updates
   const checkIntervalMs = 5 * 60 * 1000 // Check every 5 minutes
   const totalWaitMs = estimatedMinutes * 60 * 1000
-  const startTime = Date.now()
+  const testStartTime = Date.now()
 
   console.log("\n⏳ Waiting for test to complete...")
 
   while (true) {
-    const elapsed = Date.now() - startTime
+    const elapsed = Date.now() - testStartTime
     const elapsedMinutes = Math.floor(elapsed / 60000)
 
     // Check test status
@@ -758,6 +758,9 @@ async function create(envVars: Record<string, string>): Promise<void> {
     // Ensure directory structure
     await createBackupStructure(MOUNT_POINT)
 
+    // Start timing actual operations (after user prompts)
+    const operationStartTime = Date.now()
+
     // Check for repositories that will be deleted
     if (!(await checkDeletedRepos(localBackupsPath, MOUNT_POINT))) {
       console.log("❌ Operation cancelled")
@@ -782,16 +785,29 @@ async function create(envVars: Record<string, string>): Promise<void> {
     await writeMetadata(MOUNT_POINT, localBackupsPath)
     addLog("Metadata written")
 
-    // Save session log
-    const duration = Math.round((Date.now() - startTime) / 1000)
-    addLog(`=== Backup Session Complete (${Math.floor(duration / 60)}m ${duration % 60}s) ===`)
-    await saveBackupLog(
-      MOUNT_POINT,
-      backupLog.join("\n"),
-      syncSuccess && verifyResults.failed === 0,
-    )
+    // Calculate operation duration (excluding user prompts)
+    const duration = Math.round((Date.now() - operationStartTime) / 1000)
+    addLog(`=== Backup Operations Complete (${Math.floor(duration / 60)}m ${duration % 60}s) ===`)
 
-    // Display summary
+    // Ask about SMART check
+    console.log("\n🔍 Drive Health Check (SMART)")
+    console.log("   short: ~2 minutes  - Quick electrical/mechanical check")
+    console.log("   long:  ~390 minutes - Comprehensive surface scan")
+    console.log("   no:    Skip health check")
+    const smartChoice = prompt(
+      "\n❓ Would you like a SMART check of the drive's health? (short/long/no) [short]: ",
+    ) || "short"
+
+    if (smartChoice.toLowerCase() === "short" || smartChoice.toLowerCase() === "long") {
+      addLog(`Starting SMART ${smartChoice} test`)
+      await runSmartCheck(device, smartChoice.toLowerCase() as "short" | "long")
+      addLog(`SMART ${smartChoice} test completed`)
+    } else {
+      console.log("\n⏭️  Skipping SMART check")
+      addLog("SMART check skipped by user")
+    }
+
+    // Display summary after SMART check
     console.log("\n" + "=".repeat(60))
     console.log("📊 BACKUP SUMMARY")
     console.log("=".repeat(60))
@@ -827,23 +843,12 @@ async function create(envVars: Record<string, string>): Promise<void> {
 
     console.log("=".repeat(60))
 
-    // Ask about SMART check
-    console.log("\n🔍 Drive Health Check (SMART)")
-    console.log("   short: ~2 minutes  - Quick electrical/mechanical check")
-    console.log("   long:  ~390 minutes - Comprehensive surface scan")
-    console.log("   no:    Skip health check")
-    const smartChoice = prompt(
-      "\n❓ Would you like a SMART check of the drive's health? (short/long/no) [short]: ",
-    ) || "short"
-
-    if (smartChoice.toLowerCase() === "short" || smartChoice.toLowerCase() === "long") {
-      addLog(`Starting SMART ${smartChoice} test`)
-      await runSmartCheck(device, smartChoice.toLowerCase() as "short" | "long")
-      addLog(`SMART ${smartChoice} test completed`)
-    } else {
-      console.log("\n⏭️  Skipping SMART check")
-      addLog("SMART check skipped by user")
-    }
+    // Save final log with complete session
+    await saveBackupLog(
+      MOUNT_POINT,
+      backupLog.join("\n"),
+      syncSuccess && verifyResults.failed === 0,
+    )
 
     console.log(`\n🔒 To safely remove drive:`)
     console.log(`  sudo umount ${MOUNT_POINT}`)
