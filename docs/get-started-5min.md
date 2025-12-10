@@ -87,7 +87,7 @@ docker compose up -d
 docker compose ps
 
 # Check logs
-docker compose logs -f proxy
+docker compose logs -f traefik
 
 # Test web access
 curl -I https://proxy.yourdomain.com
@@ -113,7 +113,7 @@ services:
     container_name: vaultwarden
     image: vaultwarden/server:latest
     volumes:
-      - ./.volumes/vaultwarden:/data
+      - ${VOLUMES_PATH}/vaultwarden:/data
     restart: unless-stopped
     networks:
       - proxy
@@ -127,7 +127,7 @@ services:
       - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
 ```
 
-3. **Create backup config** `servers/home/backup-configs/vaultwarden.backup.ts`:
+3. **Create backup config** `servers/home/configs/backup/vaultwarden.backup.ts`:
 ```typescript
 import { BackupConfig } from "../scripts/backup/src/+lib.ts"
 
@@ -185,14 +185,14 @@ dig vault.yourdomain.com  # Should point to your server IP
 
 **Check Traefik:**
 ```bash
-docker compose logs proxy | grep vault
+docker compose logs traefik | grep vault
 ```
 
 ### SSL Certificate Error
 
 Wait 1-2 minutes for Let's Encrypt to issue certificate. Check:
 ```bash
-docker compose logs proxy | grep -i acme
+docker compose logs traefik | grep -i acme
 ```
 
 ### Container Won't Start

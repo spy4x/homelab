@@ -1,0 +1,32 @@
+networks:
+  proxy:
+    external: true
+
+name: piped
+
+services:
+  # A simple HTML page to display links to all the services.
+  homepage:
+    container_name: homepage
+    image: nginx:alpine
+    volumes:
+      - ./src:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.10"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.homepage.loadbalancer.server.port=80"
+      - "traefik.http.routers.homepage.rule=Host(`ui.${DOMAIN}`)"
+      - "traefik.http.routers.homepage.entrypoints=websecure"
+      - "traefik.http.routers.homepage.tls=true"
+      - "traefik.http.routers.homepage.tls.certresolver=myresolver"

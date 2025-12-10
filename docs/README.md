@@ -34,7 +34,7 @@ Learn about:
 **Perfect for**: Adding new services to your homelab
 
 Complete step-by-step guide covering:
-1. Service definition (shared stacks vs. server-specific)
+1. Service definition (shared stacks vs. server-specific local stacks)
 2. Environment variable configuration
 3. Backup configuration (critical!)
 4. Deployment process
@@ -144,7 +144,7 @@ deno task
 ### Key Configuration Files
 - `servers/<server>/.env` - Server environment variables
 - `servers/<server>/compose.yml` - Service definitions
-- `servers/<server>/backup-configs/*.ts` - Backup configurations
+- `servers/<server>/configs/backup/*.backup.ts` - Backup configurations
 - `servers/<server>/config.json` - Stack selection
 
 ### Important Directories on Server

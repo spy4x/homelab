@@ -14,10 +14,11 @@ if (args.length < 2) {
 
 const [playbookPath, target] = args
 
-// Validate target
-const validTargets = ["home", "offsite", "cloud"]
-if (!validTargets.includes(target)) {
-  error(`Invalid target: ${target}. Must be one of: ${validTargets.join(", ")}`)
+// Validate target directory exists
+try {
+  await Deno.stat(`./servers/${target}`)
+} catch {
+  error(`Target '${target}' does not exist. Expected directory: ./servers/${target}`)
   Deno.exit(1)
 }
 

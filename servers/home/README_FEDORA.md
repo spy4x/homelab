@@ -94,7 +94,7 @@ curl -I https://YOUR_DOMAIN
 Check Docker logs to confirm requests are reaching Traefik:
 
 ```bash
-docker logs proxy --tail 50
+docker logs traefik --tail 50
 ```
 
 ## Troubleshooting

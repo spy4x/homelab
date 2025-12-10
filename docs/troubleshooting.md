@@ -119,13 +119,13 @@ docker compose start myservice
 **Solution**:
 ```bash
 # Check Traefik logs
-docker compose logs proxy | grep -i error
+docker compose logs traefik | grep -i error
 
 # Verify DNS points to server
 dig myservice.yourdomain.com
 
 # Check Traefik can reach container
-docker compose exec proxy wget -O- http://myservice:8080
+docker compose exec traefik wget -O- http://myservice:8080
 
 # Wait if rate limited (Let's Encrypt: 5 failures/hour)
 ```
@@ -194,13 +194,13 @@ deno task deploy home
 1. Check `servers/<server>/config.json`:
 ```json
 {
-  "sharedStacks": ["proxy", "watchtower", "myservice"]
+  "sharedStacks": ["traefik", "watchtower", "myservice"]
 }
 ```
 
 2. Verify stack file exists:
 ```bash
-ls -la stacks/myservice.yml
+ls -la sharedStacks/myservice.yml
 ```
 
 3. Redeploy to apply changes
@@ -400,7 +400,7 @@ docker compose config
 docker compose up --dry-run
 
 # Validate specific file
-docker compose -f stacks/myservice.yml config
+docker compose -f sharedStacks/myservice.yml config
 ```
 
 ## Recovery Procedures

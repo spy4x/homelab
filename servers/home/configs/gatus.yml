@@ -56,8 +56,19 @@ endpoints:
       - type: ntfy
 
   - name: Cloud - Gatus
-    url: "https://uptime.${DOMAIN}"
+    url: "https://uptime-cloud.${DOMAIN}"
     interval: 10m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Cloud - Proxy
+    url: "https://proxy-cloud.${DOMAIN}"
+    interval: 10m
+    client:
+      username: ${BASIC_AUTH_USER}
+      password: ${BASIC_AUTH_PASSWORD}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -76,7 +87,7 @@ endpoints:
       - type: ntfy
 
   - name: Offsite - Syncthing
-    url: "https://sync-offsite.${DOMAIN}"
+    url: "https://syncthing-offsite.${DOMAIN}"
     interval: 10m
     conditions:
       - "[STATUS] == 200"

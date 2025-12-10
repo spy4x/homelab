@@ -70,12 +70,12 @@ These services run on multiple servers for redundancy:
 ### Stack System
 Services are organized into:
 
-1. **Shared Stacks** (`/stacks/*.yml`):
+1. **Shared Stacks** (`/sharedStacks/*.yml`):
    - Reusable compose files
    - Used across multiple servers
-   - Examples: proxy, watchtower, syncthing
+   - Examples: traefik, watchtower, syncthing
 
-2. **Local Stacks** (e.g., `/servers/home/immich/compose.yml`):
+2. **Local Stacks** (e.g., `/servers/home/localStacks/immich/compose.yml`):
    - Server-specific services
    - Can override shared stack settings
 

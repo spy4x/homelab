@@ -10,11 +10,11 @@
     // #region Deploy
     "deploy": {
       "command": "deno run -A ./scripts/deploy/+main.ts",
-      "description": "🚀 Deploy services to remote server (merges compose + stacks)"
+      "description": "🚀 Deploy services to remote server (compose.yml, localStacks, sharedStacks)"
     },
     "ssh": {
       "command": "deno run -A ./scripts/ssh/+main.ts",
-      "description": "🔐 SSH into server by name (home|cloud|offsite)"
+      "description": "🔐 SSH into server by name"
     },
     // #endregion Deploy
 
@@ -79,7 +79,8 @@
     // #endregion Checks
   },
   "imports": {
-    "@scripts/backup": "./scripts/backup/src"
+    "@scripts/backup": "./scripts/backup/src",
+    "@std/dotenv": "jsr:@std/dotenv"
   },
   "exclude": [
     "**/.vite/*",

@@ -1,5 +1,6 @@
 export const USER = getEnvVar("USER")
 export const PATH_APPS = getEnvVar("PATH_APPS")
+export const VOLUMES_PATH = getEnvVar("VOLUMES_PATH")
 export const PATH_MEDIA = getEnvVar("PATH_MEDIA", true) // Optional - only on home server
 export const PATH_SYNC = getEnvVar("PATH_SYNC")
 

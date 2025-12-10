@@ -20,7 +20,7 @@ class RestoreRunner {
   constructor() {
     this.backupsPassword = getEnvVar("BACKUPS_PASSWORD")
     this.backupsBasePath = absPath(getEnvVar("PATH_SYNC") + "/backups")
-    this.configsPath = absPath(`${PATH_APPS}/backup-configs`)
+    this.configsPath = absPath(`${PATH_APPS}/configs/backup`)
   }
 
   async run(options: RestoreOptions): Promise<void> {

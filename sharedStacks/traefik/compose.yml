@@ -1,0 +1,60 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  # Traefik is a reverse proxy and load balancer.
+  # It is used to route incoming requests to the correct container by domain name and not by port.
+  # Ex: https://movies.example.com -> jellyfin container:8096
+  # Ex: https://gitea.example.com -> gitea container:3000
+  # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
+  traefik:
+    container_name: "traefik"
+    image: "traefik:latest"
+    restart: unless-stopped
+    command:
+      # - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      # Timeout settings to allow large file uploads to Immich (up to 600s)
+      - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=600s
+      - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=600s
+      - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=600s
+      # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Use HTTP-01 challenge
+      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use 'web' entrypoint (port 80) for the challenge
+      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory" # Use staging server for testing
+      - "--certificatesresolvers.myresolver.acme.email=${CONTACT_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - 443:443
+      - 80:80
+    volumes:
+      - ${VOLUMES_PATH}/traefik/letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy
+      - default
+    deploy:
+      resources:
+        limits:
+          cpus: ${PROXY_CPU_LIMIT:-1}
+          memory: ${PROXY_MEM_LIMIT:-512M}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.traefik.rule=Host(`${PROXY_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"

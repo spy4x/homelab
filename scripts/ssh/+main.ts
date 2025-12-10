@@ -4,7 +4,19 @@
 
 import { error, log } from "../+lib.ts"
 
-const validServers = ["home", "cloud", "offsite"]
+const serversDir = "./servers"
+const validServers: string[] = []
+
+try {
+  for await (const entry of Deno.readDir(serversDir)) {
+    if (entry.isDirectory) {
+      validServers.push(entry.name)
+    }
+  }
+} catch (err) {
+  error(`Failed to scan servers directory: ${err}`)
+  Deno.exit(1)
+}
 
 const args = Deno.args
 if (args.length === 0) {

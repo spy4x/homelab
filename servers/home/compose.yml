@@ -15,7 +15,7 @@ services:
       - PGID=1000
       - TZ=${TIMEZONE}
     volumes:
-      - ./.volumes/transmission:/config
+      - ${VOLUMES_PATH}/transmission:/config
       - ${PATH_MOVIES}:/downloads/movies
       - ${PATH_SERIES}:/downloads/series
       - ${PATH_MUSIC}:/downloads/music
@@ -51,8 +51,8 @@ services:
     container_name: jellyfin
     image: jellyfin/jellyfin
     volumes:
-      - ./.volumes/jellyfin:/config
-      - ./.volumes/jellyfin-cache:/cache
+      - ${VOLUMES_PATH}/jellyfin:/config
+      - ${VOLUMES_PATH}/jellyfin-cache:/cache
       - ${PATH_MEDIA}:/media
       - ${PATH_VIDEOS}:/videos
       - ${PATH_MUSIC}:/music
@@ -78,32 +78,6 @@ services:
       - "traefik.http.routers.jellyfin.tls=true"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
 
-  # A simple HTML page to display links to all the services.
-  homepage:
-    container_name: homepage
-    image: nginx:alpine
-    volumes:
-      - ./homepage/dist:/usr/share/nginx/html:ro
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: "0.10"
-    security_opt:
-      - no-new-privileges:true
-    networks:
-      - proxy
-      - default
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.services.homepage.loadbalancer.server.port=80"
-      - "traefik.http.routers.homepage.rule=Host(`ui.${DOMAIN}`)"
-      - "traefik.http.routers.homepage.entrypoints=websecure"
-      - "traefik.http.routers.homepage.tls=true"
-      - "traefik.http.routers.homepage.tls.certresolver=myresolver"
-
   # Vaultwarden is a password manager which is compatible with Bitwarden clients.
   vaultwarden:
     container_name: vaultwarden
@@ -123,7 +97,7 @@ services:
       # Real client IP from Cloudflare (enables proper logging and rate limiting)
       - IP_HEADER=CF-Connecting-IP
     volumes:
-      - ./.volumes/vaultwarden:/data
+      - ${VOLUMES_PATH}/vaultwarden:/data
     restart: unless-stopped
     deploy:
       resources:
@@ -154,7 +128,7 @@ services:
     image: ghcr.io/open-webui/open-webui:latest
     restart: unless-stopped
     volumes:
-      - ./.volumes/open-webui:/app/backend/data
+      - ${VOLUMES_PATH}/open-webui:/app/backend/data
     deploy:
       resources:
         limits:
@@ -181,8 +155,8 @@ services:
       - PGID=1000
       - TZ=${TIMEZONE}
     volumes:
-      - ./.volumes/audiobookshelf/config:/config
-      - ./.volumes/audiobookshelf-metadata:/metadata
+      - ${VOLUMES_PATH}/audiobookshelf/config:/config
+      - ${VOLUMES_PATH}/audiobookshelf-metadata:/metadata
       - ${PATH_BOOKS}:/audiobooks
     restart: unless-stopped
     deploy:
@@ -247,7 +221,7 @@ services:
     container_name: home-assistant
     image: ghcr.io/home-assistant/home-assistant:stable
     volumes:
-      - ./.volumes/home-assistant:/config
+      - ${VOLUMES_PATH}/home-assistant:/config
       - /etc/localtime:/etc/localtime:ro
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0 # Zigbee USB dongle
@@ -280,8 +254,8 @@ services:
     container_name: adguard
     image: adguard/adguardhome:latest
     volumes:
-      - ./.volumes/adguard/work:/opt/adguardhome/work
-      - ./.volumes/adguard/conf:/opt/adguardhome/conf
+      - ${VOLUMES_PATH}/adguard/work:/opt/adguardhome/work
+      - ${VOLUMES_PATH}/adguard/conf:/opt/adguardhome/conf
     ports:
       - 53:53/tcp # DNS
       - 53:53/udp # DNS
@@ -318,7 +292,7 @@ services:
       - PGID=1000
       - TZ=${TIMEZONE}
     volumes:
-      - ./.volumes/filebrowser:/database
+      - ${VOLUMES_PATH}/filebrowser:/database
       - ${PATH_MEDIA}:/srv/media
       - ${PATH_VIDEOS}:/srv/videos
       - ${PATH_MUSIC}:/srv/music
@@ -357,7 +331,7 @@ services:
       - PGID=1000
       - TZ=${TIMEZONE}
     volumes:
-      - ./.volumes/freshrss:/config:Z
+      - ${VOLUMES_PATH}/freshrss:/config:Z
     restart: unless-stopped
     deploy:
       resources:
@@ -387,8 +361,8 @@ services:
     environment:
       - TZ=${TIMEZONE}
     volumes:
-      - ./.volumes/radicale/data:/data
-      - ./.volumes/radicale/config:/config
+      - ${VOLUMES_PATH}/radicale/data:/data
+      - ${VOLUMES_PATH}/radicale/config:/config
     restart: unless-stopped
     deploy:
       resources:
@@ -436,7 +410,7 @@ services:
       # - WOODPECKER_GITLAB_SECRET=${WOODPECKER_GITLAB_SECRET}
       - WOODPECKER_ADMIN=${WOODPECKER_ADMIN}
     volumes:
-      - ./.volumes/woodpecker-server:/var/lib/woodpecker
+      - ${VOLUMES_PATH}/woodpecker-server:/var/lib/woodpecker
     restart: unless-stopped
     deploy:
       resources:
@@ -467,7 +441,7 @@ services:
       - WOODPECKER_MAX_WORKFLOWS=4 # Parallel workflows
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./.volumes/woodpecker-agent/cache:/woodpecker/cache # Cache for faster builds
+      - ${VOLUMES_PATH}/woodpecker-agent/cache:/woodpecker/cache # Cache for faster builds
     depends_on:
       - woodpecker-server
     restart: unless-stopped

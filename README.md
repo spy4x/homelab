@@ -24,7 +24,7 @@ and backups.
 
 - Deno installed locally
 - Ansible installed locally (optional but recommended)
-- SSH key-based authentication configured
+- SSH key-based authentication configured to _non-root user_
 
 ### Initial Setup
 
@@ -45,7 +45,7 @@ deno task deploy home
 
 # 5. SSH to server and start services
 deno task ssh home
-cd ~/ssd-2tb/apps
+cd $BASE_PATH/apps
 docker compose up -d
 ```
 
@@ -61,17 +61,23 @@ For detailed instructions, see [Get Started in 5 Minutes](docs/get-started-5min.
 │   └── backup/                # Consolidated backup system (Deno + Restic)
 ├── servers/
 │   ├── home/                  # Home server (Fedora)
+|   |   ├── .env               # Server-specific environment variables
 │   │   ├── compose.yml        # Docker services
-│   │   ├── backup-configs/    # Service backup configurations
+│   │   ├── configs/           # Various service configurations
+|   |       └── backup/        # Services backup configurations
 │   │   ├── homepage/          # Custom homepage
 │   │   ├── immich/            # Photo management
 │   │   └── piped/             # YouTube alternative
 │   ├── cloud/                 # Cloud server (Hetzner VPS)
+|   |   ├── .env               # Server-specific environment variables
 │   │   ├── compose.yml        # Mail & monitoring services
-│   │   └── backup-configs/    # Service backup configurations
+│   │   └── configs/           # Various service configurations
+|   |       └── backup/        # Services backup configurations
 │   └── offsite/               # Offsite server (Raspberry Pi)
+|       ├── .env               # Server-specific environment variables
 │       ├── compose.yml        # Sync & backup services
-│       └── backup-configs/    # Service backup configurations
+│       └── configs/           # Various service configurations
+|           └── backup/        # Services backup configurations
 └── .env.example               # Shared environment variables template
 ```
 
@@ -116,7 +122,7 @@ deno task ansible ansible/playbooks/monitoring.yml <server>
 
 The ansible wrapper script (`scripts/ansible/+main.ts`) automatically:
 
-- Loads environment variables from root `.env`
+- Loads environment variables from `.env.root`
 - Loads Ansible-specific variables from `ansible/.env`
 - Loads server-specific variables from `servers/<server>/.env`
 - Passes the correct inventory and limit flags to ansible-playbook
@@ -134,11 +140,9 @@ deno task deploy offsite
 
 The deploy script (`scripts/deploy/+main.ts`) automatically:
 
-- Merges root `.env` with server-specific `.env` (server overrides root)
 - Reads `config.json` to determine required stacks
-- Merges `compose.yml` with stack files from `./stacks/` directory
 - Syncs files to remote server via rsync
-- Runs `docker compose up -d` to update services (only recreates changed containers)
+- Runs `docker compose up -d` to ensure services are running
 - Cleans up temporary files
 
 ## Backups
@@ -147,7 +151,7 @@ Automated daily backups using Deno + Restic. See `scripts/backup/README.md`.
 
 **Configure per server:**
 
-- Add service configs to `servers/{server}/backup-configs/`
+- Add service configs to `servers/{server}/configs/backup/`
 - Deploy cron job:
   `ansible-playbook ansible/playbooks/backup-cronjob.yml -K --limit <server>`
 

@@ -78,10 +78,9 @@ class BackupRunner {
     return {
       backupsOutputBasePath: absPath(getEnvVar("PATH_SYNC") + "/backups"),
       backupsPassword: getEnvVar("BACKUPS_PASSWORD"),
-      slackWebhookUrl: getEnvVar("SLACK_WEBHOOK_URL", true), // Optional
       ntfyUrl: getEnvVar("NTFY_URL", true), // Optional
       ntfyAuth: getEnvVar("NTFY_AUTH_TOKEN", true), // Optional
-      configsPath: absPath(`${PATH_APPS}/backup-configs`),
+      configsPath: absPath(`${PATH_APPS}/configs/backup`),
     }
   }
 

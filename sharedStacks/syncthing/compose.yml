@@ -1,0 +1,35 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  # Syncthing is a continuous file synchronization program.
+  # It synchronizes files between two or more computers in real time, safely protected from prying eyes.
+  syncthing:
+    container_name: syncthing
+    image: syncthing/syncthing:latest
+    volumes:
+      - ${VOLUMES_PATH}/syncthing:/var/syncthing
+      - /etc/localtime:/etc/localtime:ro
+      - ${PATH_SYNC}:/sync
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${SYNCTHING_CPU_LIMIT:-1}
+          memory: ${SYNCTHING_MEM_LIMIT:-1024M}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
+      - "traefik.http.routers.syncthing.rule=Host(`${SYNCTHING_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.syncthing.entrypoints=websecure"
+      - "traefik.http.routers.syncthing.tls=true"
+      - "traefik.http.routers.syncthing.tls.certresolver=myresolver"

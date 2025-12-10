@@ -1,9 +1,0 @@
-name: ${PROJECT}
-
-networks:
-  proxy:
-    external: true
-
-# No server-specific services defined
-# All services come from stacks defined in config.json
-services: {}

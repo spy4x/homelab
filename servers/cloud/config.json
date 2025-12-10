@@ -1,3 +1,3 @@
 {
-  "sharedStacks": ["proxy", "watchtower", "syncthing", "gatus", "ntfy"]
+  "sharedStacks": ["traefik", "watchtower", "syncthing", "gatus", "ntfy"]
 }

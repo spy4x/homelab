@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
-import { loadEnvFile, runCommand } from "../+lib.ts"
+import { runCommand } from "../+lib.ts"
+import { load } from "@std/dotenv"
 
 const REPOS_DIR = "restic-repos"
 const LOGS_DIR = "logs"
@@ -1452,7 +1453,7 @@ async function main(): Promise<void> {
 
   // Load environment variables
   console.log("🔧 Loading environment variables...")
-  const envVars = await loadEnvFile(".env")
+  const envVars = await load({ envPath: ".env" })
 
   // Check required env vars
   const required = ["LOCAL_BACKUPS_PATH", "BACKUPS_PASSWORD"]

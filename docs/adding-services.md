@@ -23,7 +23,7 @@ Decide which server will host the service:
 
 #### Option A: Shared Stack (Multi-Server)
 
-Create `/stacks/myservice.yml`:
+Create `/sharedStacks/myservice.yml`:
 
 ```yaml
 name: ${PROJECT}
@@ -37,7 +37,7 @@ services:
     container_name: myservice
     image: myservice/myservice:latest
     volumes:
-      - ./.volumes/myservice:/data
+      - ${VOLUMES_PATH}/myservice:/data
     restart: unless-stopped
     deploy:
       resources:
@@ -78,7 +78,7 @@ services:
     environment:
       - TZ=${TIMEZONE:-UTC}
     volumes:
-      - ./.volumes/myservice:/data
+      - ${VOLUMES_PATH}/myservice:/data
     restart: unless-stopped
     deploy:
       resources:
@@ -126,14 +126,14 @@ MYSERVICE_API_KEY=YOUR_API_KEY_HERE  # Get from https://myservice.com/settings
 
 **CRITICAL**: Every service with persistent data needs a backup config.
 
-Create `/servers/<server>/backup-configs/myservice.backup.ts`:
+Create `/servers/<server>/configs/backup/myservice.backup.ts`:
 
 ```typescript
 import { BackupConfig } from "../scripts/backup/src/+lib.ts"
 
 const backupConfig: BackupConfig = {
   name: "myservice",
-  sourcePaths: "default", // Uses ./.volumes/myservice
+  sourcePaths: "default", // Uses ${VOLUMES_PATH}/myservice
   containers: {
     stop: "default", // Stops container named "myservice"
   },
@@ -165,11 +165,11 @@ For non-standard configurations:
 const backupConfig: BackupConfig = {
   name: "myservice",
   sourcePaths: [
-    "./.volumes/myservice/data",
-    "./.volumes/myservice/config",
+    "${VOLUMES_PATH}/myservice/data",
+    "${VOLUMES_PATH}/myservice/config",
   ],
   pathsToChangeOwnership: [
-    "./.volumes/myservice",
+    "${VOLUMES_PATH}/myservice",
   ],
   containers: {
     stop: ["myservice", "myservice-worker"], // Multiple containers
@@ -292,7 +292,7 @@ services:
     container_name: myservice-db
     image: postgres:16-alpine
     volumes:
-      - ./.volumes/myservice/db:/var/lib/postgresql/data
+      - ${VOLUMES_PATH}/myservice/db:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=myservice
       - POSTGRES_USER=${MYSERVICE_DB_USER}
@@ -330,16 +330,16 @@ deploy:
 docker compose logs myservice
 
 # Check if volume permissions issue
-sudo ls -la ./.volumes/myservice
+sudo ls -la ${VOLUMES_PATH}/myservice
 
 # Fix permissions
-sudo chown -R $USER:$USER ./.volumes/myservice
+sudo chown -R $USER:$USER ${VOLUMES_PATH}/myservice
 ```
 
 ### Can't Access via Domain
 ```bash
 # Check Traefik can see container
-docker compose logs proxy | grep myservice
+docker compose logs traefik | grep myservice
 
 # Check DNS
 dig myservice.yourdomain.com
@@ -351,7 +351,7 @@ docker inspect myservice | grep -A 20 Labels
 ### Backup Fails
 ```bash
 # Check backup config exists
-ls -la backup-configs/myservice.backup.ts
+ls -la configs/backup/myservice.backup.ts
 
 # Run backup with verbose logging
 deno task backup 2>&1 | tee backup.log

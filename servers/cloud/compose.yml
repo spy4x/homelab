@@ -20,10 +20,10 @@ services:
       - "587:587" # SMTP - submission with STARTTLS
       - "993:993" # IMAPS - secure IMAP
     volumes:
-      - ./.volumes/mailserver/mail-data:/var/mail
-      - ./.volumes/mailserver/mail-state:/var/mail-state
-      - ./.volumes/mailserver/mail-logs:/var/log/mail
-      - ./.volumes/mailserver/config:/tmp/docker-mailserver
+      - ${VOLUMES_PATH}/mailserver/mail-data:/var/mail
+      - ${VOLUMES_PATH}/mailserver/mail-state:/var/mail-state
+      - ${VOLUMES_PATH}/mailserver/mail-logs:/var/log/mail
+      - ${VOLUMES_PATH}/mailserver/config:/tmp/docker-mailserver
       - /etc/localtime:/etc/localtime:ro
     environment:
       # Basic settings
@@ -103,8 +103,8 @@ services:
       - ROUNDCUBEMAIL_SKIN=elastic
       - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload,managesieve
     volumes:
-      - ./.volumes/roundcube/www:/var/www/html
-      - ./.volumes/roundcube/db:/var/roundcube/db
+      - ${VOLUMES_PATH}/roundcube/www:/var/www/html
+      - ${VOLUMES_PATH}/roundcube/db:/var/roundcube/db
     depends_on:
       - mailserver
     deploy:
@@ -147,7 +147,7 @@ services:
       - DISCORD_CLIENT_ID=
       - DISCORD_CLIENT_SECRET=
     volumes:
-      - ./.volumes/healthchecks:/data
+      - ${VOLUMES_PATH}/healthchecks:/data
     restart: unless-stopped
     deploy:
       resources:

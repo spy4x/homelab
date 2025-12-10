@@ -84,6 +84,17 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: Home - Proxy
+    url: "https://proxy-home.${DOMAIN}"
+    interval: 10m
+    client:
+      username: ${BASIC_AUTH_USER}
+      password: ${BASIC_AUTH_PASSWORD}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   # Offsite Server Services (cross-check)
   - name: Offsite - Proxy
     url: "https://proxy-offsite.${DOMAIN}"

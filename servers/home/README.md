@@ -86,7 +86,7 @@ Photo management with mobile app backup. See `servers/home/immich/` for details.
 
 ## Backups
 
-Backup configs in `servers/home/backup-configs/`. Automated daily at 2:30 AM.
+Backup configs in `servers/home/configs/backup/`. Automated daily at 2:30 AM.
 
 Manual run:
 

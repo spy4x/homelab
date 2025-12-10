@@ -1,0 +1,48 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  # ntfy - Notification service for alerts
+  # Can be used for mail server alerts and backup notifications
+  ntfy:
+    container_name: ntfy
+    image: binwiederhier/ntfy:latest
+    command:
+      - serve
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+      - NTFY_BASE_URL=https://${NTFY_SUBDOMAIN}.${DOMAIN}
+      - NTFY_UPSTREAM_BASE_URL=https://ntfy.sh
+      - NTFY_CACHE_FILE=/var/lib/ntfy/cache.db
+      - NTFY_AUTH_FILE=/var/lib/ntfy/auth.db
+      - NTFY_ATTACHMENT_CACHE_DIR=/var/lib/ntfy/attachments
+      - NTFY_AUTH_DEFAULT_ACCESS=deny-all
+      - NTFY_BEHIND_PROXY=true
+      - NTFY_ENABLE_SIGNUP=false
+      - NTFY_ENABLE_LOGIN=true
+    user: "1000:1000"
+    volumes:
+      - ${VOLUMES_PATH}/ntfy/cache:/var/lib/ntfy
+      - ${VOLUMES_PATH}/ntfy/etc:/etc/ntfy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${NTFY_MEM_LIMIT:-128M}
+          cpus: ${NTFY_CPU_LIMIT:-0.2}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.ntfy.loadbalancer.server.port=80"
+      - "traefik.http.routers.ntfy.rule=Host(`${NTFY_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.ntfy.entrypoints=websecure"
+      - "traefik.http.routers.ntfy.tls=true"
+      - "traefik.http.routers.ntfy.tls.certresolver=myresolver"

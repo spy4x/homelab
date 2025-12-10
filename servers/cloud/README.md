@@ -142,7 +142,7 @@ docker exec mailserver fail2ban-client status
 
 ## Backups
 
-Backup configs in `servers/cloud/backup-configs/`. Run backups:
+Backup configs in `servers/cloud/configs/backup/`. Run backups:
 
 ```bash
 deno run --env-file=.env -A scripts/backup/+main.ts

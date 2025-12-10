@@ -1,4 +1,4 @@
-import { absPath, logError, PATH_APPS } from "./+lib.ts"
+import { absPath, logError, VOLUMES_PATH } from "./+lib.ts"
 import { BackupConfigState, BackupStatus } from "./types.ts"
 
 export class BackupConfigProcessor {
@@ -46,7 +46,7 @@ export class BackupConfigProcessor {
    * Gets default source paths for a backup configuration
    */
   private static getDefaultSourcePaths(backup: BackupConfigState): string[] {
-    return [`${PATH_APPS}/.volumes/${backup.name}`]
+    return [`${VOLUMES_PATH}/${backup.name}`]
   }
 
   /**
