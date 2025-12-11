@@ -20,9 +20,9 @@ alerting:
       success-threshold: 2
 
 endpoints:
-  - name: Homepage
+  - name: Dash
     group: home
-    url: "https://ui.${DOMAIN}"
+    url: "https://dash.${DOMAIN}"
     interval: 1m
     conditions:
       - "[STATUS] == 200"

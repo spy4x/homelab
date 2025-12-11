@@ -65,7 +65,7 @@ For detailed instructions, see [Get Started in 5 Minutes](docs/get-started-5min.
 │   │   ├── compose.yml        # Docker services
 │   │   ├── configs/           # Various service configurations
 |   |       └── backup/        # Services backup configurations
-│   │   ├── homepage/          # Custom homepage
+│   │   ├── homepage/          # Custom dash
 │   │   ├── immich/            # Photo management
 │   │   └── piped/             # YouTube alternative
 │   ├── cloud/                 # Cloud server (Hetzner VPS)

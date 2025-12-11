@@ -6,8 +6,8 @@ name: piped
 
 services:
   # A simple HTML page to display links to all the services.
-  homepage:
-    container_name: homepage
+  dash:
+    container_name: dash
     image: nginx:alpine
     volumes:
       - ./src:/usr/share/nginx/html:ro
@@ -25,8 +25,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.homepage.loadbalancer.server.port=80"
-      - "traefik.http.routers.homepage.rule=Host(`ui.${DOMAIN}`)"
-      - "traefik.http.routers.homepage.entrypoints=websecure"
-      - "traefik.http.routers.homepage.tls=true"
-      - "traefik.http.routers.homepage.tls.certresolver=myresolver"
+      - "traefik.http.services.dash.loadbalancer.server.port=80"
+      - "traefik.http.routers.dash.rule=Host(`dash.${DOMAIN}`)"
+      - "traefik.http.routers.dash.entrypoints=websecure"
+      - "traefik.http.routers.dash.tls=true"
+      - "traefik.http.routers.dash.tls.certresolver=myresolver"

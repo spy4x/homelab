@@ -220,9 +220,9 @@ Redeploy to apply monitoring:
 deno task deploy home
 ```
 
-### 7. Update Homepage
+### 7. Update Dash
 
-Add service to `/servers/home/homepage/src/index.html`:
+Add service to `/servers/home/localStacks/homepage/src/index.html`:
 
 ```html
 <a href="https://myservice.$DOMAIN" target="_blank" rel="noopener noreferrer">
@@ -369,4 +369,4 @@ docker compose stop myservice && docker compose start myservice
 5. **Document** service-specific configuration in comments
 6. **Use secrets** via .env files, never hardcode
 7. **Follow naming** conventions (kebab-case for services)
-8. **Add to homepage** for easy access
+8. **Add to dash** for easy access

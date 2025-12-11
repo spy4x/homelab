@@ -67,7 +67,7 @@ Photo management with mobile app backup. See `servers/home/immich/` for details.
 
 ## Web Access
 
-- **Homepage**: https://ui.yourdomain.com
+- **Dashboard**: https://dash.yourdomain.com
 - **Movies/TV**: https://movies.yourdomain.com
 - **Photos**: https://photos.yourdomain.com
 - **Passwords**: https://passwords.yourdomain.com

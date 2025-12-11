@@ -32,7 +32,7 @@ Configure Syncthing to:
 3. Accept shared folders containing backup repositories
 4. Store backups in local storage
 
-Access UI: https://sync-2.yourdomain.com or http://<offsite-ip>:8384
+Access UI: https://sync-offsite.yourdomain.com or http://<offsite-ip>:8384
 
 ### Storage
 
