@@ -91,6 +91,7 @@
         font-weight: 500;
         text-align: center;
         line-height: 1.2;
+        margin-bottom: 10px;
       }
 
       @media (max-width: 600px) {
@@ -113,211 +114,229 @@
         }
       }
     </style>
-    <title>Anton Shubin's home servers</title>
+    <title>Anton Shubin's servers</title>
   </head>
 
   <body>
-    <h1>Anton Shubin's home servers</h1>
-
-    <div class="section">
-      <h2 class="section-title">Home Services</h2>
-      <ul class="services-grid">
-        <li class="service-item">
-          <a
-            href="https://proxy-home.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🚦</div>
-            <div class="service-name">Proxy</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://sage.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🧠</div>
-            <div class="service-name">Sage</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://photos.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📷</div>
-            <div class="service-name">Photos</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://movies.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🎬</div>
-            <div class="service-name">Movies</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://torrents.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">⬇️</div>
-            <div class="service-name">Torrents</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://metube.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📺</div>
-            <div class="service-name">YouTube DL</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://passwords.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🔑</div>
-            <div class="service-name">Passwords</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://sync-home.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🔄</div>
-            <div class="service-name">Sync</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://ntfy-home.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🔔</div>
-            <div class="service-name">Notifications</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://uptime-home.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">⏱️</div>
-            <div class="service-name">Uptime</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://ai.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🤖</div>
-            <div class="service-name">AI Chat</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://books.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📚</div>
-            <div class="service-name">Audiobooks</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://home.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🏠</div>
-            <div class="service-name">Home Assistant</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://dns.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🛡️</div>
-            <div class="service-name">AdGuard DNS</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://files.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📁</div>
-            <div class="service-name">Files</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://ci.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">🔧</div>
-            <div class="service-name">CI/CD</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://rss.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📰</div>
-            <div class="service-name">RSS Reader</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://cal.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📅</div>
-            <div class="service-name">Calendar & Contacts</div>
-          </a>
-        </li>
-        <li class="service-item">
-          <a
-            href="https://piped.${DOMAIN}"
-            target="_blank"
-            class="service-link"
-          >
-            <div class="service-icon">📺</div>
-            <div class="service-name">YouTube</div>
-          </a>
-        </li>
-      </ul>
-    </div>
-
+    <h1>Anton Shubin's servers</h1>
     <div class="container">
       <div class="section">
-        <h2 class="section-title">Cloud Services</h2>
+        <h2 class="section-title">Home</h2>
+        <ul class="services-grid">
+          <li class="service-item">
+            <a
+              href="https://proxy-home.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🚦</div>
+              <div class="service-name">Proxy</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_proxy/health/badge.svg" alt="Home Proxy Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://sage.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🧠</div>
+              <div class="service-name">Sage</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_sage/health/badge.svg" alt="Home Sage Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://photos.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📷</div>
+              <div class="service-name">Photos</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_immich/health/badge.svg" alt="Home Photos Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://movies.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🎬</div>
+              <div class="service-name">Movies</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_jellyfin/health/badge.svg" alt="Home Movies Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://torrents.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">⬇️</div>
+              <div class="service-name">Torrents</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_transmission/health/badge.svg" alt="Home Torrents Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://metube.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📺</div>
+              <div class="service-name">YouTube DL</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_metube/health/badge.svg" alt="Home YouTube DL Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://passwords.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔑</div>
+              <div class="service-name">Passwords</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_vaultwarden/health/badge.svg" alt="Home Passwords Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://sync-home.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔄</div>
+              <div class="service-name">Sync</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_syncthing/health/badge.svg" alt="Home Sync Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ntfy-home.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔔</div>
+              <div class="service-name">Notifications</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_ntfy/health/badge.svg" alt="Home Notifications Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://uptime-home.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">⏱️</div>
+              <div class="service-name">Uptime</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_gatus/health/badge.svg" alt="Home Uptime Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ai.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🤖</div>
+              <div class="service-name">AI Chat</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_open-webui/health/badge.svg" alt="Home AI Chat Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://books.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📚</div>
+              <div class="service-name">Audiobooks</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_audiobookshelf/health/badge.svg" alt="Home Audiobooks Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://home.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🏠</div>
+              <div class="service-name">Home Assistant</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_home-assistant/health/badge.svg" alt="Home Home Assistant Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://dns.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🛡️</div>
+              <div class="service-name">AdGuard DNS</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_adguard-home/health/badge.svg" alt="Home AdGuard DNS Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://files.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📁</div>
+              <div class="service-name">Files</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_filebrowser/health/badge.svg" alt="Home Files Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ci.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔧</div>
+              <div class="service-name">CI/CD</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_woodpecker-ci/health/badge.svg" alt="Home CI/CD Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://rss.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📰</div>
+              <div class="service-name">RSS Reader</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_freshrss/health/badge.svg" alt="Home RSS Reader Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://cal.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📅</div>
+              <div class="service-name">Calendar & Contacts</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_radicale/health/badge.svg" alt="Home Calendar & Contacts Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://piped.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📺</div>
+              <div class="service-name">YouTube</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_piped/health/badge.svg" alt="Home YouTube Uptime Badge" />
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <h2 class="section-title">Cloud</h2>
         <ul class="services-grid">
           <li class="service-item">
             <a
@@ -327,6 +346,7 @@
             >
               <div class="service-icon">🚦</div>
               <div class="service-name">Proxy</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_proxy/health/badge.svg" alt="Cloud Proxy Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -337,6 +357,7 @@
             >
               <div class="service-icon">📧</div>
               <div class="service-name">Webmail</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_webmail/health/badge.svg" alt="Cloud Webmail Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -347,6 +368,7 @@
             >
               <div class="service-icon">🛡️</div>
               <div class="service-name">Rspamd</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_rspamd/health/badge.svg" alt="Cloud Rspamd Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -357,6 +379,7 @@
             >
               <div class="service-icon">⏱️</div>
               <div class="service-name">Uptime</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_gatus/health/badge.svg" alt="Cloud Uptime Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -367,6 +390,7 @@
             >
               <div class="service-icon">🔔</div>
               <div class="service-name">Notifications</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_ntfy/health/badge.svg" alt="Cloud Notifications Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -377,6 +401,7 @@
             >
               <div class="service-icon">✅</div>
               <div class="service-name">Healthchecks</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_healthchecks/health/badge.svg" alt="Cloud Healthchecks Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -387,13 +412,14 @@
             >
               <div class="service-icon">🔄</div>
               <div class="service-name">Sync</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_syncthing/health/badge.svg" alt="Cloud Sync Uptime Badge" />
             </a>
           </li>
         </ul>
       </div>
 
       <div class="section">
-        <h2 class="section-title">Offsite Services</h2>
+        <h2 class="section-title">Offsite</h2>
         <ul class="services-grid">
           <li class="service-item">
             <a
@@ -403,6 +429,7 @@
             >
               <div class="service-icon">🔄</div>
               <div class="service-name">Syncthing</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/offsite_syncthing/health/badge.svg" alt="Offsite Syncthing Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -413,6 +440,7 @@
             >
               <div class="service-icon">🚦</div>
               <div class="service-name">Proxy</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/offsite_proxy/health/badge.svg" alt="Offsite Proxy Uptime Badge" />
             </a>
           </li>
         </ul>

@@ -23,6 +23,7 @@ const targetEnv = await load({ envPath: targetEnvPath })
 
 const SSH_ADDRESS = targetEnv["SSH_ADDRESS"]
 const PATH_APPS = targetEnv["PATH_APPS"]
+success(`BASIC_AUTH_BASE64: ${targetEnv["BASIC_AUTH_BASE64"]}`)
 
 if (!SSH_ADDRESS || !PATH_APPS) {
   error(`SSH_ADDRESS and PATH_APPS must be set in ${targetEnvPath}`)
@@ -46,7 +47,7 @@ try {
 const sharedStacks = config.sharedStacks || []
 const localStacks: string[] = []
 const localStacksDirExists = await Deno.stat(`${targetPath}/localStacks`).then(() => true).catch(
-  () => false
+  () => false,
 )
 if (!localStacksDirExists) {
   log(`${targetPath}/localStacks not found, skipping local stacks`)

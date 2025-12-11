@@ -10,7 +10,8 @@ web:
 
 alerting:
   ntfy:
-    topic: ${NTFY_URL}
+    url: ${NTFY_URL}
+    topic: ${NTFY_TOPIC}
     token: ${NTFY_TOKEN}
     priority: 3
     default-alert:
@@ -19,76 +20,97 @@ alerting:
       success-threshold: 2
 
 endpoints:
-  # Cloud Server Services (cross-check)
-  - name: Cloud - Mail Server (SMTP)
+  - name: Mail Server (SMTP)
+    group: cloud
     url: "tcp://mail.${DOMAIN}:587"
-    interval: 5m
+    interval: 1m
     conditions:
       - "[CONNECTED] == true"
     alerts:
       - type: ntfy
 
-  - name: Cloud - Webmail
+  - name: Webmail
+    group: cloud
     url: "https://webmail.${DOMAIN}"
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Cloud - Rspamd
+  - name: Rspamd
+    group: cloud
     url: "https://rspamd.${DOMAIN}"
-    interval: 5m
-    client:
-      username: ${RSPAMD_USERNAME}
-      password: ${RSPAMD_PASSWORD}
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Cloud - ntfy
+  - name: Healthchecks
+    group: cloud
+    url: "https://healthchecks.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Syncthing
+    group: cloud
+    url: "https://sync-cloud.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ntfy
+    group: cloud
     url: "https://ntfy-cloud.${DOMAIN}"
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Cloud - Gatus
+  - name: Gatus
+    group: cloud
     url: "https://uptime-cloud.${DOMAIN}"
-    interval: 10m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Cloud - Proxy
-    url: "https://proxy-cloud.${DOMAIN}"
-    interval: 10m
-    client:
-      username: ${BASIC_AUTH_USER}
-      password: ${BASIC_AUTH_PASSWORD}
+  - name: Proxy
+    group: cloud
+    url: "https://proxy-cloud.${DOMAIN}/dashboard"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  # Offsite Server Services (cross-check)
-  - name: Offsite - Proxy
-    url: "https://proxy-offsite.${DOMAIN}"
-    interval: 10m
-    client:
-      username: ${BASIC_AUTH_USER}
-      password: ${BASIC_AUTH_PASSWORD}
+  - name: Proxy
+    group: offsite
+    url: "https://proxy-offsite.${DOMAIN}/dashboard"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
-  - name: Offsite - Syncthing
-    url: "https://syncthing-offsite.${DOMAIN}"
-    interval: 10m
+  - name: Syncthing
+    group: offsite
+    url: "https://sync-offsite.${DOMAIN}"
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:

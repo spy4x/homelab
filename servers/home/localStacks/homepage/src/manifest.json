@@ -1,7 +1,7 @@
 {
-  "name": "Anton Shubin's home servers",
-  "short_name": "Home Servers",
-  "description": "Dashboard for Anton Shubin's homelab services",
+  "name": "Anton Shubin's servers",
+  "short_name": "My Servers",
+  "description": "Dashboard for Anton Shubin's servers",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#121212",
