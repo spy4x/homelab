@@ -16,6 +16,7 @@ alerting:
     priority: 3
     default-alert:
       enabled: true
+      send-on-resolved: true
       failure-threshold: 3
       success-threshold: 2
 
