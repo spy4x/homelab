@@ -62,7 +62,7 @@
         user: root
         minute: "{{ backup_cron_minute }}"
         hour: "{{ backup_cron_hour }}"
-        job: "USER={{ homelab_user }} {{ deno_install_path }}/bin/deno run --env-file={{ env_file_path }} -A {{ apps_path }}/scripts/backup/+main.ts >> {{ backup_log_path }} 2>&1"
+        job: "USER={{ homelab_user }} {{ deno_install_path }}/bin/deno run --env-file={{ root_env_file_path }} --env-file={{ env_file_path }} -A {{ apps_path }}/scripts/backup/+main.ts >> {{ backup_log_path }} 2>&1"
         state: present
 
     - name: Display cronjob info
@@ -72,4 +72,4 @@
           - "Schedule: Daily at {{ backup_cron_hour }}:{{ '%02d' | format(backup_cron_minute) }}"
           - "Log file: {{ backup_log_path }}"
           - "To view logs: tail -f {{ backup_log_path }}"
-          - "To test manually: sudo -u root USER={{ homelab_user }} {{ deno_install_path }}/bin/deno run --env-file={{ env_file_path }} -A {{ apps_path }}/scripts/backup/+main.ts"
+          - "To test manually: sudo -u root USER={{ homelab_user }} {{ deno_install_path }}/bin/deno run --env-file={{ root_env_file_path }} --env-file={{ env_file_path }} -A {{ apps_path }}/scripts/backup/+main.ts"

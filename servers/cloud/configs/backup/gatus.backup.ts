@@ -1,4 +1,4 @@
-import { BackupConfig } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig, SERVER_NAME } from "@scripts/backup"
 
 /**
  * Gatus Backup Configuration

@@ -15,11 +15,7 @@ class BackupRunner {
   constructor() {
     this.context = this.initializeContext()
     this.operations = new BackupOperations(this.context.backupsPassword)
-    this.reporter = new BackupReporter(
-      this.context.slackWebhookUrl,
-      this.context.ntfyUrl,
-      this.context.ntfyAuth,
-    )
+    this.reporter = new BackupReporter(this.context)
   }
 
   /**
@@ -27,7 +23,7 @@ class BackupRunner {
    */
   async run(): Promise<void> {
     const startTime = Date.now()
-    logInfo(`[${new Date().toISOString()}] Starting backup process`)
+    logInfo(`[${new Date().toISOString()}] Starting backup process for: ${this.context.serverName}`)
 
     try {
       // Load and validate configurations
@@ -76,10 +72,11 @@ class BackupRunner {
    */
   private initializeContext(): BackupContext {
     return {
-      backupsOutputBasePath: absPath(getEnvVar("PATH_SYNC") + "/backups"),
+      serverName: getEnvVar("SERVER_NAME"),
+      backupsOutputBasePath: absPath(getEnvVar("PATH_BACKUPS")),
       backupsPassword: getEnvVar("BACKUPS_PASSWORD"),
-      ntfyUrl: getEnvVar("NTFY_URL", true), // Optional
-      ntfyAuth: getEnvVar("NTFY_AUTH_TOKEN", true), // Optional
+      ntfyUrl: getEnvVar("NTFY_URL_BACKUPS"),
+      ntfyAuth: getEnvVar("NTFY_TOKEN_BACKUPS"),
       configsPath: absPath(`${PATH_APPS}/configs/backup`),
     }
   }

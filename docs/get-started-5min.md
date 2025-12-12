@@ -129,7 +129,7 @@ services:
 
 3. **Create backup config** `servers/home/configs/backup/vaultwarden.backup.ts`:
 ```typescript
-import { BackupConfig } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "vaultwarden",

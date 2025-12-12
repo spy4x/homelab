@@ -31,7 +31,6 @@ The backup system is organized into clean, modular components:
 - **Ownership Management**: Handles file ownership for proper backup access
 - **Repository Management**: Automatic Restic repository initialization
 - **Size Reporting**: Calculates and reports backup repository sizes
-- **Slack Notifications**: Comprehensive backup reports via Slack webhook
 - **Configurable Retention**: Configurable backup retention policies
 
 ## Usage
@@ -66,7 +65,6 @@ Required environment variables:
 
 - `PATH_SYNC` - Base path for backup storage
 - `BACKUPS_PASSWORD` - Password for restic repositories
-- `SLACK_WEBHOOK_URL` - Slack webhook URL for notifications (fallback)
 - `PATH_APPS` - Path to applications directory
 - `USER` - Current user name for ownership changes
 
@@ -113,7 +111,7 @@ export default backupConfig
    - Clean up old backups (7 daily, 4 weekly, 3 monthly)
    - Restart Docker containers
 4. **Calculate Repository Sizes** - Get disk usage for each repository
-5. **Generate Reports** - Console output and Slack notification
+5. **Generate Reports** - Console output and NTFY notification
 
 ## Error Handling
 

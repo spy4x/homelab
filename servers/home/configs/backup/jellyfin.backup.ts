@@ -1,11 +1,11 @@
-import { BackupConfig } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig, VOLUMES_PATH } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "jellyfin",
   sourcePaths: [
-    `${PATH_VOLUMES}/jellyfin/config`,
-    `${PATH_VOLUMES}/jellyfin/data`,
-    `${PATH_VOLUMES}/jellyfin/plugins`,
+    `${VOLUMES_PATH}/jellyfin/config`,
+    `${VOLUMES_PATH}/jellyfin/data`,
+    `${VOLUMES_PATH}/jellyfin/plugins`,
   ],
   containers: {
     stop: "default",

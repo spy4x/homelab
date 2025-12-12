@@ -79,7 +79,7 @@
     // #endregion Checks
   },
   "imports": {
-    "@scripts/backup": "./scripts/backup/src",
+    "@scripts/backup": "./scripts/backup/src/+lib.ts",
     "@std/dotenv": "jsr:@std/dotenv"
   },
   "exclude": [

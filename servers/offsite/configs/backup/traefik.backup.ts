@@ -1,9 +1,9 @@
-import { BackupConfig, PATH_VOLUMES, SERVER_NAME } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig, VOLUMES_PATH, SERVER_NAME } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "traefik",
   destName: `traefik-${SERVER_NAME}`, // Suffix added because traefik/proxy is shared across servers
-  sourcePaths: [`${PATH_VOLUMES}/traefik`],
+  sourcePaths: [`${VOLUMES_PATH}/traefik`],
   containers: {
     stop: "default",
   },

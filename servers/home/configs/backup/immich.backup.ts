@@ -1,12 +1,12 @@
-import { BackupConfig } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig, VOLUMES_PATH, PATH_MEDIA } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "immich",
   sourcePaths: [
-    `${PATH_VOLUMES}/immich`,
+    `${VOLUMES_PATH}/immich`,
     `${PATH_MEDIA}/photos`,
   ],
-  pathsToChangeOwnership: [`${PATH_VOLUMES}/immich`],
+  pathsToChangeOwnership: [`${VOLUMES_PATH}/immich`],
   containers: {
     stop: ["immich-server", "immich-machine-learning", "immich-db", "immich-kv"],
   },

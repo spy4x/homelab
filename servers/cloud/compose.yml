@@ -89,9 +89,9 @@ services:
 
   # Roundcube - Modern webmail client (optional but recommended)
   # Provides a user-friendly web interface for accessing email
-  webmail:
+  roundcube:
     image: roundcube/roundcubemail:latest
-    container_name: webmail
+    container_name: roundcube
     restart: unless-stopped
     environment:
       - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://mailserver
@@ -120,11 +120,11 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.webmail.loadbalancer.server.port=80"
-      - "traefik.http.routers.webmail.rule=Host(`webmail.${DOMAIN}`)"
-      - "traefik.http.routers.webmail.entrypoints=websecure"
-      - "traefik.http.routers.webmail.tls=true"
-      - "traefik.http.routers.webmail.tls.certresolver=myresolver"
+      - "traefik.http.services.roundcube.loadbalancer.server.port=80"
+      - "traefik.http.routers.roundcube.rule=Host(`webmail.${DOMAIN}`)"
+      - "traefik.http.routers.roundcube.entrypoints=websecure"
+      - "traefik.http.routers.roundcube.tls=true"
+      - "traefik.http.routers.roundcube.tls.certresolver=myresolver"
 
   # Healthchecks - Cron job and scheduled task monitoring
   # Receives HTTP/email pings from scheduled tasks, alerts when they don't check in

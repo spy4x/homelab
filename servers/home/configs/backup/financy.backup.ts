@@ -1,4 +1,4 @@
-import { BackupConfig } from "@scripts/backup/src/+lib.ts"
+import { BackupConfig, PATH_APPS } from "@scripts/backup"
 
 const POSTGRES_VOLUME_PATH = `${PATH_APPS}/../fn/.volumes/postgres`
 

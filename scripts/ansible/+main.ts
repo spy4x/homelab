@@ -2,7 +2,8 @@
 // Usage: deno run -A scripts/ansible/+main.ts <playbook> <target>
 // Example: deno run -A scripts/ansible/+main.ts ansible/playbooks/maintenance.yml offsite
 
-import { error, loadEnvFile, log, success } from "../+lib.ts"
+import { error, log, success } from "../+lib.ts"
+import { load } from "@std/dotenv"
 
 // Parse command line arguments
 const args = Deno.args
@@ -24,15 +25,15 @@ try {
 
 // Load environment variables from root .env
 const rootEnvPath = "./.env"
-const rootEnv = await loadEnvFile(rootEnvPath)
+const rootEnv = await load({ envPath: rootEnvPath })
 
 // Load environment variables from ansible/.env
 const ansibleEnvPath = "./ansible/.env"
-const ansibleEnv = await loadEnvFile(ansibleEnvPath)
+const ansibleEnv = await load({ envPath: ansibleEnvPath })
 
 // Load environment variables from target's server folder .env
 const targetEnvPath = `./servers/${target}/.env`
-const targetEnv = await loadEnvFile(targetEnvPath)
+const targetEnv = await load({ envPath: targetEnvPath })
 
 // Merge all environment variables (later ones override earlier ones)
 const mergedEnv = { ...Deno.env.toObject(), ...rootEnv, ...ansibleEnv, ...targetEnv }

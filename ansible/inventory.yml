@@ -22,10 +22,11 @@ all:
           ssh_port: "{{ lookup('env', 'SSH_PORT_HOME') }}"
 
           # Paths specific to this server
-          deno_install_path: /home/spy4x/.deno
-          apps_path: "{{ lookup('env', 'BASE_PATH') }}"/apps
-          backup_log_path: /home/spy4x/backup.log
-          env_file_path: "{{ lookup('env', 'BASE_PATH') }}"/apps/home/.env
+          deno_install_path: /home/{{ lookup('env', 'USER') }}/.deno
+          apps_path: "{{ lookup('env', 'PATH_APPS') }}"
+          backup_log_path: /home/{{ lookup('env', 'USER') }}/backup.log
+          env_file_path: "{{ lookup('env', 'PATH_APPS') }}/.env"
+          root_env_file_path: "{{ lookup('env', 'PATH_APPS') }}/.env.root"
 
           # Backup configuration
           backup_cron_hour: 2
@@ -72,10 +73,11 @@ all:
           ssh_port: "{{ lookup('env', 'SSH_PORT_OFFSITE') }}"
 
           # Paths specific to this server
-          deno_install_path: /home/spy4x/.deno
-          apps_path: /home/spy4x/offsite
-          backup_log_path: /home/spy4x/backup.log
-          env_file_path: /home/spy4x/offsite/.env
+          deno_install_path: /home/{{ lookup('env', 'USER') }}/.deno
+          apps_path: /home/{{ lookup('env', 'USER') }}/offsite
+          backup_log_path: /home/{{ lookup('env', 'USER') }}/backup.log
+          env_file_path: /home/{{ lookup('env', 'USER') }}/offsite/.env
+          root_env_file_path: /home/{{ lookup('env', 'USER') }}/.env.root
 
           # Backup configuration
           backup_cron_hour: 3
@@ -114,9 +116,10 @@ all:
 
           # Paths specific to this server
           deno_install_path: /root/.deno
-          apps_path: /opt/cloud
-          backup_log_path: /var/log/backup.log
-          env_file_path: /opt/cloud/.env
+          apps_path: "{{ lookup('env', 'PATH_APPS') }}"
+          backup_log_path: "{{ lookup('env', 'PATH_APPS') }}/backup.log"
+          env_file_path: "{{ lookup('env', 'PATH_APPS') }}/.env"
+          root_env_file_path: "{{ lookup('env', 'PATH_APPS') }}/.env.root"
 
           # Backup configuration
           backup_cron_hour: 4

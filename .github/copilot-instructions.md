@@ -6,6 +6,7 @@
 - Keep configurations simple and maintainable
 - Follow existing patterns and conventions in the codebase
 - Use Docker Compose for service definitions
+- **Infrastructure as Code (IaC) First**: Everything should be defined in code (compose files, configs, scripts) rather than manual UI changes or terminal commands. Knowledge gets lost, but code doesn't. Manual changes should only be temporary troubleshooting steps that get codified afterwards.
 
 ## Environment Variables
 

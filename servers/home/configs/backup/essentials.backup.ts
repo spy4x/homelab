@@ -1,4 +1,4 @@
-import { BackupConfig, PATH_SYNC } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig, PATH_SYNC } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "essentials",

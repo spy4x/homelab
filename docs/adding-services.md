@@ -129,7 +129,7 @@ MYSERVICE_API_KEY=YOUR_API_KEY_HERE  # Get from https://myservice.com/settings
 Create `/servers/<server>/configs/backup/myservice.backup.ts`:
 
 ```typescript
-import { BackupConfig } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "myservice",

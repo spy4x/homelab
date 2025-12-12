@@ -88,13 +88,14 @@ export class BackupConfigProcessor {
       if (!file.isFile || !file.name.endsWith(".backup.ts")) {
         continue
       }
+      const name = file.name.replace(".backup.ts", "")
 
       try {
         const configModule = await import(`${configsPath}/${file.name}`)
 
         if (!configModule.default) {
           const backup: BackupConfigState = {
-            name: file.name,
+            name,
             sourcePaths: [],
             fileName: file.name,
             status: BackupStatus.ERROR,
@@ -114,7 +115,7 @@ export class BackupConfigProcessor {
         backups.push(backup)
       } catch (error) {
         const backup: BackupConfigState = {
-          name: file.name,
+          name,
           sourcePaths: [],
           fileName: file.name,
           status: BackupStatus.ERROR,

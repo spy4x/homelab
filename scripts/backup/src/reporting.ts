@@ -1,33 +1,19 @@
 import { logError, logInfo } from "./+lib.ts"
-import { BackupConfigState, BackupResult, BackupStatus } from "./types.ts"
+import { BackupConfigState, BackupContext, BackupResult, BackupStatus } from "./types.ts"
 
 export class BackupReporter {
-  private slackWebhookUrl?: string
-  private ntfyUrl?: string
-  private ntfyAuth?: string
-
-  constructor(slackWebhookUrl?: string, ntfyUrl?: string, ntfyAuth?: string) {
-    this.slackWebhookUrl = slackWebhookUrl
-    this.ntfyUrl = ntfyUrl
-    this.ntfyAuth = ntfyAuth
-  }
+  constructor(private context: BackupContext) {}
 
   /**
-   * Sends a comprehensive backup report via ntfy (primary) or Slack (fallback)
+   * Sends a comprehensive backup report via ntfy
    */
   async sendNotification(result: BackupResult): Promise<void> {
-    // Try ntfy first if configured
-    if (this.ntfyUrl) {
-      const ntfySuccess = await this.sendNtfyNotification(result)
-      if (ntfySuccess) {
-        logInfo("ntfy notification sent successfully")
-        return
-      }
-      logError("ntfy notification failed, falling back to Slack")
+    const ntfySuccess = await this.sendNtfyNotification(result)
+    if (ntfySuccess) {
+      logInfo("ntfy notification sent successfully to " + this.context.ntfyUrl)
+      return
     }
-
-    // Fall back to Slack
-    await this.sendSlackNotification(result)
+    logError("ntfy notification failed to " + this.context.ntfyUrl)
   }
 
   /**
@@ -39,22 +25,21 @@ export class BackupReporter {
       const successRate = totalCount > 0 ? ((successCount / totalCount) * 100).toFixed(0) : "0"
 
       // Headers must be ASCII-only (no emojis)
-      const title = `Homelab Backup: ${successCount}/${totalCount} (${successRate}%)`
+      const title =
+        `Backup report, server "${this.context.serverName}": ${successCount}/${totalCount} (${successRate}%)`
       const message = this.buildNtfyMessage(result)
 
       const headers: Record<string, string> = {
         "Title": title,
         "Priority": successCount === totalCount ? "default" : "high",
-        "Tags": successCount === totalCount
-          ? "white_check_mark,floppy_disk"
-          : "warning,floppy_disk",
+        "Tags": successCount === totalCount ? "white_check_mark" : "warning",
       }
 
-      if (this.ntfyAuth) {
-        headers["Authorization"] = `Bearer ${this.ntfyAuth}`
+      if (this.context.ntfyAuth) {
+        headers["Authorization"] = `Bearer ${this.context.ntfyAuth}`
       }
 
-      const response = await fetch(this.ntfyUrl!, {
+      const response = await fetch(this.context.ntfyUrl, {
         method: "POST",
         headers,
         body: message,
@@ -82,9 +67,7 @@ export class BackupReporter {
       : `${durationSeconds}s`
 
     // Start with emoji in the message body (not in headers)
-    let message = `🏠 Homelab Backup Complete\n💾 Total: ${
-      totalSizeGB.toFixed(2)
-    } GB\n⏱️ Duration: ${durationText}\n\n`
+    let message = `💾 Total: ${totalSizeGB.toFixed(2)} GB\n⏱️ Duration: ${durationText}\n\n`
 
     // Add table - limit to top 10 for ntfy to keep message short
     const displayBackups = sortedBackups.slice(0, 10)
@@ -112,35 +95,6 @@ export class BackupReporter {
     }
 
     return message
-  }
-
-  /**
-   * Sends notification via Slack webhook
-   */
-  private async sendSlackNotification(result: BackupResult): Promise<void> {
-    if (!this.slackWebhookUrl) {
-      logError("Slack webhook URL not configured")
-      return
-    }
-    try {
-      const message = this.buildSlackMessage(result)
-
-      const response = await fetch(this.slackWebhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(message),
-      })
-
-      if (!response.ok) {
-        logError(`Error sending Slack message: ${response.statusText}`)
-      } else {
-        logInfo("Slack message sent")
-      }
-    } catch (err) {
-      logError(`Failed to send Slack notification: ${err}`)
-    }
   }
 
   /**
@@ -197,43 +151,6 @@ export class BackupReporter {
       const duration = this.formatDuration(backup.durationMs)
 
       logInfo(`${statusEmoji}     | ${name} | ${percentage} | ${size.padEnd(9)} | ${duration}`)
-    }
-  }
-
-  /**
-   * Builds the complete Slack message with blocks
-   */
-  private buildSlackMessage(result: BackupResult): object {
-    const { backups, successCount, totalCount, totalSizeGB, durationMs } = result
-
-    const headerText = this.buildHeaderText(
-      successCount,
-      totalCount,
-      totalSizeGB,
-      backups,
-      durationMs,
-    )
-    const tableContent = this.buildTableContent(backups, totalSizeGB)
-    const errorDetails = this.buildErrorDetails(backups)
-
-    return {
-      text: `Backup finished: ${successCount}/${totalCount} successful`,
-      blocks: [
-        {
-          type: "header",
-          text: {
-            type: "plain_text",
-            text: headerText,
-          },
-        },
-        {
-          type: "section",
-          text: {
-            type: "mrkdwn",
-            text: tableContent + errorDetails,
-          },
-        },
-      ],
     }
   }
 

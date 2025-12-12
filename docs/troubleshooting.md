@@ -13,10 +13,10 @@
 **Solution**: Use relative imports in dynamically loaded files
 ```typescript
 // ❌ Don't use
-import { BackupConfig } from "@scripts/backup/+lib.ts"
+import { BackupConfig } from "@scripts/backup"
 
 // ✅ Do use
-import { BackupConfig } from "../scripts/backup/src/+lib.ts"
+import { BackupConfig } from "@scripts/backup"
 ```
 
 #### Missing Environment Variables
