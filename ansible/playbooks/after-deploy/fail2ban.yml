@@ -7,31 +7,14 @@
   hosts: homelab_servers
   become: true
 
+  vars:
+    # NTFY notification settings
+    ntfy_url_security: "{{ lookup('env', 'NTFY_URL_SECURITY') }}"
+    ntfy_token_security: "{{ lookup('env', 'NTFY_TOKEN_SECURITY') }}"
+
   tasks:
-    # ===== Raspberry Pi: Fix Read-Only Boot Partition =====
-    - name: Check if this is a Raspberry Pi
-      ansible.builtin.stat:
-        path: /boot/firmware
-      register: boot_firmware
-      when: ansible_os_family == "Debian"
-
-    - name: Remount boot partition as read-write (Raspberry Pi)
-      ansible.builtin.command: mount -o remount,rw /boot/firmware
-      when:
-        - ansible_os_family == "Debian"
-        - boot_firmware.stat.exists | default(false)
-      failed_when: false
-      changed_when: false
-
-    - name: Fix broken packages before installing (Raspberry Pi)
-      ansible.builtin.command: dpkg --configure -a
-      environment:
-        DEBIAN_FRONTEND: noninteractive
-      when:
-        - ansible_os_family == "Debian"
-        - boot_firmware.stat.exists | default(false)
-      failed_when: false
-      changed_when: false
+    - name: Fix Raspberry Pi boot partition (if applicable)
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/raspberry-pi-fix.yml"
 
     # ===== Install Fail2ban =====
     - name: Install Fail2ban
@@ -41,22 +24,53 @@
       environment:
         DEBIAN_FRONTEND: noninteractive
 
-    - name: Install pip (for Python docker library)
-      ansible.builtin.package:
-        name: python3-pip
-        state: present
+    # ===== Detect Running Containers =====
+    - name: Get list of running Docker containers
+      ansible.builtin.shell: docker ps --format "{{ '{{' }}.Names{{ '}}' }}"
+      register: running_containers
+      changed_when: false
+      failed_when: false
 
-    - name: Install Python docker library (for log monitoring)
-      ansible.builtin.pip:
-        name: docker
-        state: present
-      when: ansible_os_family == "RedHat"
+    - name: Build dynamic jail list based on running containers
+      ansible.builtin.set_fact:
+        fail2ban_docker_jails: "{{ fail2ban_docker_jails | default([]) + [item] }}"
+      loop:
+        - {
+            name: "vaultwarden",
+            container: "vaultwarden",
+            maxretry: 5,
+            bantime: "12h",
+            findtime: "5m",
+          }
+        - {
+            name: "traefik-auth",
+            container: "traefik",
+            maxretry: 5,
+            bantime: "1h",
+            findtime: "10m",
+          }
+        - {
+            name: "home-assistant",
+            container: "home-assistant",
+            maxretry: 5,
+            bantime: "1h",
+            findtime: "10m",
+          }
+        - {
+            name: "mailserver",
+            container: "mailserver",
+            maxretry: 3,
+            bantime: "24h",
+            findtime: "10m",
+          }
+      when: item.container in running_containers.stdout_lines
 
-    - name: Install Python docker library via apt (Debian/Ubuntu)
-      ansible.builtin.apt:
-        name: python3-docker
-        state: present
-      when: ansible_os_family == "Debian"
+    - name: Display detected containers for fail2ban protection
+      ansible.builtin.debug:
+        msg: "{{ 'Detected containers for fail2ban: ' + (fail2ban_docker_jails | map(attribute='name') | list | join(', ')) if fail2ban_docker_jails is defined and fail2ban_docker_jails | length > 0 else 'No protected containers detected' }}"
+
+    - name: Install Docker Python library
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/install-docker-python.yml"
 
     - name: Create ntfy notification script for Fail2ban
       ansible.builtin.copy:
@@ -75,20 +89,13 @@
           IP="$3"
 
           if [ "$ACTION" = "ban" ]; then
-            TITLE="🚫 Fail2ban: IP Banned"
-            MESSAGE=$'🚫 IP '"$IP"$' has been banned\n\n📍 Server: "{{ inventory_hostname }}"\n🛡️ Jail: '"$JAIL"$'\n⏰ Action: Ban'
+            TITLE="🛡️ {{ inventory_hostname }}: Attack Blocked"
+            MESSAGE=$'🚫 Blocked: '"$IP"$'\n🛡️ Service: '"$JAIL"
             PRIORITY="high"
-            TAGS="{{ inventory_hostname }},security,ban"
-          elif [ "$ACTION" = "unban" ]; then
-            TITLE="✅ Fail2ban: IP Unbanned"
-            MESSAGE=$'✅ IP '"$IP"$' has been unbanned\n\n📍 Server: "{{ inventory_hostname }}"\n🛡️ Jail: '"$JAIL"$'\n⏰ Action: Unban'
-            PRIORITY="default"
-            TAGS="{{ inventory_hostname }},security,unban"
+            TAGS="{{ inventory_hostname }},security,attack"
           else
-            TITLE="⚠️ Fail2ban Alert"
-            MESSAGE=$'⚠️ Security alert\n\n📍 Server: "{{ inventory_hostname }}"\n🛡️ Jail: '"$JAIL"$'\n👤 IP: '"$IP"$'\n⏰ Action: '"$ACTION"
-            PRIORITY="default"
-            TAGS="{{ inventory_hostname }},security"
+            # Skip other actions (unban, start, stop) to reduce noise
+            exit 0
           fi
 
           # Send notification
@@ -107,15 +114,16 @@
         dest: /etc/fail2ban/action.d/ntfy.conf
         content: |
           [Definition]
-          actionstart = /usr/local/bin/fail2ban-notify "<name>" "start" "jail-started"
-          actionstop = /usr/local/bin/fail2ban-notify "<name>" "stop" "jail-stopped"
+          # Only notify on bans - no spam from start/stop/unban
+          actionstart =
+          actionstop =
           actionban = /usr/local/bin/fail2ban-notify "<name>" "ban" "<ip>"
-          actionunban = /usr/local/bin/fail2ban-notify "<name>" "unban" "<ip>"
+          actionunban =
 
     - name: Configure Fail2ban local settings
       ansible.builtin.template:
         dest: /etc/fail2ban/jail.local
-        src: "{{ playbook_dir }}/../templates/jail.local.j2"
+        src: "{{ playbook_dir }}/../../templates/jail.local.j2"
         backup: yes
       notify: restart fail2ban
 
@@ -173,6 +181,17 @@
                       ^.*Invalid authentication.*\(<ADDR>\).*$
           ignoreregex =
       when: fail2ban_docker_jails is defined and 'home-assistant' in fail2ban_docker_jails | map(attribute='name')
+
+    - name: Create Mailserver jail filter
+      ansible.builtin.copy:
+        dest: "/etc/fail2ban/filter.d/mailserver.conf"
+        content: |
+          [Definition]
+          failregex = ^.*postfix.*authentication failure.*rhost=<ADDR>.*$
+                      ^.*dovecot.*auth.*failed.*rip=<ADDR>.*$
+                      ^.*postfix.*SASL.*authentication failed.*\[<ADDR>\].*$
+          ignoreregex =
+      when: fail2ban_docker_jails is defined and 'mailserver' in fail2ban_docker_jails | map(attribute='name')
 
     - name: Enable and start Fail2ban service
       ansible.builtin.systemd:

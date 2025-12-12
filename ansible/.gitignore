@@ -2,7 +2,6 @@
 *.retry
 
 # Environment files with secrets
-.env.ansible
 
 # Ansible Vault files (if you use vault)
 *vault*.yml

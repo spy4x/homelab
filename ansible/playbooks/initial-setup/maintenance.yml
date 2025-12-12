@@ -164,6 +164,14 @@
         access_time: preserve
 
     # ===== Log Rotation Configuration =====
+    - name: Ensure Docker configuration directory exists
+      ansible.builtin.file:
+        path: /etc/docker
+        state: directory
+        mode: "0755"
+        owner: root
+        group: root
+
     - name: Check if Docker daemon.json exists
       ansible.builtin.stat:
         path: /etc/docker/daemon.json

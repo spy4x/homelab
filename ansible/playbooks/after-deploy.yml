@@ -1,0 +1,39 @@
+---
+# After Deploy Playbook
+# This playbook runs post-deployment configuration that depends on deployed services
+# It configures service-specific monitoring, backups, and security
+
+- name: After Deploy Configuration
+  hosts: homelab_servers
+
+  tasks:
+    - name: Welcome message
+      ansible.builtin.debug:
+        msg:
+          - "🚀 Starting Post-Deployment Configuration"
+          - "Target: {{ inventory_hostname }}"
+          - "User: {{ homelab_user }}"
+
+# Import all after-deploy playbooks in order
+- import_playbook: after-deploy/fail2ban.yml
+- import_playbook: after-deploy/monitoring.yml
+- import_playbook: after-deploy/backup-cronjob.yml
+- import_playbook: after-deploy/radicale-setup.yml
+
+- name: After Deploy Complete
+  hosts: homelab_servers
+  tasks:
+    - name: Configuration summary
+      ansible.builtin.debug:
+        msg:
+          - "✅ Post-deployment configuration completed!"
+          - ""
+          - "Configured components:"
+          - "  ✓ Fail2ban (SSH + Docker logs protection)"
+          - "  ✓ Container health monitoring"
+          - "  ✓ Automated backups via cron"
+          - "  ✓ Radicale user accounts (if applicable)"
+          - ""
+          - "🎉 Your homelab is fully configured and secured!"
+          - ""
+          - "All services are monitored, backed up, and protected."

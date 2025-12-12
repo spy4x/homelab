@@ -5,7 +5,7 @@
 
 - name: Setup Radicale Users
   hosts: homelab_servers
-  become: false
+  become: true
 
   vars:
     radicale_config_path: "{{ apps_path }}/.volumes/radicale/config"
@@ -74,7 +74,6 @@
       ansible.builtin.package:
         name: httpd-tools
         state: present
-      become: true
       when: htpasswd_check.rc != 0
 
     - name: Create or update user in Radicale

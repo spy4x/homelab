@@ -6,15 +6,14 @@
   hosts: homelab_servers
   become: true
 
-  tasks:
-    # ===== Install Monitoring Tools =====
-    - name: Install monitoring dependencies
-      ansible.builtin.package:
-        name:
-          - curl
-          - jq
-        state: present
+  vars:
+    # NTFY notification settings
+    ntfy_url_uptime: "{{ lookup('env', 'NTFY_URL_UPTIME') }}"
+    ntfy_token_uptime: "{{ lookup('env', 'NTFY_TOKEN_UPTIME') }}"
+    ntfy_url_hardware: "{{ lookup('env', 'NTFY_URL_HARDWARE') }}"
+    ntfy_token_hardware: "{{ lookup('env', 'NTFY_TOKEN_HARDWARE') }}"
 
+  tasks:
     # ===== Container Health Monitoring Script =====
     - name: Create container health check script
       ansible.builtin.copy:
@@ -42,6 +41,13 @@
               exit 1
           fi
 
+          # Log container status information
+          echo "=== Container Health Check - $(date) ==="
+          container_count=0
+          running_count=0
+          stopped_count=0
+          unhealthy_count=0
+
           # Load previous state
           previous_state=$(cat "$STATE_FILE")
           current_state="{}"
@@ -49,14 +55,28 @@
           alert_sent=false
 
           while IFS='|' read -r name status; do
+              # Skip empty lines
+              [ -z "$name" ] && continue
+
+              container_count=$((container_count + 1))
+
               # Determine container state
               if echo "$status" | grep -qi "unhealthy"; then
                   state="unhealthy"
+                  state_icon="🚨"
+                  unhealthy_count=$((unhealthy_count + 1))
               elif echo "$status" | grep -qi "up"; then
                   state="running"
+                  state_icon="✅"
+                  running_count=$((running_count + 1))
               else
                   state="stopped"
+                  state_icon="❌"
+                  stopped_count=$((stopped_count + 1))
               fi
+
+              # Log container status
+              echo "  $state_icon $name: $state ($status)"
 
               # Get previous state for this container
               prev_state=$(echo "$previous_state" | jq -r ".[\"$name\"] // \"unknown\"")
@@ -103,6 +123,24 @@
               fi
           done <<< "$containers"
 
+          # Log summary
+          echo ""
+          echo "Summary: $container_count containers total"
+          echo "  ✅ Running: $running_count"
+          if [ $stopped_count -gt 0 ]; then
+              echo "  ❌ Stopped: $stopped_count"
+          fi
+          if [ $unhealthy_count -gt 0 ]; then
+              echo "  🚨 Unhealthy: $unhealthy_count"
+          fi
+
+          if [ $alert_sent = true ]; then
+              echo "  📢 Alerts sent via ntfy"
+          else
+              echo "  🔕 No alerts needed"
+          fi
+          echo ""
+
           # Save current state
           echo "$current_state" > "$STATE_FILE"
 
@@ -142,12 +180,39 @@
           CRITICAL_THRESHOLD=90
           STATE_FILE="/var/lib/disk-space-alerts.txt"
 
+          # Log disk space check information
+          echo "=== Disk Space Check - $(date) ==="
+
+          alert_count=0
+          filesystem_count=0
+
           # Check all mounted filesystems
           df -H | grep -vE '^Filesystem|tmpfs|cdrom|loop' | awk '{print $5 " " $1 " " $6}' | while read output;
           do
+              [ -z "$output" ] && continue
+              filesystem_count=$((filesystem_count + 1))
+
               usage=$(echo $output | awk '{print $1}' | sed 's/%//g')
               partition=$(echo $output | awk '{print $2}')
               mountpoint=$(echo $output | awk '{print $3}')
+
+              # Determine status icon and level
+              if [ $usage -ge $CRITICAL_THRESHOLD ]; then
+                  status_icon="🚨"
+                  level="CRITICAL"
+              elif [ $usage -ge $WARNING_THRESHOLD ]; then
+                  status_icon="⚠️"
+                  level="WARNING"
+              elif [ $usage -ge $LOW_THRESHOLD ]; then
+                  status_icon="ℹ️"
+                  level="NOTICE"
+              else
+                  status_icon="✅"
+                  level="OK"
+              fi
+
+              # Log filesystem status
+              echo "  $status_icon $mountpoint ($partition): ${usage}% used - $level"
 
               # Create alert key
               alert_key="${partition}_${usage}"
@@ -161,6 +226,7 @@
                   # Clear old alerts for this partition
                   sed -i "/^${partition}_/d" "$STATE_FILE" 2>/dev/null
                   echo "$alert_key" >> "$STATE_FILE"
+                  alert_count=$((alert_count + 1))
 
                   curl -H "Authorization: Bearer $NTFY_TOKEN" \
                        -H "Title: 🚨 CRITICAL: Disk Space ${usage}%" \
@@ -173,6 +239,7 @@
                   # Clear old alerts for this partition
                   sed -i "/^${partition}_/d" "$STATE_FILE" 2>/dev/null
                   echo "$alert_key" >> "$STATE_FILE"
+                  alert_count=$((alert_count + 1))
 
                   curl -H "Authorization: Bearer $NTFY_TOKEN" \
                        -H "Title: ⚠️ WARNING: Disk Space ${usage}%" \
@@ -185,6 +252,7 @@
                   # Clear old alerts for this partition
                   sed -i "/^${partition}_/d" "$STATE_FILE" 2>/dev/null
                   echo "$alert_key" >> "$STATE_FILE"
+                  alert_count=$((alert_count + 1))
 
                   curl -H "Authorization: Bearer $NTFY_TOKEN" \
                        -H "Title: ℹ️ NOTICE: Disk Space ${usage}%" \
@@ -194,6 +262,17 @@
                        "$NTFY_URL" 2>/dev/null
               fi
           done
+
+          # Log summary
+          echo ""
+          echo "Summary: $filesystem_count filesystems checked"
+          if [ $alert_count -gt 0 ]; then
+              echo "  📢 $alert_count alerts sent via ntfy"
+          else
+              echo "  🔕 No alerts needed - all filesystems below thresholds"
+          fi
+          echo "  Thresholds: Notice ≥${LOW_THRESHOLD}%, Warning ≥${WARNING_THRESHOLD}%, Critical ≥${CRITICAL_THRESHOLD}%"
+          echo ""
 
           # Clean up old alerts (if usage dropped below threshold)
           if [ -f "$STATE_FILE" ]; then

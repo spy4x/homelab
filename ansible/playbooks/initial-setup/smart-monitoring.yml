@@ -6,6 +6,16 @@
   hosts: homelab_servers
   become: true
 
+  vars:
+    # NTFY notification settings
+    ntfy_url_hardware: "{{ lookup('env', 'NTFY_URL_HARDWARE') }}"
+    ntfy_token_hardware: "{{ lookup('env', 'NTFY_TOKEN_HARDWARE') }}"
+
+    # SMART monitoring temperature thresholds
+    smart_temp_change: "{{ lookup('env', 'SMART_TEMP_CHANGE_THRESHOLD') | default('4', true) }}"
+    smart_temp_info: "{{ lookup('env', 'SMART_TEMP_INFO_THRESHOLD') | default('35', true) }}"
+    smart_temp_critical: "{{ lookup('env', 'SMART_TEMP_CRITICAL_THRESHOLD') | default('40', true) }}"
+
   tasks:
     - name: Install smartmontools
       ansible.builtin.package:
