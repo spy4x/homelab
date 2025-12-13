@@ -3,6 +3,10 @@
 # This playbook secures SSH by disabling root login, enforcing key-only authentication,
 # and applying other security best practices
 # ⚠️  SAFE TO RE-RUN: Idempotent and validates before applying changes
+# ⚠️  REQUIRES: Firewall must be configured FIRST to avoid lockout
+
+- name: Configure Firewall First
+  import_playbook: firewall.yml
 
 - name: Harden SSH Configuration
   hosts: homelab_servers
@@ -155,7 +159,7 @@
           - "  • Root login: DISABLED"
           - "  • Password authentication: DISABLED"
           - "  • Key-only authentication: ENABLED"
-          - "  • PAM: ENABLED (for sudo compatibility)"
+          - "  • PAM: DISABLED"
           - "  • SSH Port: {{ ssh_port }}"
           - "  • Max auth attempts: 3"
           - "  • Login grace time: 30s"
@@ -164,6 +168,9 @@
           - ""
           - "⚠️  IMPORTANT: Keep your SSH key safe!"
           - "⚠️  Timestamped backup saved: /etc/ssh/sshd_config.backup-*"
+          - ""
+          - "⚠️  NEXT STEP: Run the firewall playbook to open the SSH port:"
+          - "  deno task ansible ./ansible/playbooks/initial-setup/firewall.yml {{ inventory_hostname }}"
           - ""
           - "✅ Safe to re-run: This playbook is idempotent"
           - ""

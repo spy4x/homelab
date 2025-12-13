@@ -7,10 +7,7 @@
   hosts: homelab_servers
   become: true
 
-  vars:
-    # NTFY notification settings
-    ntfy_url_security: "{{ lookup('env', 'NTFY_URL_SECURITY') }}"
-    ntfy_token_security: "{{ lookup('env', 'NTFY_TOKEN_SECURITY') }}"
+  vars: {}
 
   tasks:
     - name: Fix Raspberry Pi boot partition (if applicable)
@@ -71,54 +68,6 @@
 
     - name: Install Docker Python library
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/install-docker-python.yml"
-
-    - name: Create ntfy notification script for Fail2ban
-      ansible.builtin.copy:
-        dest: /usr/local/bin/fail2ban-notify
-        mode: "0755"
-        content: |
-          #!/bin/bash
-          # Fail2ban notification script for ntfy
-
-          NTFY_URL="{{ ntfy_url_security }}"
-          NTFY_TOKEN="{{ ntfy_token_security }}"
-
-          # Arguments from fail2ban
-          JAIL="$1"
-          ACTION="$2"
-          IP="$3"
-
-          if [ "$ACTION" = "ban" ]; then
-            TITLE="🛡️ {{ inventory_hostname }}: Attack Blocked"
-            MESSAGE=$'🚫 Blocked: '"$IP"$'\n🛡️ Service: '"$JAIL"
-            PRIORITY="high"
-            TAGS="{{ inventory_hostname }},security,attack"
-          else
-            # Skip other actions (unban, start, stop) to reduce noise
-            exit 0
-          fi
-
-          # Send notification
-          curl -H "Authorization: Bearer $NTFY_TOKEN" \
-               -H "Title: $TITLE" \
-               -H "Priority: $PRIORITY" \
-               -H "Tags: $TAGS" \
-               -d "$MESSAGE" \
-               "$NTFY_URL" 2>/dev/null
-
-          # Log to syslog
-          logger -t fail2ban "[$JAIL] $ACTION IP: $IP"
-
-    - name: Create Fail2ban action for ntfy
-      ansible.builtin.copy:
-        dest: /etc/fail2ban/action.d/ntfy.conf
-        content: |
-          [Definition]
-          # Only notify on bans - no spam from start/stop/unban
-          actionstart =
-          actionstop =
-          actionban = /usr/local/bin/fail2ban-notify "<name>" "ban" "<ip>"
-          actionunban =
 
     - name: Configure Fail2ban local settings
       ansible.builtin.template:
@@ -244,12 +193,6 @@
         msg: "{{ fail2ban_logs.stdout_lines }}"
       when: not (fail2ban_socket.stat.exists | default(false))
 
-    - name: Send test notification
-      ansible.builtin.shell: |
-        /usr/local/bin/fail2ban-notify "test" "start" "Fail2ban configured on {{ inventory_hostname }}"
-      changed_when: false
-      ignore_errors: yes
-
     - name: Build jail list for display
       ansible.builtin.set_fact:
         jail_display_list: "{{ jail_display_list | default([]) + ['  • ' + item.name + ': ' + (item.maxretry | default(5) | string) + ' attempts in ' + (item.findtime | default('10min')) + ' → ' + (item.bantime | default('1h')) + ' ban'] }}"
@@ -258,7 +201,7 @@
 
     - name: Display Fail2ban summary
       ansible.builtin.debug:
-        msg: "{{ ['✅ Fail2ban configured successfully on ' + inventory_hostname + '!', '', 'Protected services:', '  • SSH' + ((' (port ' + (ssh_port | string) + ')') if ssh_port is defined else '') + ': 3 attempts in 10min → 1h ban'] + (jail_display_list | default([])) + ['', 'Notifications: ' + ntfy_url_security, '', 'Test notification sent! Check your ntfy app.', '', 'Useful commands:', '  • Check status: sudo fail2ban-client status', '  • Check jail: sudo fail2ban-client status sshd', '  • Unban IP: sudo fail2ban-client set sshd unbanip <IP>', '  • View logs: sudo tail -f /var/log/fail2ban.log'] }}"
+        msg: "{{ ['✅ Fail2ban configured successfully on ' + inventory_hostname + '!', '', 'Protected services:', '  • SSH' + ((' (port ' + (ssh_port | string) + ')') if ssh_port is defined else '') + ': 3 attempts in 10min → 1h ban'] + (jail_display_list | default([])) + ['', 'Useful commands:', '  • Check status: sudo fail2ban-client status', '  • Check jail: sudo fail2ban-client status sshd', '  • Unban IP: sudo fail2ban-client set sshd unbanip <IP>', '  • View logs: sudo tail -f /var/log/fail2ban.log'] }}"
 
   handlers:
     - name: restart fail2ban

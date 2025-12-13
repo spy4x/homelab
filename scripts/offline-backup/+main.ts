@@ -3,8 +3,12 @@
 import { runCommand } from "../+lib.ts"
 import { load } from "@std/dotenv"
 
-const REPOS_DIR = "restic-repos"
 const LOGS_DIR = "logs"
+
+interface BackupPath {
+  source: string
+  target: string
+}
 
 interface DriveInfo {
   name: string
@@ -151,9 +155,10 @@ async function ejectDrive(device: string): Promise<void> {
 
   if (!result.success) {
     console.warn(`⚠️  Warning: Could not eject drive: ${result.error}`)
-    console.log(`   You may need to physically remove the drive`)
   } else {
-    console.log("✅ Drive ejected successfully - safe to remove")
+    console.log(
+      "✅ Drive ejected successfully - safe to unplug. To mount again, re-plug the drive.",
+    )
   }
 }
 
@@ -209,7 +214,7 @@ async function formatDrive(device: string): Promise<void> {
   console.log("✅ Drive formatted successfully")
 }
 
-async function createBackupStructure(mountPoint: string): Promise<void> {
+async function createBackupStructure(mountPoint: string, backupPaths: BackupPath[]): Promise<void> {
   console.log("📁 Ensuring backup directory structure...")
 
   // First, ensure we have write permissions on the mount point
@@ -221,8 +226,8 @@ async function createBackupStructure(mountPoint: string): Promise<void> {
   }
 
   const dirs = [
-    `${mountPoint}/${REPOS_DIR}`,
     `${mountPoint}/${LOGS_DIR}`,
+    ...backupPaths.map((bp) => `${mountPoint}/${bp.target}`),
   ]
 
   for (const dir of dirs) {
@@ -257,16 +262,38 @@ async function getBackupSize(path: string): Promise<{ bytes: number; human: stri
 
 async function writeReadme(
   mountPoint: string,
-  localBackupsPath: string,
+  backupPaths: BackupPath[],
 ): Promise<void> {
   console.log("📝 Writing README...")
 
   const now = new Date()
   const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
 
-  // Calculate backup size
-  const reposDir = `${mountPoint}/${REPOS_DIR}`
-  const backupSize = await getBackupSize(reposDir)
+  // Calculate total backup size
+  let totalBytes = 0
+  const pathSizes: Array<{ path: BackupPath; size: string }> = []
+
+  for (const backupPath of backupPaths) {
+    const targetDir = `${mountPoint}/${backupPath.target}`
+    const backupSize = await getBackupSize(targetDir)
+    totalBytes += backupSize.bytes
+    pathSizes.push({ path: backupPath, size: backupSize.human })
+  }
+
+  // Convert total to human readable
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let size = totalBytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+
+  const totalHuman = `${size.toFixed(2)} ${units[unitIndex]}`
+
+  const pathsInfo = pathSizes.map((ps) => `  - ${ps.path.source} → ${ps.path.target} (${ps.size})`)
+    .join("\n")
 
   const readmeContent = `# Homelab Offline Backup Drive
 
@@ -293,12 +320,13 @@ Keep at 20-25°C, <60% humidity, elevated from floor.
 **Created:** ${now.toISOString().split("T")[0]} ${
     now.toTimeString().split(" ")[0]
   } ${Intl.DateTimeFormat().resolvedOptions().timeZone}
-**Source:** ${localBackupsPath}
+**Backup Paths:**
+${pathsInfo}
 **Type:** Restic repositories
 **Encryption:** Yes (Restic native encryption)
 **Schedule:** Monthly offline backup
 **Next Update Due:** ${nextMonth.toISOString().split("T")[0]}
-**Backup Size:** ${backupSize.human} (${backupSize.bytes.toLocaleString()} bytes)
+**Total Backup Size:** ${totalHuman} (${totalBytes.toLocaleString()} bytes)
 
 ### Important Notes
 
@@ -328,118 +356,131 @@ The script will guide you through the restore process.
 }
 
 async function checkDeletedRepos(
-  localBackupsPath: string,
+  backupPaths: BackupPath[],
   mountPoint: string,
 ): Promise<boolean> {
-  const expanded = localBackupsPath.replace(/^~/, Deno.env.get("HOME") || "~")
-  const reposDir = `${mountPoint}/${REPOS_DIR}`
+  for (const backupPath of backupPaths) {
+    const expanded = backupPath.source.replace(/^~/, Deno.env.get("HOME") || "~")
+    const targetDir = `${mountPoint}/${backupPath.target}`
 
-  try {
-    const localRepos = new Set<string>()
-    for await (const entry of Deno.readDir(expanded)) {
-      if (entry.isDirectory) {
-        localRepos.add(entry.name)
+    try {
+      const localRepos = new Set<string>()
+      for await (const entry of Deno.readDir(expanded)) {
+        if (entry.isDirectory) {
+          localRepos.add(entry.name)
+        }
       }
-    }
 
-    const driveRepos: string[] = []
-    for await (const entry of Deno.readDir(reposDir)) {
-      if (entry.isDirectory && !localRepos.has(entry.name)) {
-        driveRepos.push(entry.name)
+      const driveRepos: string[] = []
+      for await (const entry of Deno.readDir(targetDir)) {
+        if (entry.isDirectory && !localRepos.has(entry.name)) {
+          driveRepos.push(entry.name)
+        }
       }
-    }
 
-    if (driveRepos.length > 0) {
-      console.log("\n⚠️  WARNING: The following repositories exist on the drive but not locally:")
-      console.log("   They will be DELETED from the drive:\n")
-      driveRepos.forEach((repo) => console.log(`     - ${repo}`))
+      if (driveRepos.length > 0) {
+        console.log(
+          `\n⚠️  WARNING: In ${backupPath.target}, the following repositories exist on the drive but not locally:`,
+        )
+        console.log("   They will be DELETED from the drive:\n")
+        driveRepos.forEach((repo) => console.log(`     - ${repo}`))
 
-      const confirm = prompt("\n❓ Continue and delete these repositories? (yes/no): ")
-      return confirm?.toLowerCase() === "yes"
+        const confirm = prompt("\n❓ Continue and delete these repositories? (yes/no) [yes]: ") ||
+          "yes"
+        if (confirm?.toLowerCase() !== "yes") {
+          return false
+        }
+      }
+    } catch (error) {
+      console.warn(`⚠️  Could not check for deleted repos in ${backupPath.target}: ${error}`)
     }
-  } catch (error) {
-    console.warn(`⚠️  Could not check for deleted repos: ${error}`)
   }
 
   return true
 }
 
 async function syncBackups(
-  localBackupsPath: string,
+  backupPaths: BackupPath[],
   mountPoint: string,
 ): Promise<void> {
-  console.log(`\n🔄 Syncing backups from ${localBackupsPath}...`)
+  console.log(`\n🔄 Syncing ${backupPaths.length} backup path(s)...`)
 
-  const expanded = localBackupsPath.replace(/^~/, Deno.env.get("HOME") || "~")
-  const source = `${expanded}/`
-  const target = `${mountPoint}/${REPOS_DIR}/`
+  for (const backupPath of backupPaths) {
+    const expanded = backupPath.source.replace(/^~/, Deno.env.get("HOME") || "~")
+    const source = `${expanded}/`
+    const target = `${mountPoint}/${backupPath.target}/`
 
-  console.log(`   Source: ${source}`)
-  console.log(`   Target: ${target}`)
+    console.log(`\n  📦 ${backupPath.source} → ${backupPath.target}`)
 
-  // Spawn rsync with real-time output
-  const proc = new Deno.Command("rsync", {
-    args: [
-      "-avh",
-      "--info=progress2",
-      "--delete",
-      "--exclude=.sync*",
-      "--exclude=*.tmp",
-      source,
-      target,
-    ],
-    stdout: "piped",
-    stderr: "piped",
-  })
+    // Spawn rsync with real-time output
+    const proc = new Deno.Command("rsync", {
+      args: [
+        "-avh",
+        "--info=progress2",
+        "--delete",
+        "--exclude=.sync*",
+        "--exclude=*.tmp",
+        "--exclude=.stfolder",
+        source,
+        target,
+      ],
+      stdout: "piped",
+      stderr: "piped",
+    })
 
-  const child = proc.spawn()
-  const decoder = new TextDecoder()
-  let lastProgress = 0
+    const child = proc.spawn()
+    const decoder = new TextDecoder()
+    let lastProgress = 0
 
-  // Read stdout in chunks
-  const reader = child.stdout.getReader()
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+    // Read stdout in chunks
+    const reader = child.stdout.getReader()
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
 
-      const text = decoder.decode(value)
-      const lines = text.split("\n")
+        const text = decoder.decode(value)
+        const lines = text.split("\n")
 
-      for (const line of lines) {
-        // Parse rsync progress: "  1.23G  45%  123.45MB/s"
-        const match = line.match(/(\d+)%/)
-        if (match) {
-          const progress = parseInt(match[1])
-          // Show progress every 5%
-          if (progress >= lastProgress + 5) {
-            const sizeMatch = line.match(/([\d.]+[KMGT]?)/)
-            const speedMatch = line.match(/([\d.]+[KMGT]?B\/s)/)
-            let msg = `   Progress: ${progress}%`
-            if (sizeMatch) msg += ` (${sizeMatch[1]})`
-            if (speedMatch) msg += ` @ ${speedMatch[1]}`
-            console.log(msg)
-            lastProgress = progress
+        for (const line of lines) {
+          // Parse rsync progress: "  1.23G  45%  123.45MB/s"
+          const match = line.match(/(\d+)%/)
+          if (match) {
+            const progress = parseInt(match[1])
+            // Show progress every 5%
+            if (progress >= lastProgress + 5) {
+              const sizeMatch = line.match(/([\d.]+[KMGT]?)/)
+              const speedMatch = line.match(/([\d.]+[KMGT]?B\/s)/)
+              let msg = `     Progress: ${progress}%`
+              if (sizeMatch) msg += ` (${sizeMatch[1]})`
+              if (speedMatch) msg += ` @ ${speedMatch[1]}`
+              console.log(msg)
+              lastProgress = progress
+            }
           }
         }
       }
+    } finally {
+      reader.releaseLock()
     }
-  } finally {
-    reader.releaseLock()
+
+    const status = await child.status
+    if (!status.success) {
+      const errorOutput = decoder.decode(await child.stderr.arrayBuffer())
+      throw new Error(`Rsync failed for ${backupPath.target}: ${errorOutput}`)
+    }
+
+    console.log(`  ✅ ${backupPath.target} sync completed`)
   }
 
-  const status = await child.status
-  if (!status.success) {
-    const errorOutput = decoder.decode(await child.stderr.arrayBuffer())
-    throw new Error(`Rsync failed: ${errorOutput}`)
-  }
-
-  console.log("✅ Sync completed")
+  console.log("\n✅ All syncs completed")
 }
 
 async function verifyBackups(
   mountPoint: string,
+  backupPaths: BackupPath[],
   resticPassword: string,
+  fullVerification = false,
 ): Promise<
   {
     passed: number
@@ -448,7 +489,10 @@ async function verifyBackups(
     details: Array<{ name: string; status: "passed" | "failed" | "skipped"; error?: string }>
   }
 > {
-  console.log("\n🔍 Verifying backup integrity (100% data verification)...")
+  const verificationType = fullVerification
+    ? "100% data verification"
+    : "structure verification (fast)"
+  console.log(`\n🔍 Verifying backup integrity (${verificationType})...`)
 
   const results = {
     passed: 0,
@@ -472,62 +516,73 @@ async function verifyBackups(
     return results
   }
 
-  const reposDir = `${mountPoint}/${REPOS_DIR}`
+  // Process each backup path
+  for (const backupPath of backupPaths) {
+    const targetDir = `${mountPoint}/${backupPath.target}`
 
-  // List all repos
-  const repos: string[] = []
-  try {
-    for await (const entry of Deno.readDir(reposDir)) {
-      if (entry.isDirectory) {
-        // Check if it's a valid restic repo (has config file)
-        const configPath = `${reposDir}/${entry.name}/config`
-        try {
-          await Deno.stat(configPath)
-          repos.push(`${reposDir}/${entry.name}`)
-        } catch {
-          // Skip directories without config file (not restic repos)
-          console.log(`\n  ⏭️  Skipping ${entry.name} (not a restic repository)`)
-          results.skipped++
-          results.details.push({ name: entry.name, status: "skipped" })
+    console.log(`\n  📦 Verifying: ${backupPath.target}`)
+
+    // List all repos in this target directory
+    const repos: string[] = []
+    try {
+      for await (const entry of Deno.readDir(targetDir)) {
+        if (entry.isDirectory) {
+          // Check if it's a valid restic repo (has config file)
+          const configPath = `${targetDir}/${entry.name}/config`
+          try {
+            await Deno.stat(configPath)
+            repos.push(`${targetDir}/${entry.name}`)
+          } catch {
+            // Skip directories without config file (not restic repos)
+            console.log(`     ⏭️  Skipping ${entry.name} (not a restic repository)`)
+            results.skipped++
+            results.details.push({ name: `${backupPath.target}/${entry.name}`, status: "skipped" })
+          }
         }
       }
-    }
-  } catch (error) {
-    console.warn(`⚠️  Warning: Could not list repos: ${error}`)
-    return results
-  }
-
-  if (repos.length === 0) {
-    console.log("ℹ️  No repositories found to verify")
-    return results
-  }
-
-  for (const repo of repos) {
-    const name = repo.split("/").pop() || "unknown"
-    console.log(`\n  Checking: ${name}...`)
-
-    // Set env var for this process temporarily
-    const originalPassword = Deno.env.get("RESTIC_PASSWORD")
-    Deno.env.set("RESTIC_PASSWORD", resticPassword)
-
-    const result = await runCommand(["restic", "-r", repo, "check", "--read-data"])
-
-    // Restore original env
-    if (originalPassword) {
-      Deno.env.set("RESTIC_PASSWORD", originalPassword)
-    } else {
-      Deno.env.delete("RESTIC_PASSWORD")
+    } catch (error) {
+      console.warn(`  ⚠️  Warning: Could not list repos in ${backupPath.target}: ${error}`)
+      continue
     }
 
-    if (result.success) {
-      console.log(`  ✅ ${name}: OK`)
-      results.passed++
-      results.details.push({ name, status: "passed" })
-    } else {
-      console.log(`  ❌ ${name}: FAILED`)
-      console.log(`     ${result.error.split("\n")[0]}`)
-      results.failed++
-      results.details.push({ name, status: "failed", error: result.error.split("\n")[0] })
+    if (repos.length === 0) {
+      console.log(`     ℹ️  No restic repositories found in ${backupPath.target}`)
+      continue
+    }
+
+    for (const repo of repos) {
+      const name = `${backupPath.target}/${repo.split("/").pop() || "unknown"}`
+      console.log(`     Checking: ${name}...`)
+
+      // Set env var for this process temporarily
+      const originalPassword = Deno.env.get("RESTIC_PASSWORD")
+      Deno.env.set("RESTIC_PASSWORD", resticPassword)
+
+      const result = await runCommand([
+        "restic",
+        "-r",
+        repo,
+        "check",
+        ...(fullVerification ? ["--read-data"] : []),
+      ])
+
+      // Restore original env
+      if (originalPassword) {
+        Deno.env.set("RESTIC_PASSWORD", originalPassword)
+      } else {
+        Deno.env.delete("RESTIC_PASSWORD")
+      }
+
+      if (result.success) {
+        console.log(`     ✅ ${name}: OK`)
+        results.passed++
+        results.details.push({ name, status: "passed" })
+      } else {
+        console.log(`     ❌ ${name}: FAILED`)
+        console.log(`        ${result.error.split("\n")[0]}`)
+        results.failed++
+        results.details.push({ name, status: "failed", error: result.error.split("\n")[0] })
+      }
     }
   }
 
@@ -712,8 +767,27 @@ async function saveBackupLog(
 }
 
 async function create(envVars: Record<string, string>): Promise<void> {
-  const localBackupsPath = envVars.LOCAL_BACKUPS_PATH
+  const backupPathsJson = envVars.BACKUP_PATHS
   const resticPassword = envVars.BACKUPS_PASSWORD
+
+  // Parse backup paths
+  let backupPaths: BackupPath[]
+  try {
+    backupPaths = JSON.parse(backupPathsJson)
+    if (!Array.isArray(backupPaths) || backupPaths.length === 0) {
+      throw new Error("BACKUP_PATHS must be a non-empty array")
+    }
+    // Validate structure
+    for (const bp of backupPaths) {
+      if (!bp.source || !bp.target) {
+        throw new Error("Each backup path must have 'source' and 'target' properties")
+      }
+    }
+  } catch (error) {
+    console.error(`❌ Error: Invalid BACKUP_PATHS format: ${error}`)
+    console.error(`   Expected JSON array: [{"source":"~/path","target":"folder-name"}]`)
+    Deno.exit(1)
+  }
 
   // Start console logging
   const logger = new ConsoleLogger()
@@ -758,27 +832,29 @@ async function create(envVars: Record<string, string>): Promise<void> {
   timings.total = { start: Date.now() }
   console.log("=== Offline Backup Session Started ===")
 
-  // Expand path
-  const expanded = localBackupsPath.replace(
-    /^~/,
-    Deno.env.get("HOME") || "~",
-  )
-
-  // Check if source exists
-  try {
-    const stat = await Deno.stat(expanded)
-    if (!stat.isDirectory) {
-      console.error(`❌ Error: ${expanded} is not a directory`)
+  // Check if all sources exist
+  for (const backupPath of backupPaths) {
+    const expanded = backupPath.source.replace(/^~/, Deno.env.get("HOME") || "~")
+    try {
+      const stat = await Deno.stat(expanded)
+      if (!stat.isDirectory) {
+        console.error(`❌ Error: ${expanded} is not a directory`)
+        logger.stop()
+        Deno.exit(1)
+      }
+    } catch {
+      console.error(`❌ Error: ${expanded} does not exist`)
       logger.stop()
       Deno.exit(1)
     }
-  } catch {
-    console.error(`❌ Error: ${expanded} does not exist`)
-    logger.stop()
-    Deno.exit(1)
   }
 
   console.log("\n=== Offline Backup - Create Mode ===\n")
+  console.log("📦 Backup Paths:")
+  backupPaths.forEach((bp) => {
+    console.log(`   ${bp.source} → ${bp.target}`)
+  })
+  console.log("")
   console.log("⚠️  This script will require sudo password for the following operations:")
   console.log("   - Setting write permissions on mounted drive")
   console.log("   - Formatting drive (if selected)")
@@ -822,6 +898,29 @@ async function create(envVars: Record<string, string>): Promise<void> {
   const needsFormat = prompt(
     "\n❓ Does this drive need formatting? (yes/no) [no]: ",
   )
+
+  // Ask about verification type upfront
+  console.log("\n🔍 Backup Verification")
+  console.log("   fast: ~2-5 minutes  - Check repository structure only")
+  console.log("   full: ~hours - Read and verify every byte (thorough)")
+  console.log("   skip: Skip verification")
+  const verifyChoice = prompt(
+    "\n❓ Verification type? (fast/full/skip) [fast]: ",
+  ) || "fast"
+  const fullVerification = verifyChoice.toLowerCase() === "full"
+  const skipVerification = verifyChoice.toLowerCase() === "skip"
+
+  // Ask about SMART check upfront
+  console.log("\n🔍 Drive Health Check (SMART)")
+  console.log("   short: ~2 minutes  - Quick electrical/mechanical check")
+  console.log("   long:  ~390 minutes - Comprehensive surface scan")
+  console.log("   skip:  Skip health check")
+  const smartChoice = prompt(
+    "\n❓ SMART check type? (short/long/skip) [short]: ",
+  ) || "short"
+
+  console.log("\n✅ All questions answered! Starting backup process...")
+  console.log("   You can now take a walk - the backup will run unattended.\n")
   if (needsFormat?.toLowerCase() === "yes") {
     await formatDrive(device)
   }
@@ -846,10 +945,10 @@ async function create(envVars: Record<string, string>): Promise<void> {
     }
 
     // Ensure directory structure
-    await createBackupStructure(MOUNT_POINT)
+    await createBackupStructure(MOUNT_POINT, backupPaths)
 
     // Check for repositories that will be deleted
-    if (!(await checkDeletedRepos(localBackupsPath, MOUNT_POINT))) {
+    if (!(await checkDeletedRepos(backupPaths, MOUNT_POINT))) {
       console.log("❌ Operation cancelled")
       await unmountDrive(partition, MOUNT_POINT)
       await ejectDrive(device)
@@ -859,29 +958,30 @@ async function create(envVars: Record<string, string>): Promise<void> {
 
     // Sync backups
     startTiming("rsync")
-    await syncBackups(localBackupsPath, MOUNT_POINT)
+    await syncBackups(backupPaths, MOUNT_POINT)
     syncSuccess = true
     endTiming("rsync")
 
-    // Verify backups
-    startTiming("verification")
-    verifyResults = await verifyBackups(MOUNT_POINT, resticPassword)
-    endTiming("verification")
+    // Verify backups (if not skipped)
+    if (!skipVerification) {
+      startTiming("verification")
+      verifyResults = await verifyBackups(
+        MOUNT_POINT,
+        backupPaths,
+        resticPassword,
+        fullVerification,
+      )
+      endTiming("verification")
+    } else {
+      console.log("\n⏭️  Skipping backup verification")
+    }
 
     // Write README (after verification to include accurate size)
     startTiming("readme")
-    await writeReadme(MOUNT_POINT, localBackupsPath)
+    await writeReadme(MOUNT_POINT, backupPaths)
     endTiming("readme")
 
-    // Ask about SMART check
-    console.log("\n🔍 Drive Health Check (SMART)")
-    console.log("   short: ~2 minutes  - Quick electrical/mechanical check")
-    console.log("   long:  ~390 minutes - Comprehensive surface scan")
-    console.log("   no:    Skip health check")
-    const smartChoice = prompt(
-      "\n❓ Would you like a SMART check of the drive's health? (short/long/no) [short]: ",
-    ) || "short"
-
+    // Run SMART check if requested
     if (smartChoice.toLowerCase() === "short" || smartChoice.toLowerCase() === "long") {
       smartTestRun = true
       smartTestType = smartChoice.toLowerCase()
@@ -915,7 +1015,10 @@ async function create(envVars: Record<string, string>): Promise<void> {
       const smartSec = Math.round(timings.smart_check.duration / 1000)
       console.log(`   - SMART Check: ${Math.floor(smartSec / 60)}m ${smartSec % 60}s`)
     }
-    console.log(`\n   Source: ${expanded}`)
+    console.log(`\n   Backup Paths:`)
+    backupPaths.forEach((bp) => {
+      console.log(`     ${bp.source} → ${bp.target}`)
+    })
     console.log(`   Destination: ${MOUNT_POINT}`)
     console.log(`\n📦 Verification Results:`)
     console.log(`   ✅ Passed:  ${verifyResults.passed}`)
@@ -1026,11 +1129,9 @@ async function create(envVars: Record<string, string>): Promise<void> {
     await unmountDrive(partition, MOUNT_POINT)
     await ejectDrive(device)
 
-    console.log(`\n📂 To manually inspect the backup drive later:`)
-    console.log(`   udisksctl mount -b ${partition}`)
-    console.log(`   # Drive will be auto-mounted, check with: mount | grep ${driveName}`)
-    console.log(`   # To unmount: udisksctl unmount -b ${partition}`)
-    console.log(`   # To eject: udisksctl power-off -b ${device}`)
+    // Beep to notify user that backup is complete
+    console.log("\n🔔 BACKUP COMPLETE!")
+    Deno.stdout.write(new TextEncoder().encode("\x07")) // ASCII bell character
   } catch (error) {
     console.error(`\n❌ Error during backup: ${error}`)
 
@@ -1065,22 +1166,37 @@ async function create(envVars: Record<string, string>): Promise<void> {
 }
 
 async function restore(envVars: Record<string, string>): Promise<void> {
-  const localBackupsPath = envVars.LOCAL_BACKUPS_PATH
+  const backupPathsJson = envVars.BACKUP_PATHS
   const resticPassword = envVars.BACKUPS_PASSWORD
 
-  // Expand path
-  const expanded = localBackupsPath.replace(
-    /^~/,
-    Deno.env.get("HOME") || "~",
-  )
+  // Parse backup paths
+  let backupPaths: BackupPath[]
+  try {
+    backupPaths = JSON.parse(backupPathsJson)
+    if (!Array.isArray(backupPaths) || backupPaths.length === 0) {
+      throw new Error("BACKUP_PATHS must be a non-empty array")
+    }
+    // Validate structure
+    for (const bp of backupPaths) {
+      if (!bp.source || !bp.target) {
+        throw new Error("Each backup path must have 'source' and 'target' properties")
+      }
+    }
+  } catch (error) {
+    console.error(`❌ Error: Invalid BACKUP_PATHS format: ${error}`)
+    console.error(`   Expected JSON array: [{"source":"~/path","target":"folder-name"}]`)
+    Deno.exit(1)
+  }
 
   console.log("\n=== Offline Backup - Restore Mode ===\n")
   console.log("⚠️  This script requires no sudo privileges for mounting")
   console.log("")
-  console.log(
-    "⚠️  WARNING: This will restore backups from offline drive to:",
-  )
-  console.log(`   ${expanded}\n`)
+  console.log("⚠️  WARNING: This will restore backups from offline drive to:")
+  backupPaths.forEach((bp) => {
+    const expanded = bp.source.replace(/^~/, Deno.env.get("HOME") || "~")
+    console.log(`   ${expanded} ← ${bp.target}`)
+  })
+  console.log("")
 
   // List drives
   console.log("📋 Available drives:\n")
@@ -1132,19 +1248,27 @@ async function restore(envVars: Record<string, string>): Promise<void> {
       MOUNT_POINT = await mountDrive(partition)
     }
 
-    // Check if backup structure exists
-    const reposDir = `${MOUNT_POINT}/${REPOS_DIR}`
-    try {
-      await Deno.stat(reposDir)
-    } catch {
-      console.error(`❌ Error: No backup repositories found at ${reposDir}`)
-      console.error(
-        "   This drive may not be an offline backup drive or is corrupted",
-      )
+    // Check if backup structure exists - look for any of the target directories
+    let foundTargets = 0
+    for (const bp of backupPaths) {
+      const targetDir = `${MOUNT_POINT}/${bp.target}`
+      try {
+        await Deno.stat(targetDir)
+        foundTargets++
+      } catch {
+        console.warn(`⚠️  Warning: Target directory not found: ${bp.target}`)
+      }
+    }
+
+    if (foundTargets === 0) {
+      console.error(`❌ Error: No backup targets found on this drive`)
+      console.error("   This drive may not be an offline backup drive or is corrupted")
       await unmountDrive(partition, MOUNT_POINT)
       await ejectDrive(device)
       Deno.exit(1)
     }
+
+    console.log(`\nℹ️  Found ${foundTargets} of ${backupPaths.length} backup target(s) on drive`)
 
     // Show README if available
     try {
@@ -1159,7 +1283,7 @@ async function restore(envVars: Record<string, string>): Promise<void> {
 
     // Confirm restore
     const confirm = prompt(
-      "\n⚠️  Type 'RESTORE' to restore all backups to local folder: ",
+      "\n⚠️  Type 'RESTORE' to restore all backups to local folders: ",
     )
     if (confirm !== "RESTORE") {
       console.log("❌ Restore cancelled")
@@ -1168,37 +1292,57 @@ async function restore(envVars: Record<string, string>): Promise<void> {
       Deno.exit(0)
     }
 
-    // Create target directory if it doesn't exist
-    await Deno.mkdir(expanded, { recursive: true })
+    // Restore each backup path
+    for (const bp of backupPaths) {
+      const expanded = bp.source.replace(/^~/, Deno.env.get("HOME") || "~")
+      const sourceDir = `${MOUNT_POINT}/${bp.target}`
 
-    // Sync from drive to local
-    console.log(`\n🔄 Restoring backups to ${expanded}...`)
+      // Check if source exists on drive
+      try {
+        await Deno.stat(sourceDir)
+      } catch {
+        console.log(`\n⏭️  Skipping ${bp.target} (not found on drive)`)
+        continue
+      }
 
-    const source = `${reposDir}/`
-    const target = `${expanded}/`
+      // Create target directory if it doesn't exist
+      await Deno.mkdir(expanded, { recursive: true })
 
-    const result = await runCommand(
-      [
-        "rsync",
-        "-avhP",
-        "--delete",
-        source,
-        target,
-      ],
-    )
+      // Sync from drive to local
+      console.log(`\n🔄 Restoring ${bp.target} to ${expanded}...`)
 
-    if (!result.success) {
-      throw new Error(`Rsync failed: ${result.error}`)
+      const source = `${sourceDir}/`
+      const target = `${expanded}/`
+
+      const result = await runCommand(
+        [
+          "rsync",
+          "-avhP",
+          "--delete",
+          source,
+          target,
+        ],
+      )
+
+      if (!result.success) {
+        throw new Error(`Rsync failed for ${bp.target}: ${result.error}`)
+      }
+
+      console.log(`✅ ${bp.target} restored`)
     }
 
-    console.log("✅ Restore completed")
+    console.log("\n✅ All restores completed")
 
     // Verify restored backups
     console.log("\n🔍 Verifying restored backups...")
-    await verifyBackups(expanded.replace(`/${REPOS_DIR}`, ""), resticPassword)
+    await verifyBackups(MOUNT_POINT, backupPaths, resticPassword)
 
     console.log("\n✅ Restore completed successfully!")
-    console.log(`\nBackups restored to: ${expanded}`)
+    console.log("\nBackups restored to:")
+    backupPaths.forEach((bp) => {
+      const expanded = bp.source.replace(/^~/, Deno.env.get("HOME") || "~")
+      console.log(`  - ${expanded}`)
+    })
     console.log(`\n🔒 To safely remove drive:`)
     console.log(`  udisksctl unmount -b ${partition}`)
     console.log(`  udisksctl power-off -b ${device}`)
@@ -1224,7 +1368,27 @@ async function restore(envVars: Record<string, string>): Promise<void> {
 }
 
 async function verify(envVars: Record<string, string>): Promise<void> {
+  const backupPathsJson = envVars.BACKUP_PATHS
   const resticPassword = envVars.BACKUPS_PASSWORD
+
+  // Parse backup paths
+  let backupPaths: BackupPath[]
+  try {
+    backupPaths = JSON.parse(backupPathsJson)
+    if (!Array.isArray(backupPaths) || backupPaths.length === 0) {
+      throw new Error("BACKUP_PATHS must be a non-empty array")
+    }
+    // Validate structure
+    for (const bp of backupPaths) {
+      if (!bp.source || !bp.target) {
+        throw new Error("Each backup path must have 'source' and 'target' properties")
+      }
+    }
+  } catch (error) {
+    console.error(`❌ Error: Invalid BACKUP_PATHS format: ${error}`)
+    console.error(`   Expected JSON array: [{"source":"~/path","target":"folder-name"}]`)
+    Deno.exit(1)
+  }
 
   console.log("\n=== Offline Backup - Verify Mode ===\n")
   console.log("⚠️  This will mount the backup drive, verify all repositories,")
@@ -1280,19 +1444,29 @@ async function verify(envVars: Record<string, string>): Promise<void> {
       MOUNT_POINT = await mountDrive(partition)
     }
 
-    // Check if backup structure exists
-    const reposDir = `${MOUNT_POINT}/${REPOS_DIR}`
-    try {
-      await Deno.stat(reposDir)
-    } catch {
-      console.error(`❌ Error: No backup repositories found at ${reposDir}`)
-      console.error(
-        "   This drive may not be an offline backup drive or is corrupted",
-      )
+    // Check if backup structure exists - detect backup paths
+    const foundPaths: BackupPath[] = []
+    for (const bp of backupPaths) {
+      const targetDir = `${MOUNT_POINT}/${bp.target}`
+      try {
+        await Deno.stat(targetDir)
+        foundPaths.push(bp)
+      } catch {
+        console.warn(`⚠️  Warning: Target directory not found: ${bp.target}`)
+      }
+    }
+
+    if (foundPaths.length === 0) {
+      console.error(`❌ Error: No backup targets found on this drive`)
+      console.error("   This drive may not be an offline backup drive or is corrupted")
       await unmountDrive(partition, MOUNT_POINT)
       await ejectDrive(device)
       Deno.exit(1)
     }
+
+    console.log(
+      `\nℹ️  Found ${foundPaths.length} of ${backupPaths.length} backup target(s) on drive`,
+    )
 
     // Show README if available
     try {
@@ -1305,14 +1479,29 @@ async function verify(envVars: Record<string, string>): Promise<void> {
       console.log("\nℹ️  No README found\n")
     }
 
-    // Get backup size
+    // Get total backup size
     console.log("\n📊 Analyzing backup...")
-    const sizeInfo = await getBackupSize(reposDir)
-    console.log(`💾 Backup Size: ${sizeInfo.human}\n`)
+    let totalBytes = 0
+    for (const bp of foundPaths) {
+      const targetDir = `${MOUNT_POINT}/${bp.target}`
+      const sizeInfo = await getBackupSize(targetDir)
+      totalBytes += sizeInfo.bytes
+      console.log(`   ${bp.target}: ${sizeInfo.human}`)
+    }
+
+    const units = ["B", "KB", "MB", "GB", "TB"]
+    let size = totalBytes
+    let unitIndex = 0
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024
+      unitIndex++
+    }
+    const totalHuman = `${size.toFixed(2)} ${units[unitIndex]}`
+    console.log(`💾 Total Backup Size: ${totalHuman}\n`)
 
     // Verify backups with restic
     console.log("🔍 Starting full verification (this may take a while)...\n")
-    const verifyResults = await verifyBackups(MOUNT_POINT, resticPassword)
+    const verifyResults = await verifyBackups(MOUNT_POINT, foundPaths, resticPassword)
 
     // Display verification summary
     console.log("\n" + "=".repeat(60))
@@ -1399,7 +1588,8 @@ Commands:
   help      Show this help message
 
 Environment Variables Required:
-  LOCAL_BACKUPS_PATH   Path to local backups folder (e.g., ~/sync/backups)
+  BACKUP_PATHS         JSON array of backup paths: [{"source":"path","target":"folder"}]
+                       Example: [{"source":"~/sync/backups","target":"restic-repos"}]
   BACKUPS_PASSWORD     Restic repository password
 
 Examples:
@@ -1416,6 +1606,7 @@ Examples:
   deno task offline-backup help
 
 Features:
+  - Multiple backup paths support
   - Automatic drive detection and selection
   - BTRFS formatting with compression
   - User-space mounting (no sudo for mount/unmount)
@@ -1453,10 +1644,10 @@ async function main(): Promise<void> {
 
   // Load environment variables
   console.log("🔧 Loading environment variables...")
-  const envVars = await load({ envPath: ".env" })
+  const envVars = await load({ envPath: ".env.root" })
 
   // Check required env vars
-  const required = ["LOCAL_BACKUPS_PATH", "BACKUPS_PASSWORD"]
+  const required = ["BACKUP_PATHS", "BACKUPS_PASSWORD"]
   const missing = required.filter((key) => !envVars[key])
 
   if (missing.length > 0) {
