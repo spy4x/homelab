@@ -104,11 +104,15 @@
         enabled: yes
         state: started
 
+    - name: Detect system architecture for Docker Compose
+      ansible.builtin.set_fact:
+        docker_compose_arch: "{{ 'aarch64' if ansible_architecture == 'aarch64' else 'x86_64' }}"
+
     - name: Install Docker Compose plugin
       ansible.builtin.shell: |
         DOCKER_CONFIG=${DOCKER_CONFIG:-/usr/local/lib/docker}
         mkdir -p $DOCKER_CONFIG/cli-plugins
-        curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+        curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{ docker_compose_arch }} -o $DOCKER_CONFIG/cli-plugins/docker-compose
         chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
       args:
         creates: /usr/local/lib/docker/cli-plugins/docker-compose
