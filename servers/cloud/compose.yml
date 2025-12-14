@@ -132,6 +132,7 @@ services:
   healthchecks:
     container_name: healthchecks
     image: healthchecks/healthchecks:latest
+    user: "999:999" # Run as hc user (UID/GID 999)
     environment:
       - TZ=${TIMEZONE}
       - SECRET_KEY=${HEALTHCHECKS_SECRET_KEY}
@@ -146,14 +147,15 @@ services:
       - REGISTRATION_OPEN=False
       - DISCORD_CLIENT_ID=
       - DISCORD_CLIENT_SECRET=
+      - DB_NAME=/data/hc.sqlite
     volumes:
       - ${VOLUMES_PATH}/healthchecks:/data
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 128M
-          cpus: "0.25"
+          memory: 512M
+          cpus: "0.5"
     security_opt:
       - no-new-privileges:true
     networks:
