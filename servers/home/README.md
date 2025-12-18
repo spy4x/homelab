@@ -1,102 +1,33 @@
-# Home Server - Primary Services
+# Home Server
 
-Fedora server running media, automation, and productivity services.
+Primary services: media, automation, productivity.
 
 ## Services
 
-**Media**: Jellyfin, Immich, AudioBookshelf, MeTube, Transmission\
-**Productivity**: Vaultwarden, FreshRSS, FileBrowser, Open WebUI\
-**Home Automation**: Home Assistant, AdGuard Home\
-**Infrastructure**: Traefik, Syncthing, WireGuard, Woodpecker CI, Watchtower,
-ntfy
+**Media** - [Jellyfin](docs/jellyfin.md), [Immich](docs/immich.md), [Audiobookshelf](docs/audiobookshelf.md), [MeTube](docs/metube.md), [Transmission](docs/transmission.md)  
+**Productivity** - [Vaultwarden](docs/vaultwarden.md), [FreshRSS](docs/freshrss.md), [FileBrowser](docs/filebrowser.md), [Open WebUI](docs/open-webui.md)  
+**Automation** - [Home Assistant](docs/home-assistant.md), [AdGuard Home](docs/adguard.md)  
+**Infrastructure** - [Traefik](../../sharedStacks/traefik/), [Gatus](../../sharedStacks/gatus/), [Syncthing](../../sharedStacks/syncthing/), [WireGuard](../../sharedStacks/wireguard/), [Watchtower](../../sharedStacks/watchtower/), [ntfy](../../sharedStacks/ntfy/), [Woodpecker CI](docs/woodpecker.md)
 
-## Quick Setup
+## Hardware
 
-See main [README.md](../../README.md) for setup and deployment instructions.
+- **OS**: Fedora 40
+- **Storage**: SSD + external drives
+- **Network**: Gigabit ethernet
 
-## Services Configuration
+## Quick Access
 
-### Vaultwarden (Password Manager)
+Dashboard: `https://dash.${DOMAIN}`
 
-SMTP configured for password resets and emergency access. Configure in `.env`:
+See individual service docs in [docs/](docs/) for configuration details.
 
-```env
-HOME_SMTP_HOST=mail.yourdomain.com
-HOME_SMTP_PORT=587
-HOME_SMTP_FROM=noreply@yourdomain.com
-HOME_SMTP_USERNAME=noreply@yourdomain.com
-HOME_SMTP_PASSWORD=<password>
-```
-
-Admin page: https://passwords.yourdomain.com/admin (enable
-`VAULTWARDEN_ADMIN_TOKEN` temporarily)
-
-### Home Assistant
-
-Configure SMTP in Home Assistant UI:
-
-- Settings → System → Network → Email
-- Or via `configuration.yaml`
-
-### AdGuard Home
-
-DNS server blocking ads network-wide. Initial setup at
-https://dns.yourdomain.com:3000 (first run only).
-
-Configure devices to use server IP as DNS.
-
-### Woodpecker CI
-
-GitHub/Gitea/GitLab integration for CI/CD. Configure OAuth app and set
-credentials in `.env`:
-
-```env
-HOME_WOODPECKER_GITHUB_CLIENT=<client-id>
-HOME_WOODPECKER_GITHUB_SECRET=<client-secret>
-HOME_WOODPECKER_ADMIN=<your-username>
-```
-
-### WireGuard VPN
-
-Peer configurations in `.volumes/wireguard/`. Mobile clients at
-https://www.wireguard.com/install/.
-
-### Immich (Photos)
-
-Photo management with mobile app backup. See `servers/home/immich/` for details.
-
-## Web Access
-
-- **Dashboard**: https://dash.yourdomain.com
-- **Movies/TV**: https://movies.yourdomain.com
-- **Photos**: https://photos.yourdomain.com
-- **Passwords**: https://passwords.yourdomain.com
-- **Files**: https://files.yourdomain.com
-- **RSS**: https://rss.yourdomain.com
-- **Books**: https://books.yourdomain.com
-- **Home**: https://home.yourdomain.com
-- **DNS**: https://dns.yourdomain.com
-- **AI**: https://ai.yourdomain.com
-- **Torrents**: https://torrents.yourdomain.com
-- **Sync**: https://sync.yourdomain.com
-- **CI**: https://ci.yourdomain.com
-- **VPN**: vpn.yourdomain.com:51820
-- **MeTube**: https://metube.yourdomain.com
-- **Calendar/Contacts**: https://cal.yourdomain.com
-
-## Backups
-
-Backup configs in `servers/home/configs/backup/`. Automated daily at 2:30 AM.
-
-Manual run:
+## Deployment
 
 ```bash
-deno run --env-file=.env -A scripts/backup/+main.ts
+deno task deploy home
 ```
 
-## Monitoring
-
-ntfy notifications for:
+See main [README](../../README.md) for setup instructions.
 
 - Hardware alerts (disk space, SSD health, temperature)
 - Security (SSH failed logins, fail2ban bans)

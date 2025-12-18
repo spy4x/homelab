@@ -1,53 +1,41 @@
-# Offsite Server - Backup Replication
+# Offsite Server
 
-Raspberry Pi for offsite backup replication and redundancy.
+Backup replication and monitoring on Raspberry Pi 4.
 
 ## Services
 
-- **Syncthing**: Replicates backups from home and cloud servers
-- **WireGuard**: VPN access
-- **Traefik**: Reverse proxy
-- **Watchtower**: Automatic container updates
+**Infrastructure** - [Syncthing](../../sharedStacks/syncthing/), [Gatus](../../sharedStacks/gatus/), [WireGuard](../../sharedStacks/wireguard/), [Traefik](../../sharedStacks/traefik/), [Watchtower](../../sharedStacks/watchtower/)
 
-## Quick Setup
+## Hardware
 
-See main [README.md](../../README.md) for setup and deployment instructions.
+- **Device**: Raspberry Pi 4 (4GB RAM)
+- **OS**: Raspberry Pi OS (Debian-based)
+- **Storage**: External HDD/SSD for backups
+- **Location**: Different physical location than other servers
 
 ## Purpose
 
-This server acts as an offsite backup location, providing:
-
 - Geographic redundancy for backups
-- Protection against site-specific disasters
-- Additional monitoring node for cross-checking home/cloud servers
+- Independent monitoring node
+- Disaster recovery capability
 
-## Configuration
+## Setup
 
-### Syncthing
+Mount external storage and configure in `.env`:
 
-Configure Syncthing to:
+```bash
+OFFSITE_PATH_SYNC=/mnt/external/sync
+```
 
-1. Connect to home server Syncthing instance
-2. Connect to cloud server Syncthing instance
-3. Accept shared folders containing backup repositories
-4. Store backups in local storage
+Configure Syncthing to accept shared folders from home and cloud servers.
 
-Access UI: https://sync-offsite.yourdomain.com or http://<offsite-ip>:8384
+## Deployment
 
-### Storage
+```bash
+deno task deploy offsite
+```
 
-Ensure sufficient storage for backup replication:
-
-- Connect external HDD/SSD if needed
-- Mount at startup via `/etc/fstab`
-- Update `OFFSITE_PATH_SYNC` in `.env` to point to mount
-
-### WireGuard
-
-VPN peers configured in `.volumes/wireguard/`. Use for secure remote access to
-offsite location.
-
-## Monitoring
+See main [README](../../README.md) for setup instructions.
 
 Should be monitored by home and cloud servers via Gatus/Uptime Kuma.
 

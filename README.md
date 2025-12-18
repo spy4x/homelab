@@ -1,314 +1,83 @@
-# Homelab
+# Self-Hosted Infrastructure Framework
 
-Multi-server homelab infrastructure with automated configuration, monitoring,
-and backups.
-
-## 📚 Documentation
-
-- **[Get Started in 5 Minutes](docs/get-started-5min.md)** - Quick setup guide
-- **[Architecture Overview](docs/architecture.md)** - System design & topology
-- **[Adding Services](docs/adding-services.md)** - Step-by-step service guide
-- **[Troubleshooting](docs/troubleshooting.md)** - Common issues & solutions
-
-## Architecture
-
-- **Home Server**: Primary services (Fedora, media, automation)
-- **Cloud Server**: Email, monitoring, external services (Hetzner VPS)
-- **Offsite Server**: Backup & sync replication (Raspberry Pi)
-
-> 💡 **New to this homelab?** Start with the [5-minute quick start guide](docs/get-started-5min.md)
+Infrastructure-as-code framework for managing multi-server Docker-based services with automated deployment, monitoring, and backups.
 
 ## Quick Start
 
-### Prerequisites
-
-- Deno installed locally
-- Ansible installed locally (optional but recommended)
-- SSH key-based authentication configured to _non-root user_
-
-### Initial Setup
-
 ```bash
-# 1. Clone repository
-git clone <your-repo-url> ~/homelab
-cd ~/homelab
+# Clone and setup
+git clone <repo-url> ~/homelab && cd ~/homelab
+cp servers/home/.env.example servers/home/.env  # Configure your environment
 
-# 2. Configure environment
-cp servers/home/.env.example servers/home/.env
-# Edit servers/home/.env with your values
-
-# 3. (Optional) Run Ansible initial setup
-deno task ansible initial-setup
-
-# 4. Deploy services
+# Deploy to server
 deno task deploy home
 
-# 5. SSH to server and start services
+# Start services
 deno task ssh home
-cd $BASE_PATH/apps
-docker compose up -d
+cd /opt/apps && docker compose up -d
 ```
 
-For detailed instructions, see [Get Started in 5 Minutes](docs/get-started-5min.md).
+**Requirements**: Deno, SSH key access, Docker on target server(s)
+
+## Documentation
+
+- **[Get Started](docs/get-started-5min.md)** - Initial setup & deployment
+- **[Architecture](docs/architecture.md)** - System design & data flow
+- **[Adding Services](docs/adding-services.md)** - Service integration guide
+- **[Troubleshooting](docs/troubleshooting.md)** - Debug common issues
+- **[Backup System](scripts/backup/README.md)** - Restic-based backup details
+
+## Example Servers
+
+This repo includes three real servers as reference implementations:
+
+- **home** - Primary services (media, automation, productivity)
+- **cloud** - Email & external monitoring (Hetzner VPS)
+- **offsite** - Backup replication (Raspberry Pi)
+
 
 ## Repository Structure
 
 ```
-├── ansible/                    # Shared Ansible config & playbooks
-│   ├── inventory.yml          # All servers inventory
-│   └── playbooks/             # All playbooks (shared + deploy)
-├── scripts/                   # Shared scripts
-│   └── backup/                # Consolidated backup system (Deno + Restic)
-├── servers/
-│   ├── home/                  # Home server (Fedora)
-|   |   ├── .env               # Server-specific environment variables
-│   │   ├── compose.yml        # Docker services
-│   │   ├── configs/           # Various service configurations
-|   |       └── backup/        # Services backup configurations
-│   │   ├── homepage/          # Custom dash
-│   │   ├── immich/            # Photo management
-│   │   └── piped/             # YouTube alternative
-│   ├── cloud/                 # Cloud server (Hetzner VPS)
-|   |   ├── .env               # Server-specific environment variables
-│   │   ├── compose.yml        # Mail & monitoring services
-│   │   └── configs/           # Various service configurations
-|   |       └── backup/        # Services backup configurations
-│   └── offsite/               # Offsite server (Raspberry Pi)
-|       ├── .env               # Server-specific environment variables
-│       ├── compose.yml        # Sync & backup services
-│       └── configs/           # Various service configurations
-|           └── backup/        # Services backup configurations
-└── .env.example               # Shared environment variables template
+servers/{name}/          # Server-specific config
+  ├── compose.yml        # Docker services
+  ├── .env              # Environment variables
+  ├── configs/          # Service configs
+  │   └── backup/       # Backup definitions
+  ├── localStacks/      # Server-specific services
+  └── docs/             # Service documentation
+sharedStacks/           # Reusable service stacks
+  └── {service}/        # Traefik, Gatus, etc.
+scripts/                # Management tools (Deno)
+  ├── deploy/          # Deployment automation
+  ├── backup/          # Backup system
+  └── ansible/         # Ansible wrapper
+ansible/                # Server provisioning
+docs/                   # Framework documentation
 ```
 
-## Services
+## Core Features
 
-### Home Server
-
-**Media**: Jellyfin, Immich, AudioBookshelf, MeTube
-**Productivity**: Vaultwarden, FreshRSS, FileBrowser, Open WebUI
-**Home Automation**: Home Assistant, AdGuard Home
-**Infrastructure**: Traefik, Syncthing, WireGuard, Woodpecker CI
-
-### Cloud Server
-
-**Email**: Docker Mail Server, Roundcube, Rspamd\
-**Monitoring**: Gatus, Healthchecks, ntfy\
-**Infrastructure**: Traefik, Syncthing
-
-### Offsite Server
-
-**Backup**: Syncthing replication, WireGuard
-
-## Ansible Playbooks
-
-### Running Playbooks
-
-Use the Deno wrapper script for convenience (automatically loads environment variables):
-
-```bash
-# Complete setup for new server
-deno task ansible ansible/site.yml <server>
-
-# Individual playbooks
-deno task ansible ansible/playbooks/initial-setup.yml <server>
-deno task ansible ansible/playbooks/ssh-hardening.yml <server>
-deno task ansible ansible/playbooks/fail2ban.yml <server>
-deno task ansible ansible/playbooks/smart-monitoring.yml home
-deno task ansible ansible/playbooks/backup-cronjob.yml <server>
-deno task ansible ansible/playbooks/maintenance.yml <server>
-deno task ansible ansible/playbooks/monitoring.yml <server>
-```
-
-The ansible wrapper script (`scripts/ansible/+main.ts`) automatically:
-
-- Loads environment variables from `.env.root`
-- Loads Ansible-specific variables from `ansible/.env`
-- Loads server-specific variables from `servers/<server>/.env`
-- Passes the correct inventory and limit flags to ansible-playbook
-
-### Deployment
-
-Deploy services to a server using the Deno deployment script:
-
-```bash
-# Deploy to a specific server
-deno task deploy home
-deno task deploy cloud
-deno task deploy offsite
-```
-
-The deploy script (`scripts/deploy/+main.ts`) automatically:
-
-- Reads `config.json` to determine required stacks
-- Syncs files to remote server via rsync
-- Runs `docker compose up -d` to ensure services are running
-- Cleans up temporary files
-
-## Backups
-
-Automated daily backups using Deno + Restic. See `scripts/backup/README.md`.
-
-**Configure per server:**
-
-- Add service configs to `servers/{server}/configs/backup/`
-- Deploy cron job:
-  `ansible-playbook ansible/playbooks/backup-cronjob.yml -K --limit <server>`
-
-## Monitoring & Alerts
-
-**Cross-server monitoring**: Each server monitors the others via Gatus/Uptime
-Kuma\
-**Notifications**: ntfy for alerts (hardware, security, uptime)\
-**Channels**:
-
-- Hardware: SSD health, disk space, temperature
-- Security: Failed logins, IP bans (fail2ban)
-- Uptime: Service availability, container health
-
-## Email Configuration
-
-Services with SMTP support are configured to use the cloud mail server:
-
-- Vaultwarden: Password resets, emergency access
-- Home Assistant: Automation notifications
-- Healthchecks: Cron job monitoring alerts
-- Woodpecker CI: Build notifications
-
-SMTP details in `.env` with `CLOUD_SMTP_*` or `HOME_SMTP_*` prefix.
+**Deployment** - Automated rsync + Docker Compose deployment via `deno task deploy`  
+**Backups** - Restic-based with per-service configs, see [backup README](scripts/backup/README.md)  
+**Monitoring** - Cross-server health checks (Gatus) + notifications (ntfy)  
+**Provisioning** - Ansible playbooks for server hardening & maintenance  
+**Service Discovery** - Traefik reverse proxy with automatic SSL
 
 ## Common Tasks
 
-### Managing Services
-
 ```bash
+# Deploy server config
+deno task deploy <server>
+
 # SSH to server
-ssh <server>
+deno task ssh <server>
 
-# Check services
-docker compose ps
-docker compose logs -f <service>
+# Run Ansible playbook
+deno task ansible <playbook> <server>
 
-# Restart service
-docker compose restart <service>
-
-# Update all services
-docker compose pull && docker compose up -d
+# Manual backup
+cd servers/<server> && deno run --env-file=.env -A ../../scripts/backup/+main.ts
 ```
 
-### Email Management (Cloud Server)
-
-```bash
-# SSH to cloud server
-cd /opt/cloud
-
-# Manage users
-docker exec -it mailserver setup email add user@domain.com
-docker exec -it mailserver setup email list
-docker exec -it mailserver setup email del user@domain.com
-
-# Manage aliases
-docker exec -it mailserver setup alias add alias@domain.com target@domain.com
-
-# Show DKIM key for DNS
-docker exec mailserver cat /tmp/docker-mailserver/opendkim/keys/*/mail.txt
-
-# Check mail queue
-docker exec mailserver postqueue -p
-```
-
-### Backup Management
-
-```bash
-# Manual backup run
-deno run --env-file=.env -A scripts/backup/+main.ts
-
-# Check backup logs
-tail -f ~/backup.log
-
-# Restore from backup
-export RESTIC_PASSWORD="your-backup-password"
-restic -r /path/to/repo snapshots
-restic -r /path/to/repo restore <snapshot-id> --target <target-dir>
-```
-
-## Security
-
-- SSH: Key-only authentication, custom ports, fail2ban
-- Docker: Non-root users, security-opt flags, resource limits
-- SSL/TLS: Automated Let's Encrypt certificates via Traefik
-- Firewall: Minimal open ports, UFW/firewalld rules
-- Updates: Automated via Watchtower (containers) and Ansible (system)
-
-## Troubleshooting
-
-### Fedora Docker Networking
-
-If external access to Docker containers fails on Fedora:
-
-```bash
-# Apply immediate fix
-sudo iptables -I DOCKER-USER -j ACCEPT
-
-# Make permanent (create systemd service)
-sudo tee /etc/systemd/system/docker-external-access.service << 'EOF'
-[Unit]
-Description=Allow external access to Docker containers
-After=docker.service
-Requires=docker.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/sbin/iptables -I DOCKER-USER -j ACCEPT
-RemainAfterExit=yes
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl enable docker-external-access.service
-```
-
-### Raspberry Pi Boot Partition Read-only
-
-```bash
-# Run fix playbook
-ansible-playbook ansible/playbooks/fix-raspberry-pi.yml -K --limit offsite
-
-# Or manual fix
-ssh <offsite-server>
-sudo mount -o remount,rw /boot/firmware
-sudo dpkg --configure -a
-```
-
-### Check Service Health
-
-```bash
-# View errors
-docker compose ps
-docker logs <container> --tail 100
-
-# Check resource usage
-docker stats
-
-# Test connectivity
-curl -I https://<service-domain>
-```
-
-## Documentation
-
-- **[Get Started in 5 Minutes](docs/get-started-5min.md)** - Quick setup for new servers
-- **[Architecture Overview](docs/architecture.md)** - System design, topology & data flow
-- **[Adding Services Guide](docs/adding-services.md)** - Complete service deployment workflow
-- **[Troubleshooting Guide](docs/troubleshooting.md)** - Common issues & debugging
-- **Backup System**: `scripts/backup/README.md` - Backup implementation details
-- **Cloud/Email Setup**: `servers/cloud/README.md` - Mail server configuration
-- **Fedora Networking**: `servers/home/README_FEDORA.md` - Fedora-specific fixes
-
-## Contributing
-
-This is a personal homelab setup. Feel free to use as reference for your own
-infrastructure.
-
-**Maintained by**: Anton Shubin (@spy4x)\
-**License**: MIT
+See individual [server docs](servers/) and [service docs](sharedStacks/) for details.

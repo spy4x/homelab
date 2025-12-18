@@ -1,102 +1,63 @@
-# Cloud Server - Email & Monitoring
+# Cloud Server
 
-Hetzner VPS running email infrastructure and monitoring services.
+Email infrastructure and external monitoring on Hetzner VPS.
 
 ## Services
 
-- **Docker Mail Server**: Full SMTP/IMAP with Rspamd, ClamAV, Fail2ban
-- **Roundcube**: Webmail interface
-- **Gatus**: Status page and monitoring
-- **Healthchecks**: Cron job monitoring
-- **ntfy**: Notification service
-- **Syncthing**: Backup synchronization
-- **Traefik**: Reverse proxy with Let's Encrypt
+**Email** - [Mail Server](docs/mailserver.md), [Roundcube](docs/roundcube.md)  
+**Monitoring** - [Gatus](../../sharedStacks/gatus/), [Healthchecks](docs/healthchecks.md), [ntfy](../../sharedStacks/ntfy/)  
+**Infrastructure** - [Traefik](../../sharedStacks/traefik/), [Syncthing](../../sharedStacks/syncthing/)
 
-## Quick Setup
+## Hardware
 
-### 1. DNS Configuration
+- **Provider**: Hetzner VPS
+- **OS**: Ubuntu 22.04
+- **Network**: Public IPv4, 24/7 uptime
 
-**Required DNS records** (replace `<VPS-IP>` with your server IP):
+## DNS Requirements
 
 ```dns
-# Mail server
 A       mail                <VPS-IP>
 MX      @                   10 mail.yourdomain.com
 TXT     @                   v=spf1 mx ip4:<VPS-IP> ~all
-TXT     _dmarc              v=DMARC1; p=quarantine; rua=mailto:your@email.com
-
-# Service subdomains
-A       webmail             <VPS-IP>
-A       uptime              <VPS-IP>
-A       ntfy                <VPS-IP>
-A       rspamd              <VPS-IP>
-A       proxy-cloud         <VPS-IP>
-A       sync-cloud          <VPS-IP>
-
-# PTR record (in Hetzner console)
+TXT     _dmarc              v=DMARC1; p=quarantine
+TXT     mail._domainkey     v=DKIM1; k=rsa; p=<get-from-server>
 PTR     <VPS-IP>            mail.yourdomain.com
 ```
 
-### 2. Deploy
-
-See main [README.md](../../README.md) for setup and deployment instructions.
-
-### 3. Configure DKIM
-
-Wait 2 minutes for services to start, then:
-
+Get DKIM key after deployment:
 ```bash
-ssh root@<VPS-IP>
-cd /opt/cloud
 docker exec mailserver cat /tmp/docker-mailserver/opendkim/keys/*/mail.txt
 ```
-
-Add output as DNS TXT record:
-
-```dns
-TXT     mail._domainkey     v=DKIM1; k=rsa; p=<key-from-output>
-```
-
-### 4. Create Email Accounts
-
-```bash
-docker exec -it mailserver setup email add your@domain.com
-docker exec -it mailserver setup email add noreply@domain.com
-```
-
-Save `noreply@domain.com` password to `.env` as `CLOUD_SMTP_PASSWORD`.
 
 ## Email Management
 
 ```bash
-# List accounts
-docker exec mailserver setup email list
-
-# Add account
+# Add user
 docker exec -it mailserver setup email add user@domain.com
 
-# Delete account
-docker exec mailserver setup email del user@domain.com
+# List users
+docker exec mailserver setup email list
 
 # Add alias
 docker exec mailserver setup alias add alias@domain.com target@domain.com
-
-# Check mail queue
-docker exec mailserver postqueue -p
-
-# View logs
-docker logs mailserver --tail 100
 ```
 
-## Web Interfaces
+See [mailserver docs](docs/mailserver.md) for details.
 
-- **Webmail**: https://webmail.yourdomain.com
-- **Rspamd** (spam filter): https://rspamd.yourdomain.com
-- **Uptime Monitoring**: https://uptime.yourdomain.com
-- **Notifications**: https://ntfy.yourdomain.com
-- **Traefik Dashboard**: https://proxy-cloud.yourdomain.com
+## Access
 
-## Monitoring
+- Webmail: `https://webmail.${DOMAIN}`
+- Rspamd: `https://rspamd.${DOMAIN}`
+- Monitoring: `https://uptime.${DOMAIN}`
+
+## Deployment
+
+```bash
+deno task deploy cloud
+```
+
+See main [README](../../README.md) for setup instructions.
 
 **Gatus** monitors both cloud and home servers. Configure in
 `.volumes/gatus/config.yaml`.
