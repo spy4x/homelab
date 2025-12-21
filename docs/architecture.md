@@ -13,17 +13,23 @@ Infrastructure-as-code framework for multi-server Docker deployments.
 
 ### Docker Compose Stacks
 
-Services organized in layers:
+Services organized as individual reusable stacks:
 
 ```
-sharedStacks/        # Reusable across servers (traefik, gatus, etc.)
-  └── traefik/
+stacks/              # ALL service definitions (catalog)
+  ├── traefik/
+  │   ├── compose.yml
+  │   ├── backup.ts
+  │   └── README.md
+  ├── immich/
+  └── ...
 servers/{name}/
-  ├── localStacks/   # Server-specific (immich, piped, etc.)
-  └── compose.yml    # Final configuration layer
+  ├── config.json    # Which stacks to deploy
+  ├── configs/       # Server-specific overrides
+  └── .env          # Environment variables
 ```
 
-**Priority**: sharedStacks → localStacks → compose.yml (highest)
+**Deployment**: Stacks copied to server, deployed with server's `.env` and configs
 
 ### Traefik Reverse Proxy
 
@@ -34,7 +40,8 @@ servers/{name}/
 
 ### Restic Backups
 
-- Per-service backup configs in `servers/{name}/configs/backup/`
+- Per-service backup configs in `stacks/{name}/backup.ts`
+- Non-service backups in `servers/{name}/configs/backup/`
 - [Restic](https://restic.readthedocs.io/) for encrypted, deduplicated backups
 - Syncthing replicates repos across servers
 - See [backup README](../scripts/backup/README.md) for details
@@ -49,9 +56,10 @@ servers/{name}/
 
 `deno task deploy <server>`:
 1. Reads `servers/{server}/config.json` for required stacks
-2. Merges sharedStacks + localStacks + compose.yml
-3. Syncs to server via rsync
-4. Runs `docker compose up -d`
+2. Copies stacks and server configs to temp directory
+3. Runs any `before.deploy.ts` scripts (stack-level or server-specific)
+4. Syncs to server via rsync
+5. Deploys each stack with `docker compose up -d`
 
 ## Example: 3-Server Setup
 
@@ -83,7 +91,7 @@ Gatus HTTP check → Failure → ntfy notification
 
 ## Adding Servers
 
-1. Create `servers/{name}/` with compose.yml, .env, config.json
+1. Create `servers/{name}/` with config.json and .env
 2. Add to `ansible/inventory.yml`
 3. Run `deno task ansible ansible/site.yml {name}`
 4. Deploy: `deno task deploy {name}`

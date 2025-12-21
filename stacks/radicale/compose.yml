@@ -1,0 +1,35 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # Radicale is a lightweight CalDAV and CardDAV server for calendars, contacts, and tasks.
+  # It provides a simple interface for syncing your calendar and contacts across devices.
+  radicale:
+    container_name: radicale
+    image: tomsquest/docker-radicale:latest
+    user: "1000:1000"
+    environment:
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_PATH}/radicale/data:/data
+      - ${VOLUMES_PATH}/radicale/config:/config
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.25"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.radicale.loadbalancer.server.port=5232"
+      - "traefik.http.routers.radicale.rule=Host(`cal.${DOMAIN}`)"
+      - "traefik.http.routers.radicale.entrypoints=websecure"
+      - "traefik.http.routers.radicale.tls=true"
+      - "traefik.http.routers.radicale.tls.certresolver=myresolver"

@@ -78,53 +78,124 @@ export class BackupConfigProcessor {
   }
 
   /**
-   * Loads all backup configurations from the configs directory
+   * Loads backup configurations from a specific directory
    */
-  static async loadConfigurations(configsPath: string): Promise<BackupConfigState[]> {
+  private static async loadConfigsFromDir(
+    dirPath: string,
+    filePattern: string = ".backup.ts",
+  ): Promise<BackupConfigState[]> {
     const backups: BackupConfigState[] = []
-    const configFiles = Deno.readDirSync(configsPath)
 
-    for (const file of configFiles) {
-      if (!file.isFile || !file.name.endsWith(".backup.ts")) {
-        continue
-      }
-      const name = file.name.replace(".backup.ts", "")
+    try {
+      const entries = Deno.readDirSync(dirPath)
 
-      try {
-        const configModule = await import(`${configsPath}/${file.name}`)
+      for (const entry of entries) {
+        if (entry.isFile && entry.name.endsWith(filePattern)) {
+          const name = entry.name.replace(filePattern, "")
+          try {
+            const configModule = await import(`${dirPath}/${entry.name}`)
 
-        if (!configModule.default) {
-          const backup: BackupConfigState = {
-            name,
-            sourcePaths: [],
-            fileName: file.name,
-            status: BackupStatus.ERROR,
-            error: `File ${file.name} does not export a default BackupConfig`,
-            errorAtStep: "config",
+            if (!configModule.default) {
+              const backup: BackupConfigState = {
+                name,
+                sourcePaths: [],
+                fileName: entry.name,
+                status: BackupStatus.ERROR,
+                error: `File ${entry.name} does not export a default BackupConfig`,
+                errorAtStep: "config",
+              }
+              backups.push(backup)
+              continue
+            }
+
+            const backup: BackupConfigState = {
+              ...configModule.default,
+              fileName: entry.name,
+              status: BackupStatus.IN_PROGRESS,
+            }
+
+            backups.push(backup)
+          } catch (error) {
+            const backup: BackupConfigState = {
+              name,
+              sourcePaths: [],
+              fileName: entry.name,
+              status: BackupStatus.ERROR,
+              error: `Failed to load config: ${error}`,
+              errorAtStep: "config",
+            }
+            backups.push(backup)
           }
-          backups.push(backup)
-          continue
-        }
+        } else if (entry.isDirectory) {
+          // For stack directories, look for backup.ts inside
+          const stackBackupPath = `${dirPath}/${entry.name}/backup.ts`
+          try {
+            const stat = Deno.statSync(stackBackupPath)
+            if (stat.isFile) {
+              try {
+                const configModule = await import(stackBackupPath)
 
-        const backup: BackupConfigState = {
-          ...configModule.default,
-          fileName: file.name,
-          status: BackupStatus.IN_PROGRESS,
-        }
+                if (!configModule.default) {
+                  const backup: BackupConfigState = {
+                    name: entry.name,
+                    sourcePaths: [],
+                    fileName: `${entry.name}/backup.ts`,
+                    status: BackupStatus.ERROR,
+                    error: `File ${entry.name}/backup.ts does not export a default BackupConfig`,
+                    errorAtStep: "config",
+                  }
+                  backups.push(backup)
+                  continue
+                }
 
-        backups.push(backup)
-      } catch (error) {
-        const backup: BackupConfigState = {
-          name,
-          sourcePaths: [],
-          fileName: file.name,
-          status: BackupStatus.ERROR,
-          error: `Failed to load config: ${error}`,
-          errorAtStep: "config",
+                const backup: BackupConfigState = {
+                  ...configModule.default,
+                  fileName: `${entry.name}/backup.ts`,
+                  status: BackupStatus.IN_PROGRESS,
+                }
+
+                backups.push(backup)
+              } catch (error) {
+                const backup: BackupConfigState = {
+                  name: entry.name,
+                  sourcePaths: [],
+                  fileName: `${entry.name}/backup.ts`,
+                  status: BackupStatus.ERROR,
+                  error: `Failed to load config: ${error}`,
+                  errorAtStep: "config",
+                }
+                backups.push(backup)
+              }
+            }
+          } catch {
+            // backup.ts doesn't exist in this stack directory, skip
+          }
         }
-        backups.push(backup)
       }
+    } catch (error) {
+      // Directory doesn't exist or can't be read, return empty array
+      console.warn(`Could not read directory ${dirPath}: ${error}`)
     }
+
+    return backups
+  }
+
+  /**
+   * Loads all backup configurations from stacks and server configs directories
+   */
+  static async loadConfigurations(
+    stacksPath: string,
+    serverConfigsPath: string,
+  ): Promise<BackupConfigState[]> {
+    const backups: BackupConfigState[] = []
+
+    // Load from stacks directory (each stack may have a backup.ts file)
+    const stackBackups = await this.loadConfigsFromDir(stacksPath, "")
+    backups.push(...stackBackups)
+
+    // Load from server configs/backup directory (for non-service backups)
+    const serverBackups = await this.loadConfigsFromDir(serverConfigsPath, ".backup.ts")
+    backups.push(...serverBackups)
 
     return backups
   }
