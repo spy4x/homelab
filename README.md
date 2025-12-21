@@ -39,15 +39,16 @@ This repo includes three real servers as reference implementations:
 ## Repository Structure
 
 ```
-servers/{name}/          # Server-specific config
-  ├── compose.yml        # Docker services
-  ├── .env              # Environment variables
-  ├── configs/          # Service configs
-  │   └── backup/       # Backup definitions
-  ├── localStacks/      # Server-specific services
-  └── docs/             # Service documentation
-sharedStacks/           # Reusable service stacks
-  └── {service}/        # Traefik, Gatus, etc.
+stacks/{name}/          # ALL service stacks (catalog)
+  └── {service}/        # Traefik, Immich, etc.
+      ├── compose.yml
+      ├── backup.ts
+      └── README.md
+servers/{name}/         # Server-specific config
+  ├── config.json       # Which stacks to deploy
+  ├── .env             # Environment variables
+  └── configs/         # Server-specific overrides
+      └── backup/      # Non-service backups only
 scripts/                # Management tools (Deno)
   ├── deploy/          # Deployment automation
   ├── backup/          # Backup system
@@ -80,4 +81,4 @@ deno task ansible <playbook> <server>
 cd servers/<server> && deno run --env-file=.env -A ../../scripts/backup/+main.ts
 ```
 
-See individual [server docs](servers/) and [service docs](sharedStacks/) for details.
+See [server docs](servers/) for server-specific notes and [service docs](stacks/) for available services.
