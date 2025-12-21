@@ -1,0 +1,228 @@
+# Gatus Configuration for Cloud Server
+# Monitors home and offsite services (cross-check monitoring)
+
+storage:
+  type: sqlite
+  path: /data/data.db
+
+web:
+  port: 8080
+
+alerting:
+  ntfy:
+    url: ${NTFY_URL}
+    topic: ${NTFY_TOPIC}
+    token: ${NTFY_TOKEN}
+    priority: 3
+    default-alert:
+      enabled: true
+      send-on-resolved: true
+      failure-threshold: 3
+      success-threshold: 2
+
+endpoints:
+  - name: Dash
+    group: home
+    url: "https://dash.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Vaultwarden
+    group: home
+    url: "https://passwords.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Jellyfin
+    group: home
+    url: "https://movies.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Immich
+    group: home
+    url: "https://photos.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Home Assistant
+    group: home
+    url: "https://home.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: AdGuard Home
+    group: home
+    url: "https://dns.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Transmission
+    group: home
+    url: "https://torrents.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Open-WebUI
+    group: home
+    url: "https://ai.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Audiobookshelf
+    group: home
+    url: "https://books.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: MeTube
+    group: home
+    url: "https://metube.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: FileBrowser
+    group: home
+    url: "https://files.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: FreshRSS
+    group: home
+    url: "https://rss.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Radicale
+    group: home
+    url: "https://cal.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Woodpecker CI
+    group: home
+    url: "https://ci.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Piped
+    group: home
+    url: "https://piped.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Syncthing
+    group: home
+    url: "https://sync-home.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ntfy
+    group: home
+    url: "https://ntfy-home.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Gatus
+    group: home
+    url: "https://uptime-home.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Proxy
+    group: home
+    url: "https://proxy-home.${DOMAIN}/dashboard"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Sage
+    group: home
+    url: "https://sage.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Proxy
+    group: offsite
+    url: "https://proxy-offsite.${DOMAIN}/dashboard"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Syncthing
+    group: offsite
+    url: "https://sync-offsite.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy

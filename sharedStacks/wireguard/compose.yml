@@ -1,0 +1,38 @@
+services:
+  wireguard:
+    container_name: wireguard
+    image: lscr.io/linuxserver/wireguard:latest
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+      - SERVERURL=vpn.${DOMAIN}
+      - SERVERPORT=51820
+      - PEERS=${VPN_PEERS}
+      - PEERDNS=1.1.1.1,8.8.8.8,9.9.9.9
+      - LOG_CONFS=true
+    volumes:
+      - ${VOLUMES_PATH}/wireguard:/config
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - 51820:51820/udp
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    networks:
+      - default
+
+networks:
+  default:
+    external: true
+    name: proxy

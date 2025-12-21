@@ -1,0 +1,118 @@
+# Gatus Configuration for Home Server
+# Monitors cloud and offsite services (cross-check monitoring)
+
+storage:
+  type: sqlite
+  path: /data/data.db
+
+web:
+  port: 8080
+
+alerting:
+  ntfy:
+    url: ${NTFY_URL}
+    topic: ${NTFY_TOPIC}
+    token: ${NTFY_TOKEN}
+    priority: 3
+    default-alert:
+      enabled: true
+      send-on-resolved: true
+      failure-threshold: 3
+      success-threshold: 2
+
+endpoints:
+  - name: Mail Server (SMTP)
+    group: cloud
+    url: "tcp://mail.${DOMAIN}:587"
+    interval: 1m
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: ntfy
+
+  - name: Webmail
+    group: cloud
+    url: "https://webmail.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Rspamd
+    group: cloud
+    url: "https://rspamd.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Healthchecks
+    group: cloud
+    url: "https://healthchecks.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Syncthing
+    group: cloud
+    url: "https://sync-cloud.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ntfy
+    group: cloud
+    url: "https://ntfy-cloud.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Gatus
+    group: cloud
+    url: "https://uptime-cloud.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Proxy
+    group: cloud
+    url: "https://proxy-cloud.${DOMAIN}/dashboard"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Proxy
+    group: offsite
+    url: "https://proxy-offsite.${DOMAIN}/dashboard"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Syncthing
+    group: offsite
+    url: "https://sync-offsite.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy

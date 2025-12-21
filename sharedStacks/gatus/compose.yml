@@ -1,0 +1,41 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  # Gatus - Modern, lightweight health check & status page
+  # YAML-configured monitoring with ntfy alerting
+  # https://github.com/TwiN/gatus
+  gatus:
+    container_name: gatus
+    image: twinproduction/gatus:latest
+    environment:
+      - NTFY_URL=${NTFY_URL}
+      - NTFY_TOPIC=${NTFY_UPTIME_TOPIC}
+      - NTFY_TOKEN=${NTFY_UPTIME_AUTH_TOKEN}
+      - BASIC_AUTH_BASE64=${BASIC_AUTH_BASE64}
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ${GATUS_CONFIG_PATH}:/config/config.yaml:ro
+      - ${VOLUMES_PATH}/gatus/data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${GATUS_MEM_LIMIT:-128M}
+          cpus: ${GATUS_CPU_LIMIT:-0.2}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.gatus.loadbalancer.server.port=8080"
+      - "traefik.http.routers.gatus.rule=Host(`${GATUS_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.gatus.entrypoints=websecure"
+      - "traefik.http.routers.gatus.tls=true"
+      - "traefik.http.routers.gatus.tls.certresolver=myresolver"

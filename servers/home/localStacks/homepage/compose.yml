@@ -1,0 +1,32 @@
+networks:
+  proxy:
+    external: true
+
+name: piped
+
+services:
+  # A simple HTML page to display links to all the services.
+  dash:
+    container_name: dash
+    image: nginx:alpine
+    volumes:
+      - ./src:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.10"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.dash.loadbalancer.server.port=80"
+      - "traefik.http.routers.dash.rule=Host(`dash.${DOMAIN}`)"
+      - "traefik.http.routers.dash.entrypoints=websecure"
+      - "traefik.http.routers.dash.tls=true"
+      - "traefik.http.routers.dash.tls.certresolver=myresolver"

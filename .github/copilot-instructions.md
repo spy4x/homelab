@@ -6,6 +6,7 @@
 - Keep configurations simple and maintainable
 - Follow existing patterns and conventions in the codebase
 - Use Docker Compose for service definitions
+- **Infrastructure as Code (IaC) First**: Everything should be defined in code (compose files, configs, scripts) rather than manual UI changes or terminal commands. Knowledge gets lost, but code doesn't. Manual changes should only be temporary troubleshooting steps that get codified afterwards.
 
 ## Environment Variables
 
@@ -51,7 +52,7 @@
      - Have no user data or state to preserve
      - Examples: NFS server, Samba, pure proxies without volumes
 
-2. **Homepage Entry** - Add service to `server/homepage/src/index.html`
+2. **Dash Entry** - Add service to `servers/home/localStacks/homepage/src/index.html`
    - Choose appropriate emoji icon
    - Add to correct section (Primary or Secondary Services)
    - Use pattern: subdomain, icon, and clear name
@@ -63,7 +64,7 @@
 4. **Verification** - Before completion:
    - Backup config uses appropriate defaults
    - Container names match docker-compose
-   - Homepage entry added
+   - Dash entry added
    - Environment variables added to both files
 
 ## Key Principles
@@ -77,4 +78,4 @@
 
 - Docker services: `server/compose.yml`, `secondary/compose.yml`, `experiments/compose.yml`
 - Backup scripts: `server/scripts/backup/configs/*.backup.ts`
-- Homepage: `server/homepage/src/index.html`
+- Dash: `servers/home/localStacks/homepage/src/index.html`

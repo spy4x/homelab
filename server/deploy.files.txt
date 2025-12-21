@@ -1,6 +1,0 @@
-compose.yml
-homepage/***
-immich/***
-piped/***
-scripts/***
-.env

@@ -7,9 +7,8 @@ bantime = 1h
 findtime = 10m
 maxretry = 3
 
-# Notification action
+# Default action
 action = %(action_)s
-         ntfy[name=%(__name__)s]
 
 # Ignore local IPs (adjust to your network)
 ignoreip = 127.0.0.1/8 ::1 192.168.0.0/16 10.0.0.0/8
@@ -28,3 +27,25 @@ backend = systemd
 maxretry = 3
 bantime = 1h
 
+# ===== Docker Container Protection =====
+# Dynamically generated jails based on running containers
+
+{% if fail2ban_docker_jails is defined and fail2ban_docker_jails | length > 0 %}
+{% for jail in fail2ban_docker_jails %}
+[{{ jail.name }}]
+enabled = true
+filter = {{ jail.name }}
+backend = polling
+{% if jail.name == 'traefik-auth' %}
+logpath = {{ apps_path }}/.volumes/traefik/logs/access.log
+{% elif jail.name == 'mailserver' %}
+logpath = {{ apps_path }}/.volumes/mailserver/mail-logs/mail.log
+{% else %}
+logpath = /var/lib/docker/containers/{{ jail.container }}*/*.log
+{% endif %}
+maxretry = {{ jail.maxretry | default(5) }}
+bantime = {{ jail.bantime | default('1h') }}
+findtime = {{ jail.findtime | default('10m') }}
+
+{% endfor %}
+{% endif %}
