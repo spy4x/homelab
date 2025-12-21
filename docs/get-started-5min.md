@@ -93,5 +93,5 @@ Deploy backup cron via Ansible: `deno task ansible ansible/playbooks/backup-cron
 - **[Architecture](architecture.md)** - Understand system design
 - **[Adding Services](adding-services.md)** - Complete integration guide
 - **[Troubleshooting](troubleshooting.md)** - Debug issues
-- **Server docs** - See `servers/{server}/README.md` for server-specific services
-- **Service docs** - See `sharedStacks/{service}/README.md` for reusable stacks
+- **Server docs** - See `servers/{server}/README.md` for server-specific notes
+- **Service docs** - See `stacks/{service}/README.md` for all available services

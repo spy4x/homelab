@@ -55,8 +55,8 @@ See [Traefik docs](https://doc.traefik.io/traefik/) for label syntax.
 **Compose file not found**  
 Verify deployment: `deno task deploy <server>`
 
-**Stack not merging**  
-Check `servers/<server>/config.json` includes stack in `sharedStacks` array.
+**Stack not deploying**  
+Check `servers/<server>/config.json` includes stack in `stacks` array.
 
 ## Monitoring
 
