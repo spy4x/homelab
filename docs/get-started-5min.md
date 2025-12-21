@@ -36,38 +36,33 @@ After deployment: Traefik reverse proxy + Watchtower auto-updater running with S
 
 ## Add Your First Service
 
-Example: Vaultwarden password manager
+Example: Vaultwarden password manager (already in stacks/)
 
-**1. Add to compose.yml**:
-```yaml
-services:
-  vaultwarden:
-    image: vaultwarden/server:latest
-    container_name: vaultwarden
-    volumes:
-      - ${VOLUMES_PATH}/vaultwarden:/data
-    networks: [proxy, default]
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.vaultwarden.rule=Host(`vault.${DOMAIN}`)"
-      - "traefik.http.routers.vaultwarden.entrypoints=websecure"
-      - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
+**1. Add to config.json**:
+```json
+{
+  "stacks": [
+    {"name": "traefik"},
+    {"name": "watchtower"},
+    {"name": "vaultwarden"}
+  ]
+}
 ```
 
-**2. Create backup config** at `servers/home/configs/backup/vaultwarden.backup.ts`:
-```typescript
-import { BackupConfig } from "@scripts/backup"
-export default {
-  name: "vaultwarden",
-  sourcePaths: "default",
-  containers: { stop: "default" }
-} as BackupConfig
-```
+**2. Add any required env vars** to `servers/home/.env`
 
 **3. Deploy**: `deno task deploy home`
 
-**4. Access**: `https://vault.yourdomain.com`
+**4. Access**: `https://passwords.yourdomain.com`
+
+### Creating a New Service
+
+See `stacks/vaultwarden/` for example structure:
+- `compose.yml` - Service definition
+- `backup.ts` - Backup configuration
+- `README.md` - Documentation
+
+Full guide: [Adding Services](adding-services.md)
 
 ## Initial Server Provisioning (Optional)
 

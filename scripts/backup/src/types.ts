@@ -22,6 +22,7 @@ export interface BackupContext {
   backupsPassword: string
   ntfyUrl: string
   ntfyAuth: string
+  stacksPath: string
   configsPath: string
 }
 

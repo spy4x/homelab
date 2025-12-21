@@ -1,0 +1,43 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # Roundcube - Modern webmail client (optional but recommended)
+  # Provides a user-friendly web interface for accessing email
+  roundcube:
+    image: roundcube/roundcubemail:latest
+    container_name: roundcube
+    restart: unless-stopped
+    environment:
+      - ROUNDCUBEMAIL_DEFAULT_HOST=ssl://mailserver
+      - ROUNDCUBEMAIL_DEFAULT_PORT=993
+      - ROUNDCUBEMAIL_SMTP_SERVER=tls://mailserver
+      - ROUNDCUBEMAIL_SMTP_PORT=587
+      - ROUNDCUBEMAIL_UPLOAD_MAX_FILESIZE=50M
+      - ROUNDCUBEMAIL_DB_TYPE=sqlite
+      - ROUNDCUBEMAIL_SKIN=elastic
+      - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload,managesieve
+    volumes:
+      - ${VOLUMES_PATH}/roundcube/www:/var/www/html
+      - ${VOLUMES_PATH}/roundcube/db:/var/roundcube/db
+    depends_on:
+      - mailserver
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.roundcube.loadbalancer.server.port=80"
+      - "traefik.http.routers.roundcube.rule=Host(`webmail.${DOMAIN}`)"
+      - "traefik.http.routers.roundcube.entrypoints=websecure"
+      - "traefik.http.routers.roundcube.tls=true"
+      - "traefik.http.routers.roundcube.tls.certresolver=myresolver"

@@ -1,0 +1,44 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # Transmission is a BitTorrent client with a web interface.
+  # It is a lightweight, works on the server in background and has zero configuration.
+  transmission:
+    image: linuxserver/transmission
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_PATH}/transmission:/config
+      - ${PATH_MOVIES}:/downloads/movies
+      - ${PATH_SERIES}:/downloads/series
+      - ${PATH_MUSIC}:/downloads/music
+      - ${PATH_BOOKS}:/downloads/books
+      - ${PATH_OTHER}:/downloads/other
+    ports:
+      - 51413:51413 # Default port for torrent traffic
+      - 51413:51413/udp # Default port for DHT
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: "1"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
+      - "traefik.http.routers.transmission.rule=Host(`torrents.${DOMAIN}`)"
+      - "traefik.http.routers.transmission.entrypoints=websecure"
+      - "traefik.http.routers.transmission.tls=true"
+      - "traefik.http.routers.transmission.tls.certresolver=myresolver"
+      - "traefik.http.routers.transmission.middlewares=auth"

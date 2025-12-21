@@ -31,7 +31,7 @@ if (!SSH_ADDRESS || !PATH_APPS) {
 
 // Load target's config.json to get required stacks
 const configPath = `${targetPath}/config.json`
-let config: { sharedStacks?: string[] } = {}
+let config: { stacks?: Array<{ name: string; deployAs?: string }> } = {}
 try {
   const configContent = await Deno.readTextFile(configPath)
   config = JSON.parse(configContent)
@@ -43,20 +43,7 @@ try {
   }
 }
 
-const sharedStacks = config.sharedStacks || []
-const localStacks: string[] = []
-const localStacksDirExists = await Deno.stat(`${targetPath}/localStacks`).then(() => true).catch(
-  () => false,
-)
-if (!localStacksDirExists) {
-  log(`${targetPath}/localStacks not found, skipping local stacks`)
-} else {
-  for await (const entry of Deno.readDir(`${targetPath}/localStacks`)) {
-    if (entry.isDirectory) {
-      localStacks.push(entry.name)
-    }
-  }
-}
+const stacks = config.stacks || []
 
 // Create temporary directory for deployment files
 const tempDir = await Deno.makeTempDir({ prefix: "deploy_" })
@@ -64,7 +51,7 @@ log(`Created temp dir: ${tempDir}`)
 
 try {
   // Copy server folder contents to temp directory
-  const whitelist = [".env", "compose.yml", "configs/", "localStacks/"]
+  const whitelist = [".env", "configs/", "stacks/"]
   log("Copying files to temp dir...")
   for (const item of whitelist) {
     const srcPath = `${targetPath}/${item}`
@@ -96,14 +83,39 @@ try {
   await Deno.copyFile("./deno.jsonc", `${tempDir}/deno.jsonc`)
   log(` + /deno.jsonc`)
 
-  // handle "before.deploy.ts" scripts for local stacks
-  for (const stack of localStacks) {
-    const beforeDeployPath = `${tempDir}/localStacks/${stack}/before.deploy.ts`
-    const doesBeforeDeployExist = await Deno.stat(beforeDeployPath).then(() => true).catch(() =>
+  // Copy required stacks to temp directory
+  if (stacks.length > 0) {
+    await Deno.mkdir(`${tempDir}/stacks`, { recursive: true })
+    for (const stackConfig of stacks) {
+      const stackName = stackConfig.name
+      const stackPath = `./stacks/${stackName}`
+      const destPath = `${tempDir}/stacks/${stackName}`
+
+      try {
+        await copyDirectory(stackPath, destPath)
+        log(` + /stacks/${stackName}`)
+      } catch (err) {
+        if (err instanceof Deno.errors.NotFound) {
+          error(`Stack not found: ${stackPath}`)
+          Deno.exit(1)
+        }
+        throw err
+      }
+    }
+  }
+
+  // Handle "before.deploy.ts" scripts for stacks
+  for (const stackConfig of stacks) {
+    const stackName = stackConfig.name
+    const deployAs = stackConfig.deployAs || stackName
+
+    // Check for stack-level before.deploy.ts
+    const stackBeforeDeployPath = `${tempDir}/stacks/${stackName}/before.deploy.ts`
+    const hasStackBeforeDeploy = await Deno.stat(stackBeforeDeployPath).then(() => true).catch(() =>
       false
     )
-    if (doesBeforeDeployExist) {
-      log(`Running before.deploy.ts for ${stack}...`)
+    if (hasStackBeforeDeploy) {
+      log(`Running before.deploy.ts for stack ${stackName}...`)
       const proc = new Deno.Command(Deno.execPath(), {
         args: [
           "run",
@@ -112,37 +124,46 @@ try {
           "-E",
           "--env-file=.env.root",
           "--env-file=.env",
-          beforeDeployPath,
+          stackBeforeDeployPath,
+        ],
+        cwd: tempDir,
+        env: { DEPLOY_AS: deployAs },
+      })
+      const output = await proc.output()
+      if (output.code !== 0) {
+        error(`before.deploy.ts failed for stack: ${stackName}`)
+        error(new TextDecoder().decode(output.stderr))
+        Deno.exit(1)
+      }
+      success(`✓ before.deploy.ts for ${stackName}`)
+    }
+
+    // Check for server-specific before.deploy.ts
+    const serverBeforeDeployPath = `${tempDir}/configs/${deployAs}/before.deploy.ts`
+    const hasServerBeforeDeploy = await Deno.stat(serverBeforeDeployPath).then(() => true).catch(
+      () => false
+    )
+    if (hasServerBeforeDeploy) {
+      log(`Running server-specific before.deploy.ts for ${deployAs}...`)
+      const proc = new Deno.Command(Deno.execPath(), {
+        args: [
+          "run",
+          "-R",
+          "-W",
+          "-E",
+          "--env-file=.env.root",
+          "--env-file=.env",
+          serverBeforeDeployPath,
         ],
         cwd: tempDir,
       })
       const output = await proc.output()
       if (output.code !== 0) {
-        error(`before.deploy.ts failed for stack: ${stack}`)
+        error(`server-specific before.deploy.ts failed for: ${deployAs}`)
         error(new TextDecoder().decode(output.stderr))
         Deno.exit(1)
       }
-      success(`✓ before.deploy.ts for ${stack}`)
-    }
-  }
-
-  // Copy required shared stacks to temp directory in 'shared' subdirectory
-  if (sharedStacks.length > 0) {
-    await Deno.mkdir(`${tempDir}/sharedStacks`, { recursive: true })
-    for (const stack of sharedStacks) {
-      const stackPath = `./sharedStacks/${stack}`
-      const destPath = `${tempDir}/sharedStacks/${stack}`
-
-      try {
-        await copyDirectory(stackPath, destPath)
-        log(` + /sharedStacks/${stack}`)
-      } catch (err) {
-        if (err instanceof Deno.errors.NotFound) {
-          error(`Stack not found: ${stackPath}`)
-          Deno.exit(1)
-        }
-        throw err
-      }
+      success(`✓ server-specific before.deploy.ts for ${deployAs}`)
     }
   }
 
@@ -180,63 +201,32 @@ try {
   }
   success("Proxy network ensured")
 
-  // Deploy shared stacks
-  if (sharedStacks.length > 0) {
-    log("Deploying shared stacks...")
-    for (const stack of sharedStacks) {
-      log(`${stack}...`)
-      const sharedStackCmd =
-        `cd ${PATH_APPS} && docker compose --env-file=.env.root --env-file=.env -f sharedStacks/${stack}/compose.yml up -d`
-      const sharedStackCommand = await runCommand(["ssh", SSH_ADDRESS, sharedStackCmd])
-      if (!sharedStackCommand.success) {
-        error(`Failed to deploy shared stack: ${stack}`)
-        error(sharedStackCommand.error)
+  // Deploy stacks
+  if (stacks.length > 0) {
+    log("Deploying stacks...")
+    for (const stackConfig of stacks) {
+      const stackName = stackConfig.name
+      const deployAs = stackConfig.deployAs || stackName
+      log(`${stackName}${deployAs !== stackName ? ` (as ${deployAs})` : ""}...`)
+
+      // Use project name to allow same stack deployed multiple times
+      const projectFlag = `-p ${deployAs}`
+      const stackCmd =
+        `cd ${PATH_APPS} && docker compose ${projectFlag} --env-file=.env.root --env-file=.env -f stacks/${stackName}/compose.yml up -d`
+      const stackCommand = await runCommand(["ssh", SSH_ADDRESS, stackCmd])
+      if (!stackCommand.success) {
+        error(
+          `Failed to deploy stack: ${stackName}${
+            deployAs !== stackName ? ` (as ${deployAs})` : ""
+          }`,
+        )
+        error(stackCommand.error)
         Deno.exit(1)
       }
-      success(`✓ ${stack}`)
+      success(`✓ ${stackName}${deployAs !== stackName ? ` (as ${deployAs})` : ""}`)
     }
   } else {
-    log("No shared stacks to deploy")
-  }
-
-  // Deploy local stacks first (each in its own directory to maintain isolation)
-  if (localStacks.length > 0) {
-    const LOCAL_STACKS_PATH = `${PATH_APPS}/localStacks`
-    log("Deploying local stacks...")
-    for (const stack of localStacks) {
-      log(`${stack}...`)
-
-      const localStackCmd =
-        `cd ${LOCAL_STACKS_PATH}/${stack} && docker compose --env-file=../../.env.root --env-file=../../.env up -d`
-      const localStackCommand = await runCommand(["ssh", SSH_ADDRESS, localStackCmd])
-      if (!localStackCommand.success) {
-        error(`Failed to deploy local stack: ${stack}`)
-        error(localStackCommand.error)
-        Deno.exit(1)
-      }
-      success(`✓ ${stack}`)
-    }
-  }
-
-  const doesComposeYmlExist = await Deno.stat(`${tempDir}/compose.yml`).then(() => true).catch(() =>
-    false
-  )
-  if (!doesComposeYmlExist) {
-    log("No compose.yml found for main services, skipping...")
-  } else {
-    // Deploy main services with shared stacks
-    log("Deploying compose.yml...")
-
-    const remoteCmd =
-      `cd ${PATH_APPS} && docker compose --env-file=.env.root --env-file=.env -f compose.yml up -d`
-
-    const sshCommand = await runCommand(["ssh", SSH_ADDRESS, remoteCmd])
-    if (!sshCommand.success) {
-      error("Failed to deploy main services")
-      error(sshCommand.error)
-      Deno.exit(1)
-    }
-    success("✓ compose.yml")
+    log("No stacks to deploy")
   }
 
   log("Deployment script finished")

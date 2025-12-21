@@ -1,0 +1,36 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # Audiobookshelf is a self-hosted audio & epub/pdf book server.
+  audiobookshelf:
+    container_name: audiobookshelf
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_PATH}/audiobookshelf/config:/config
+      - ${VOLUMES_PATH}/audiobookshelf-metadata:/metadata
+      - ${PATH_BOOKS}:/audiobooks
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+          cpus: "1"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.audiobookshelf.loadbalancer.server.port=80"
+      - "traefik.http.routers.audiobookshelf.rule=Host(`books.${DOMAIN}`)"
+      - "traefik.http.routers.audiobookshelf.entrypoints=websecure"
+      - "traefik.http.routers.audiobookshelf.tls=true"
+      - "traefik.http.routers.audiobookshelf.tls.certresolver=myresolver"

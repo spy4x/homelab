@@ -77,15 +77,19 @@ class BackupRunner {
       backupsPassword: getEnvVar("BACKUPS_PASSWORD"),
       ntfyUrl: getEnvVar("NTFY_URL_BACKUPS"),
       ntfyAuth: getEnvVar("NTFY_TOKEN_BACKUPS"),
+      stacksPath: absPath(`${PATH_APPS}/stacks`),
       configsPath: absPath(`${PATH_APPS}/configs/backup`),
     }
   }
 
   /**
-   * Loads all backup configurations from the configs directory
+   * Loads all backup configurations from stacks and server configs
    */
   private async loadConfigurations(): Promise<BackupConfigState[]> {
-    return await BackupConfigProcessor.loadConfigurations(this.context.configsPath)
+    return await BackupConfigProcessor.loadConfigurations(
+      this.context.stacksPath,
+      this.context.configsPath,
+    )
   }
 
   /**

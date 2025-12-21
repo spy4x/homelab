@@ -1,3 +1,7 @@
 {
-  "sharedStacks": ["traefik", "watchtower", "syncthing"]
+  "stacks": [
+    { "name": "traefik" },
+    { "name": "watchtower" },
+    { "name": "syncthing" }
+  ]
 }

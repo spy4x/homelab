@@ -1,0 +1,37 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # Jellyfin is a media server for hosting and managing personal media libraries.
+  # Think of movies, TV shows, home videos, music, and pictures.
+  jellyfin:
+    container_name: jellyfin
+    image: jellyfin/jellyfin
+    volumes:
+      - ${VOLUMES_PATH}/jellyfin:/config
+      - ${VOLUMES_PATH}/jellyfin-cache:/cache
+      - ${PATH_MEDIA}:/media
+      - ${PATH_VIDEOS}:/videos
+      - ${PATH_MUSIC}:/music
+    devices:
+      - /dev/dri:/dev/dri # for GPU transcoding
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 8192M
+          cpus: "3"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      - "traefik.http.routers.jellyfin.rule=Host(`movies.${DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls=true"
+      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"

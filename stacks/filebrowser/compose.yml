@@ -1,0 +1,44 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # FileBrowser is a web-based file manager that provides a simple interface for managing files.
+  # It allows you to upload, download, edit, and organize files through a web interface.
+  filebrowser:
+    container_name: filebrowser
+    image: filebrowser/filebrowser:latest
+    user: "1000:1000"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TIMEZONE}
+    volumes:
+      - ${VOLUMES_PATH}/filebrowser:/database
+      - ${PATH_MEDIA}:/srv/media
+      - ${PATH_VIDEOS}:/srv/videos
+      - ${PATH_MUSIC}:/srv/music
+      - ${PATH_BOOKS}:/srv/books
+      - ${PATH_SYNC}:/srv/sync
+      - ${PATH_MOVIES}:/srv/movies
+      - ${PATH_SERIES}:/srv/series
+      - ${PATH_OTHER}:/srv/other
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.filebrowser.loadbalancer.server.port=80"
+      - "traefik.http.routers.filebrowser.rule=Host(`files.${DOMAIN}`)"
+      - "traefik.http.routers.filebrowser.entrypoints=websecure"
+      - "traefik.http.routers.filebrowser.tls=true"
+      - "traefik.http.routers.filebrowser.tls.certresolver=myresolver"

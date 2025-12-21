@@ -1,0 +1,50 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # Healthchecks - Cron job and scheduled task monitoring
+  # Receives HTTP/email pings from scheduled tasks, alerts when they don't check in
+  # https://github.com/healthchecks/healthchecks
+  healthchecks:
+    container_name: healthchecks
+    image: healthchecks/healthchecks:latest
+    user: "999:999" # Run as hc user (UID/GID 999)
+    environment:
+      - TZ=${TIMEZONE}
+      - SECRET_KEY=${HEALTHCHECKS_SECRET_KEY}
+      - SITE_ROOT=https://healthchecks.${DOMAIN}
+      - SITE_NAME=Healthchecks
+      - DEFAULT_FROM_EMAIL=noreply@${DOMAIN}
+      - EMAIL_HOST=mailserver
+      - EMAIL_PORT=587
+      - EMAIL_USE_TLS=True
+      - EMAIL_HOST_USER=noreply@${DOMAIN}
+      - EMAIL_HOST_PASSWORD=${SMTP_PASSWORD}
+      - REGISTRATION_OPEN=False
+      - DISCORD_CLIENT_ID=
+      - DISCORD_CLIENT_SECRET=
+      - DB_NAME=/data/hc.sqlite
+    volumes:
+      - ${VOLUMES_PATH}/healthchecks:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    depends_on:
+      - mailserver
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.healthchecks.loadbalancer.server.port=8000"
+      - "traefik.http.routers.healthchecks.rule=Host(`healthchecks.${DOMAIN}`)"
+      - "traefik.http.routers.healthchecks.entrypoints=websecure"
+      - "traefik.http.routers.healthchecks.tls=true"
+      - "traefik.http.routers.healthchecks.tls.certresolver=myresolver"

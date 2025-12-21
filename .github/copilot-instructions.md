@@ -42,40 +42,57 @@
 
 **CRITICAL: Every new service MUST include:**
 
-1. **Backup Configuration** - Create `server/scripts/backup/configs/[service-name].backup.ts`
-   - See detailed guide: `server/scripts/backup/README.md` → "Adding New Services"
+1. **Stack Definition** - Create `stacks/{service-name}/compose.yml`
+   - Follow existing stack patterns
+   - Include networks, labels for Traefik, resource limits
+   - Add to server's `config.json` stacks array
+
+2. **Backup Configuration** - Create `stacks/{service-name}/backup.ts`
+   - See detailed guide: `scripts/backup/README.md` → "Adding New Services"
    - Use `"default"` for standard setups
    - Follow existing examples for similar services
    - **Skip backup configs entirely** for stateless/transient services that:
      - Don't mount any volumes for persistent data
      - Store all configuration in compose.yml environment variables
      - Have no user data or state to preserve
-     - Examples: NFS server, Samba, pure proxies without volumes
+     - Examples: Pure proxies without volumes, stateless workers
 
-2. **Dash Entry** - Add service to `servers/home/localStacks/homepage/src/index.html`
+3. **Documentation** - Add `stacks/{service-name}/README.md`
+   - Service description and purpose
+   - Setup instructions
+   - Configuration notes
+   - Troubleshooting tips
+
+4. **Dashboard Entry** - Update homepage
+   - For home server: `servers/home/configs/homepage/index.html`
    - Choose appropriate emoji icon
    - Add to correct section (Primary or Secondary Services)
    - Use pattern: subdomain, icon, and clear name
 
-3. **Environment Variables** - If the service needs any:
-   - Add to both `.env` and `.env.example` as described above
+5. **Environment Variables** - If the service needs any:
+   - Add to both `servers/{name}/.env` and `.env.example` as described above
    - Document in service comments in compose.yml
 
-4. **Verification** - Before completion:
-   - Backup config uses appropriate defaults
-   - Container names match docker-compose
-   - Dash entry added
-   - Environment variables added to both files
+6. **Verification** - Before completion:
+   - Stack has compose.yml (required)
+   - Backup config uses appropriate defaults (if needed)
+   - Container names match stack name
+   - Dashboard entry added (if applicable)
+   - Environment variables added to both files (if needed)
+   - Documentation complete
 
 ## Key Principles
 
-- **Backups First**: No service is complete without backup configuration
+- **Stacks Catalog**: All services live in `stacks/`, servers choose what to deploy
+- **Backups First**: Services with data MUST have backup configs
 - **Keep It Simple**: Use defaults unless custom configuration is necessary
-- **Follow Patterns**: Check existing services for similar examples
-- **Documentation**: Update relevant README files when adding new features
+- **Follow Patterns**: Check existing stacks for similar examples
+- **Documentation**: Every stack needs a README.md
 
 ## File Locations
 
-- Docker services: `server/compose.yml`, `secondary/compose.yml`, `experiments/compose.yml`
-- Backup scripts: `server/scripts/backup/configs/*.backup.ts`
-- Dash: `servers/home/localStacks/homepage/src/index.html`
+- Service stacks: `stacks/{name}/compose.yml`
+- Stack backups: `stacks/{name}/backup.ts`
+- Stack docs: `stacks/{name}/README.md`
+- Server configs: `servers/{name}/config.json`, `.env`, `configs/`
+- Dashboard: `servers/home/configs/homepage/index.html`

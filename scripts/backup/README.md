@@ -20,7 +20,12 @@ The backup system is organized into clean, modular components:
 
 ### Configuration Files
 
-- **`configs/*.backup.ts`** - Individual service backup configurations
+Backup configurations are loaded from two locations:
+
+1. **`stacks/*/backup.ts`** - Service backup configurations (co-located with service definitions)
+2. **`servers/{name}/configs/backup/*.backup.ts`** - Non-service backups (server-specific folders, etc.)
+
+The system automatically discovers and merges configurations from both locations.
 
 ## Features
 
@@ -98,6 +103,37 @@ export default backupConfig
 - `sourcePaths` - Paths to backup (use "default" for `${PATH_APPS}/.volumes/${name}`)
 - `pathsToChangeOwnership` - Paths to change ownership before backup (optional)
 - `containers.stop` - Docker containers to stop during backup (use "default" for `[name]`)
+
+## Adding New Services
+
+When adding a new service with persistent data:
+
+1. **Create backup config** at `stacks/{service}/backup.ts`:
+   ```typescript
+   import { BackupConfig } from "@scripts/backup"
+
+   export default {
+     name: "myservice",
+     sourcePaths: "default", // Uses ${VOLUMES_PATH}/myservice
+     containers: { stop: "default" }, // Stops container "myservice"
+   } as BackupConfig
+   ```
+
+2. **For shared services** deployed on multiple servers, use dynamic naming:
+   ```typescript
+   export default {
+     name: "gatus",
+     destName: `gatus-\${SERVER_NAME}`, // Unique repo per server
+     sourcePaths: "default",
+     containers: { stop: "default" },
+   } as BackupConfig
+   ```
+
+3. **Skip backup config entirely** for stateless services (no volumes, config via env vars only)
+
+4. **For non-service backups** (server-specific folders), create `servers/{name}/configs/backup/mybackup.backup.ts` instead
+
+The backup script automatically discovers configs from both locations during execution.
 
 ## Backup Process
 

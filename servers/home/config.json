@@ -1,3 +1,25 @@
 {
-  "sharedStacks": ["traefik", "watchtower", "syncthing", "gatus", "ntfy", "wireguard"]
+  "stacks": [
+    { "name": "traefik" },
+    { "name": "watchtower" },
+    { "name": "syncthing" },
+    { "name": "gatus" },
+    { "name": "ntfy" },
+    { "name": "wireguard" },
+    { "name": "nginx", "deployAs": "homepage" },
+    { "name": "immich" },
+    { "name": "piped" },
+    { "name": "transmission" },
+    { "name": "jellyfin" },
+    { "name": "vaultwarden" },
+    { "name": "open-webui" },
+    { "name": "audiobookshelf" },
+    { "name": "metube" },
+    { "name": "home-assistant" },
+    { "name": "adguard" },
+    { "name": "filebrowser" },
+    { "name": "freshrss" },
+    { "name": "radicale" },
+    { "name": "woodpecker" }
+  ]
 }

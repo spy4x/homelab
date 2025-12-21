@@ -4,40 +4,18 @@ Complete workflow for integrating new services into the infrastructure.
 
 ## Quick Checklist
 
-1. ☐ Add service to `compose.yml` or create stack file
-2. ☐ Add environment variables to `.env` and `.env.example`
-3. ☐ Create backup config (if service has persistent data)
-4. ☐ Deploy and verify
-5. ☐ Add monitoring to Gatus
+1. ☐ Create stack in `stacks/{name}/` with compose.yml
+2. ☐ Add stack to server's `config.json`
+3. ☐ Add environment variables to `.env` and `.env.example`
+4. ☐ Create backup config (if service has persistent data)
+5. ☐ Deploy and verify
+6. ☐ Add monitoring to Gatus
 
 ## Service Definition
 
-### Option A: Server-Specific
-
-Add to `servers/{server}/compose.yml`:
+Create `stacks/myservice/compose.yml`:
 
 ```yaml
-services:
-  myservice:
-    image: myservice/myservice:latest
-    container_name: myservice
-    volumes:
-      - ${VOLUMES_PATH}/myservice:/data
-    networks: [proxy, default]
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.myservice.rule=Host(`myservice.${DOMAIN}`)"
-      - "traefik.http.routers.myservice.entrypoints=websecure"
-      - "traefik.http.routers.myservice.tls.certresolver=myresolver"
-```
-
-### Option B: Reusable Stack
-
-Create `sharedStacks/myservice/compose.yml`:
-
-```yaml
-name: ${PROJECT}
 networks:
   proxy:
     external: true
@@ -60,8 +38,29 @@ services:
 Add to `servers/{server}/config.json`:
 ```json
 {
-  "sharedStacks": ["traefik", "myservice"]
+  "stacks": [
+    {"name": "traefik"},
+    {"name": "myservice"}
+  ]
 }
+```
+
+### Server-Specific Configuration
+
+For server-specific settings, use environment variables or config overrides in `servers/{server}/configs/myservice/`.
+
+### Deploying Same Stack Multiple Times
+
+Use `deployAs` to deploy the same stack with different names:
+
+```json
+{
+  "stacks": [
+    {"name": "nginx", "deployAs": "homepage"},
+    {"name": "nginx", "deployAs": "blog"}
+  ]
+}
+```
 ```
 
 ## Environment Variables
@@ -84,7 +83,7 @@ MYSERVICE_API_KEY=YOUR_API_KEY_HERE  # Get from https://myservice.com/settings
 
 **Required for all services with persistent data.**
 
-Create `servers/{server}/configs/backup/myservice.backup.ts`:
+Create `stacks/myservice/backup.ts`:
 
 ```typescript
 import { BackupConfig } from "@scripts/backup"
@@ -96,7 +95,7 @@ export default {
 } as BackupConfig
 ```
 
-**Skip backup config** for stateless services (config-only via env vars, no volumes).
+**Skip backup config entirely** for stateless services (config-only via env vars, no volumes).
 
 ### Advanced Backup Configs
 
@@ -112,15 +111,18 @@ export default {
 } as BackupConfig
 ```
 
-**Shared service** (multiple servers):
+**Shared service deployed on multiple servers**:
 ```typescript
 export default {
   name: "myservice",
-  destName: "myservice-home", // Unique repo name per server
+  destName: `myservice-\${SERVER_NAME}`, // Unique repo name per server
   sourcePaths: "default",
   containers: { stop: "default" }
 } as BackupConfig
 ```
+
+**Non-service backups** (server-specific folders):
+Create `servers/{server}/configs/backup/mybackup.backup.ts` instead.
 
 See [backup README](../scripts/backup/README.md) for full options.
 
