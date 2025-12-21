@@ -5,19 +5,20 @@ Infrastructure-as-code framework for managing multi-server Docker-based services
 ## Quick Start
 
 ```bash
+# Install Deno
+curl -fsSL https://deno.land/install.sh | sh
+
 # Clone and setup
-git clone <repo-url> ~/homelab && cd ~/homelab
-cp servers/home/.env.example servers/home/.env  # Configure your environment
+git clone https://github.com/spy4x/homelab.git ~/homelab && cd ~/homelab
+cp servers/home/.env.example servers/home/.env  # Copy example env
+# Edit servers/home/.env with your ssh params, domain, email, etc.
+
+# Configure server with Ansible - Install
+deno task ansible ./ansible/playbooks/initial-setup/base.yml home 
 
 # Deploy to server
 deno task deploy home
-
-# Start services
-deno task ssh home
-cd /opt/apps && docker compose up -d
 ```
-
-**Requirements**: Deno, SSH key access, Docker on target server(s)
 
 ## Documentation
 
@@ -34,7 +35,6 @@ This repo includes three real servers as reference implementations:
 - **home** - Primary services (media, automation, productivity)
 - **cloud** - Email & external monitoring (Hetzner VPS)
 - **offsite** - Backup replication (Raspberry Pi)
-
 
 ## Repository Structure
 
@@ -59,10 +59,10 @@ docs/                   # Framework documentation
 
 ## Core Features
 
-**Deployment** - Automated rsync + Docker Compose deployment via `deno task deploy`  
-**Backups** - Restic-based with per-service configs, see [backup README](scripts/backup/README.md)  
-**Monitoring** - Cross-server health checks (Gatus) + notifications (ntfy)  
-**Provisioning** - Ansible playbooks for server hardening & maintenance  
+**Deployment** - Automated rsync + Docker Compose deployment via `deno task deploy`\
+**Backups** - Restic-based with per-service configs, see [backup README](scripts/backup/README.md)\
+**Monitoring** - Cross-server health checks (Gatus) + notifications (ntfy)\
+**Provisioning** - Ansible playbooks for server hardening & maintenance\
 **Service Discovery** - Traefik reverse proxy with automatic SSL
 
 ## Common Tasks
