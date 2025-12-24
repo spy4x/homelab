@@ -23,7 +23,7 @@ services:
       - NTFY_BEHIND_PROXY=true
       - NTFY_ENABLE_SIGNUP=false
       - NTFY_ENABLE_LOGIN=true
-    user: "1000:1000"
+    user: "${PUID:-1000}:${PGID:-1000}"
     volumes:
       - ${VOLUMES_PATH}/ntfy/cache:/var/lib/ntfy
       - ${VOLUMES_PATH}/ntfy/etc:/etc/ntfy

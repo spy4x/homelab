@@ -8,10 +8,10 @@ services:
   filebrowser:
     container_name: filebrowser
     image: filebrowser/filebrowser:latest
-    user: "1000:1000"
+    user: "${PUID:-1000}:${PGID:-1000}"
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
     volumes:
       - ${VOLUMES_PATH}/filebrowser:/database

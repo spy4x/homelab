@@ -7,7 +7,7 @@ services:
   vaultwarden:
     container_name: vaultwarden
     image: vaultwarden/server:latest
-    user: "1000:1000" # Run as non-root user for better security
+    user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       - DOMAIN=https://passwords.${DOMAIN}
       # - ADMIN_TOKEN=${VAULTWARDEN_ADMIN_TOKEN} # Enable admin page only while needed and disable otherwise for better security

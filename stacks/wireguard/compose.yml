@@ -6,8 +6,8 @@ services:
       - NET_ADMIN
       - SYS_MODULE
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
       - SERVERURL=vpn.${DOMAIN}
       - SERVERPORT=51820
