@@ -4,9 +4,9 @@ services:
   # Watchtower is a process for automating Docker container base image updates.
   watchtower:
     container_name: watchtower
-    image: containrrr/watchtower
+    image: containrrr/watchtower:latest
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:z
     restart: unless-stopped
     deploy:
       resources:
@@ -15,4 +15,4 @@ services:
           memory: ${WATCHTOWER_MEM_LIMIT:-256M}
     security_opt:
       - no-new-privileges:true
-    command: --interval 86400 --cleanup
+    command: --interval 86400 --cleanup --api-version 1.44
