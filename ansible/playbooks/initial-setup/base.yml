@@ -16,18 +16,6 @@
     - name: Fix Raspberry Pi boot partition (if applicable)
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/raspberry-pi-fix.yml"
 
-    # ===== Bootstrap Python Dependencies for Ansible =====
-    - name: Install python3-libdnf5 for Ansible on RedHat/Fedora (bootstrap)
-      ansible.builtin.raw: |
-        if command -v dnf5 &> /dev/null; then
-          dnf5 install -y python3-libdnf5
-        elif command -v dnf &> /dev/null; then
-          dnf install -y python3-libdnf5
-        fi
-      when: ansible_os_family == "RedHat"
-      changed_when: false
-      failed_when: false
-
     - name: Install Docker Python library for Ansible
       ansible.builtin.include_tasks: "{{ playbook_dir }}/../../tasks/install-docker-python.yml"
 

@@ -5,6 +5,7 @@ Generic Nginx web server for serving static content.
 ## Overview
 
 This stack provides a lightweight Nginx container that can be deployed multiple times on the same server using the `deployAs` feature in `config.json`. It's commonly used for:
+
 - Static website hosting
 - Dashboard/homepage
 - Landing pages
@@ -22,10 +23,11 @@ This stack provides a lightweight Nginx container that can be deployed multiple 
 ### Basic Deployment
 
 Add to `servers/{server}/config.json`:
+
 ```json
 {
   "stacks": [
-    {"name": "nginx", "deployAs": "homepage"}
+    { "name": "nginx", "deployAs": "homepage" }
   ]
 }
 ```
@@ -33,12 +35,13 @@ Add to `servers/{server}/config.json`:
 ### Multiple Deployments
 
 Deploy the same nginx stack multiple times:
+
 ```json
 {
   "stacks": [
-    {"name": "nginx", "deployAs": "homepage"},
-    {"name": "nginx", "deployAs": "blog"},
-    {"name": "nginx", "deployAs": "docs"}
+    { "name": "nginx", "deployAs": "homepage" },
+    { "name": "nginx", "deployAs": "blog" },
+    { "name": "nginx", "deployAs": "docs" }
   ]
 }
 ```
@@ -46,6 +49,7 @@ Deploy the same nginx stack multiple times:
 ### Content
 
 Place your HTML/CSS/JS files in `servers/{server}/configs/{deployAs}/src/`:
+
 ```
 servers/home/configs/homepage/src/
 ├── index.html
@@ -56,6 +60,7 @@ servers/home/configs/homepage/src/
 ### Server-Specific Setup
 
 For dynamic content generation (like the homepage), add a `before.deploy.ts` script:
+
 ```
 servers/{server}/configs/{deployAs}/before.deploy.ts
 ```
