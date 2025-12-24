@@ -21,8 +21,6 @@ services:
     volumes:
       - ${VOLUMES_PATH}/roundcube/www:/var/www/html
       - ${VOLUMES_PATH}/roundcube/db:/var/roundcube/db
-    depends_on:
-      - mailserver
     deploy:
       resources:
         limits:
