@@ -24,6 +24,7 @@ nano servers/demo/.env
 ```
 
 **Required changes:**
+
 - `SSH_ADDRESS` - Your server's hostname or IP
 - `SSH_PORT` - Your SSH port (if not 22)
 - `HOMELAB_USER` - Your SSH username

@@ -19,6 +19,7 @@ Privacy-respecting YouTube frontend with no ads.
 ## Architecture
 
 Consists of three services:
+
 - **Frontend** - User interface (Vue.js)
 - **Backend** - API server (Java)
 - **Proxy** - Video/image proxy (Go)
@@ -29,6 +30,7 @@ Consists of three services:
 ### Environment Variables
 
 Add to `servers/{server}/.env`:
+
 ```bash
 #region Piped
 PIPED_POSTGRES_USER=spy4x
@@ -64,6 +66,7 @@ Before deployment, a `config.properties` file is generated from the template wit
 ## Backup
 
 Included in backup configuration. Backs up:
+
 - PostgreSQL database (user accounts, subscriptions, preferences)
 
 Videos and thumbnails are not stored locally (proxied from YouTube).

@@ -20,6 +20,7 @@ Lightweight CalDAV and CardDAV server for calendars and contacts.
 ### Environment Variables
 
 No additional environment variables required - uses standard timezone:
+
 ```bash
 TIMEZONE=Europe/Moscow  # Already in server .env
 ```
@@ -27,6 +28,7 @@ TIMEZONE=Europe/Moscow  # Already in server .env
 ### Data Storage
 
 Calendars and contacts stored in:
+
 ```
 .volumes/radicale/
 ├── data/       # Calendar/contact data
@@ -49,6 +51,7 @@ Calendars and contacts stored in:
 ### Android
 
 Use DAVx⁵ app:
+
 1. Install DAVx⁵ from F-Droid or Play Store
 2. Add account with URL: `https://radicale.${DOMAIN}`
 3. Enter credentials
@@ -74,6 +77,7 @@ Web interface: `https://radicale.${DOMAIN}`
 ## Backup
 
 Included in backup configuration. Backs up:
+
 - `/data` - All calendars and contacts
 - `/config` - Server configuration
 
