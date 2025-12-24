@@ -107,6 +107,26 @@
         enabled: yes
         state: started
 
+    # ===== SELinux Configuration for Docker =====
+    - name: Set correct SELinux context for Docker socket (RedHat/Fedora)
+      when: ansible_os_family == "RedHat"
+      block:
+        - name: Install SELinux policy tools
+          ansible.builtin.dnf:
+            name: policycoreutils-python-utils
+            state: present
+
+        - name: Add permanent SELinux policy for Docker socket
+          ansible.builtin.command: semanage fcontext -a -t container_var_run_t /var/run/docker.sock
+          register: semanage_result
+          failed_when: false
+          changed_when: semanage_result.rc == 0
+
+        - name: Apply SELinux context to Docker socket
+          ansible.builtin.command: restorecon -v /var/run/docker.sock
+          when: semanage_result.rc == 0 or semanage_result.rc == 1
+          changed_when: false
+
     - name: Detect system architecture for Docker Compose
       ansible.builtin.set_fact:
         docker_compose_arch: "{{ 'aarch64' if ansible_architecture == 'aarch64' else 'x86_64' }}"

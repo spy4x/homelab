@@ -12,6 +12,7 @@ node_modules
 *.env
 !.env.example
 !*.env.example
+!.env.root.example
 
 todos.txt
 servers/*

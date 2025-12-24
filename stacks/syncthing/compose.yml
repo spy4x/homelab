@@ -10,10 +10,13 @@ services:
   syncthing:
     container_name: syncthing
     image: syncthing/syncthing:latest
+    environment:
+      - PUID=1000
+      - PGID=1000
     volumes:
-      - ${VOLUMES_PATH}/syncthing:/var/syncthing
+      - ${VOLUMES_PATH}/syncthing:/var/syncthing:z
       - /etc/localtime:/etc/localtime:ro
-      - ${PATH_SYNC}:/sync
+      - ${PATH_SYNC}:/sync:z
     ports:
       - 22000:22000/tcp # Sync protocol (BEP)
       - 22000:22000/udp # QUIC connections
