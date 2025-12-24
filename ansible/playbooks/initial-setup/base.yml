@@ -113,8 +113,16 @@
       block:
         - name: Install SELinux policy tools
           ansible.builtin.dnf:
-            name: policycoreutils-python-utils
+            name:
+              - policycoreutils-python-utils
+              - checkpolicy
             state: present
+
+        - name: Enable container_manage_cgroup SELinux boolean
+          ansible.posix.seboolean:
+            name: container_manage_cgroup
+            state: yes
+            persistent: yes
 
         - name: Add permanent SELinux policy for Docker socket
           ansible.builtin.command: semanage fcontext -a -t container_var_run_t /var/run/docker.sock
@@ -126,6 +134,45 @@
           ansible.builtin.command: restorecon -Fv /var/run/docker.sock
           when: semanage_result.rc == 0 or semanage_result.rc == 1
           changed_when: false
+
+        - name: Create custom SELinux policy for container socket access
+          ansible.builtin.copy:
+            content: |
+              module container_socket 1.0;
+
+              require {
+                  type container_t;
+                  type container_runtime_t;
+                  class unix_stream_socket connectto;
+              }
+
+              #============= container_t ==============
+              allow container_t container_runtime_t:unix_stream_socket connectto;
+            dest: /tmp/container_socket.te
+            mode: "0644"
+
+        - name: Compile custom SELinux policy
+          ansible.builtin.command: checkmodule -M -m -o /tmp/container_socket.mod /tmp/container_socket.te
+          changed_when: false
+
+        - name: Create SELinux policy package
+          ansible.builtin.command: semodule_package -o /tmp/container_socket.pp -m /tmp/container_socket.mod
+          changed_when: false
+
+        - name: Install custom SELinux policy
+          ansible.builtin.command: semodule -i /tmp/container_socket.pp
+          register: semodule_result
+          failed_when: false
+          changed_when: semodule_result.rc == 0
+
+        - name: Clean up temporary policy files
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - /tmp/container_socket.te
+            - /tmp/container_socket.mod
+            - /tmp/container_socket.pp
 
     - name: Detect system architecture for Docker Compose
       ansible.builtin.set_fact:
