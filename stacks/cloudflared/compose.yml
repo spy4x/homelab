@@ -1,0 +1,26 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  # Cloudflared creates a secure tunnel to Cloudflare's network.
+  # This allows you to expose services without a static IP or opening ports.
+  # Works with Traefik to route traffic through Cloudflare Tunnel.
+  cloudflared:
+    container_name: cloudflared
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TUNNEL_TOKEN}
+    networks:
+      - proxy
+    deploy:
+      resources:
+        limits:
+          cpus: ${CLOUDFLARED_CPU_LIMIT:-0.5}
+          memory: ${CLOUDFLARED_MEM_LIMIT:-256M}
+    security_opt:
+      - no-new-privileges:true
