@@ -1,0 +1,8 @@
+{
+  "stacks": [
+    { "name": "traefik" },
+    { "name": "watchtower" },
+    { "name": "syncthing" },
+    { "name": "gatus" }
+  ]
+}

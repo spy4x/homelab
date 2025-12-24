@@ -38,8 +38,6 @@ services:
     networks:
       - proxy
       - default
-    depends_on:
-      - mailserver
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

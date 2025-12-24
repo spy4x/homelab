@@ -1,0 +1,76 @@
+# Piped
+
+Privacy-respecting YouTube frontend with no ads.
+
+## Overview
+
+[Piped](https://github.com/TeamPiped/Piped) is an alternative frontend for YouTube that focuses on privacy and performance. It proxies requests to YouTube, removing tracking and ads while providing a clean interface.
+
+## Features
+
+- No ads or tracking
+- Subscription management without Google account
+- SponsorBlock integration
+- LBRY integration for decentralized content
+- RSS feeds for channels
+- Watch history and playlists
+- Lightweight and fast
+
+## Architecture
+
+Consists of three services:
+- **Frontend** - User interface (Vue.js)
+- **Backend** - API server (Java)
+- **Proxy** - Video/image proxy (Go)
+- **Database** - PostgreSQL for user data
+
+## Configuration
+
+### Environment Variables
+
+Add to `servers/{server}/.env`:
+```bash
+#region Piped
+PIPED_POSTGRES_USER=spy4x
+PIPED_POSTGRES_PASSWORD=<generate-secure-password>
+PIPED_POSTGRES_DB=piped
+#endregion Piped
+```
+
+### Config File
+
+Before deployment, a `config.properties` file is generated from the template with your domain settings.
+
+## Access
+
+- **Frontend**: `https://piped.${DOMAIN}`
+- **API**: `https://pipedapi.${DOMAIN}`
+- **Proxy**: `https://pipedproxy.${DOMAIN}`
+
+## First-Time Setup
+
+1. Open `https://piped.${DOMAIN}`
+2. Create an account (stored locally in your database)
+3. Import subscriptions from YouTube (via OPML or CSV)
+4. Configure preferences (quality, autoplay, etc.)
+
+## Resource Usage
+
+- Frontend: ~512M RAM, 1 CPU
+- Backend: ~1024M RAM, 2 CPUs
+- Proxy: ~512M RAM, 1 CPU
+- PostgreSQL: ~256M RAM, 0.5 CPU
+
+## Backup
+
+Included in backup configuration. Backs up:
+- PostgreSQL database (user accounts, subscriptions, preferences)
+
+Videos and thumbnails are not stored locally (proxied from YouTube).
+
+## Notes
+
+- May break when YouTube changes their API
+- Check [Piped instances status](https://piped-instances.kavin.rocks/) for updates
+- Consider using official instances during outages
+- Database stores only user preferences, not video content
