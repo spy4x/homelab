@@ -123,7 +123,7 @@
           changed_when: semanage_result.rc == 0
 
         - name: Apply SELinux context to Docker socket
-          ansible.builtin.command: restorecon -v /var/run/docker.sock
+          ansible.builtin.command: restorecon -Fv /var/run/docker.sock
           when: semanage_result.rc == 0 or semanage_result.rc == 1
           changed_when: false
 

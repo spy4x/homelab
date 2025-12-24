@@ -9,8 +9,8 @@ services:
     container_name: metube
     image: ghcr.io/alexta69/metube
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
       - DOWNLOAD_DIR=/downloads/videos
       - AUDIO_DOWNLOAD_DIR=/downloads/music

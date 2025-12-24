@@ -23,6 +23,23 @@ docker compose stop <service>   # Stop conflict
 sudo chown -R $USER:$USER .volumes/myservice
 ```
 
+**File permission issues with services**  
+Some services run with specific user/group IDs and may have permission issues with mounted volumes. By default, services use `1000:1000`, but your user might have a different ID.
+
+Check your user and group ID:
+```bash
+id -u  # Your user ID
+id -g  # Your group ID
+```
+
+If your IDs are not `1000:1000`, add these to your server's `.env` file (`servers/<server>/.env`):
+```bash
+PUID=1001  # Replace with your user ID
+PGID=1001  # Replace with your group ID
+```
+
+Services using these variables will automatically use your user/group ID for file operations.
+
 **Repository not found**  
 ```bash
 export RESTIC_PASSWORD='your-password'
