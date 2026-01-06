@@ -12,9 +12,9 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
     volumes:
-      - ${VOLUMES_PATH}/audiobookshelf/config:/config
-      - ${VOLUMES_PATH}/audiobookshelf-metadata:/metadata
-      - ${PATH_BOOKS}:/audiobooks
+      - ${VOLUMES_PATH}/audiobookshelf/config:/config:z
+      - ${VOLUMES_PATH}/audiobookshelf-metadata:/metadata:z
+      - ${PATH_BOOKS}:/audiobooks:z
     restart: unless-stopped
     deploy:
       resources:

@@ -17,8 +17,8 @@ services:
       - OUTPUT_TEMPLATE=%(uploader,channel)s/%(title)s.%(ext)s
       - OUTPUT_TEMPLATE_PLAYLIST=%(playlist,uploader,channel)s/%(title)s.%(ext)s
     volumes:
-      - ${PATH_VIDEOS}:/downloads/videos
-      - ${PATH_MUSIC}:/downloads/music
+      - ${PATH_VIDEOS}:/downloads/videos:z
+      - ${PATH_MUSIC}:/downloads/music:z
     restart: unless-stopped
     deploy:
       resources:

@@ -12,8 +12,8 @@ services:
     environment:
       - TZ=${TIMEZONE}
     volumes:
-      - ${VOLUMES_PATH}/radicale/data:/data
-      - ${VOLUMES_PATH}/radicale/config:/config
+      - ${VOLUMES_PATH}/radicale/data:/data:z
+      - ${VOLUMES_PATH}/radicale/config:/config:z
     restart: unless-stopped
     deploy:
       resources:

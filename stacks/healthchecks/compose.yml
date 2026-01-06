@@ -26,7 +26,7 @@ services:
       - DISCORD_CLIENT_SECRET=
       - DB_NAME=/data/hc.sqlite
     volumes:
-      - ${VOLUMES_PATH}/healthchecks:/data
+      - ${VOLUMES_PATH}/healthchecks:/data:z
     restart: unless-stopped
     deploy:
       resources:

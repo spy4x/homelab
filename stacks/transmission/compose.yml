@@ -13,12 +13,12 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
     volumes:
-      - ${VOLUMES_PATH}/transmission:/config
-      - ${PATH_MOVIES}:/downloads/movies
-      - ${PATH_SERIES}:/downloads/series
-      - ${PATH_MUSIC}:/downloads/music
-      - ${PATH_BOOKS}:/downloads/books
-      - ${PATH_OTHER}:/downloads/other
+      - ${VOLUMES_PATH}/transmission:/config:z
+      - ${PATH_MOVIES}:/downloads/movies:z
+      - ${PATH_SERIES}:/downloads/series:z
+      - ${PATH_MUSIC}:/downloads/music:z
+      - ${PATH_BOOKS}:/downloads/books:z
+      - ${PATH_OTHER}:/downloads/other:z
     ports:
       - 51413:51413 # Default port for torrent traffic
       - 51413:51413/udp # Default port for DHT

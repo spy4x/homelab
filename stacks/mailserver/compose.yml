@@ -18,11 +18,11 @@ services:
       - "587:587" # SMTP - submission with STARTTLS
       - "993:993" # IMAPS - secure IMAP
     volumes:
-      - ${VOLUMES_PATH}/mailserver/mail-data:/var/mail
-      - ${VOLUMES_PATH}/mailserver/mail-state:/var/mail-state
-      - ${VOLUMES_PATH}/mailserver/mail-logs:/var/log/mail
-      - ${VOLUMES_PATH}/mailserver/config:/tmp/docker-mailserver
-      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/mailserver/mail-data:/var/mail:z
+      - ${VOLUMES_PATH}/mailserver/mail-state:/var/mail-state:z
+      - ${VOLUMES_PATH}/mailserver/mail-logs:/var/log/mail:z
+      - ${VOLUMES_PATH}/mailserver/config:/tmp/docker-mailserver:z
+      - /etc/localtime:/etc/localtime:ro,z
     environment:
       # Basic settings
       - ENABLE_RSPAMD=1 # Modern spam filtering
