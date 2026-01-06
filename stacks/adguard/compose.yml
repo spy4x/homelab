@@ -10,8 +10,8 @@ services:
     container_name: adguard
     image: adguard/adguardhome:latest
     volumes:
-      - ${VOLUMES_PATH}/adguard/work:/opt/adguardhome/work
-      - ${VOLUMES_PATH}/adguard/conf:/opt/adguardhome/conf
+      - ${VOLUMES_PATH}/adguard/work:/opt/adguardhome/work:z
+      - ${VOLUMES_PATH}/adguard/conf:/opt/adguardhome/conf:z
     ports:
       - 53:53/tcp # DNS
       - 53:53/udp # DNS

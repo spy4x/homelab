@@ -14,15 +14,15 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
     volumes:
-      - ${VOLUMES_PATH}/filebrowser:/database
-      - ${PATH_MEDIA}:/srv/media
-      - ${PATH_VIDEOS}:/srv/videos
-      - ${PATH_MUSIC}:/srv/music
-      - ${PATH_BOOKS}:/srv/books
-      - ${PATH_SYNC}:/srv/sync
-      - ${PATH_MOVIES}:/srv/movies
-      - ${PATH_SERIES}:/srv/series
-      - ${PATH_OTHER}:/srv/other
+      - ${VOLUMES_PATH}/filebrowser:/database:z
+      - ${PATH_MEDIA}:/srv/media:z
+      - ${PATH_VIDEOS}:/srv/videos:z
+      - ${PATH_MUSIC}:/srv/music:z
+      - ${PATH_BOOKS}:/srv/books:z
+      - ${PATH_SYNC}:/srv/sync:z
+      - ${PATH_MOVIES}:/srv/movies:z
+      - ${PATH_SERIES}:/srv/series:z
+      - ${PATH_OTHER}:/srv/other:z
     restart: unless-stopped
     deploy:
       resources:

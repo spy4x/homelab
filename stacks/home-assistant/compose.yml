@@ -9,8 +9,8 @@ services:
     container_name: home-assistant
     image: ghcr.io/home-assistant/home-assistant:stable
     volumes:
-      - ${VOLUMES_PATH}/home-assistant:/config
-      - /etc/localtime:/etc/localtime:ro
+      - ${VOLUMES_PATH}/home-assistant:/config:z
+      - /etc/localtime:/etc/localtime:ro,z
     devices:
       - /dev/ttyUSB0:/dev/ttyUSB0 # Zigbee USB dongle
     environment:

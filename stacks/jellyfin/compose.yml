@@ -9,11 +9,11 @@ services:
     container_name: jellyfin
     image: jellyfin/jellyfin
     volumes:
-      - ${VOLUMES_PATH}/jellyfin:/config
-      - ${VOLUMES_PATH}/jellyfin-cache:/cache
-      - ${PATH_MEDIA}:/media
-      - ${PATH_VIDEOS}:/videos
-      - ${PATH_MUSIC}:/music
+      - ${VOLUMES_PATH}/jellyfin:/config:z
+      - ${VOLUMES_PATH}/jellyfin-cache:/cache:z
+      - ${PATH_MEDIA}:/media:z
+      - ${PATH_VIDEOS}:/videos:z
+      - ${PATH_MUSIC}:/music:z
     devices:
       - /dev/dri:/dev/dri # for GPU transcoding
     restart: unless-stopped

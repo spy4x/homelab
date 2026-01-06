@@ -30,7 +30,7 @@ services:
       # - WOODPECKER_GITLAB_SECRET=${WOODPECKER_GITLAB_SECRET}
       - WOODPECKER_ADMIN=${WOODPECKER_ADMIN}
     volumes:
-      - ${VOLUMES_PATH}/woodpecker-server:/var/lib/woodpecker
+      - ${VOLUMES_PATH}/woodpecker-server:/var/lib/woodpecker:z
     restart: unless-stopped
     deploy:
       resources:

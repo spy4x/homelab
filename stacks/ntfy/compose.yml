@@ -25,8 +25,8 @@ services:
       - NTFY_ENABLE_LOGIN=true
     user: "${PUID:-1000}:${PGID:-1000}"
     volumes:
-      - ${VOLUMES_PATH}/ntfy/cache:/var/lib/ntfy
-      - ${VOLUMES_PATH}/ntfy/etc:/etc/ntfy
+      - ${VOLUMES_PATH}/ntfy/cache:/var/lib/ntfy:z
+      - ${VOLUMES_PATH}/ntfy/etc:/etc/ntfy:z
     restart: unless-stopped
     deploy:
       resources:

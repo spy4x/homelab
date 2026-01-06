@@ -39,7 +39,7 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
     volumes:
-      - ./config.properties:/app/config.properties:ro
+      - ./config.properties:/app/config.properties:ro,z
     depends_on:
       - db
       - bg-helper

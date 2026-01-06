@@ -22,7 +22,7 @@ services:
       # Real client IP from Cloudflare (enables proper logging and rate limiting)
       - IP_HEADER=CF-Connecting-IP
     volumes:
-      - ${VOLUMES_PATH}/vaultwarden:/data
+      - ${VOLUMES_PATH}/vaultwarden:/data:z
     restart: unless-stopped
     deploy:
       resources:

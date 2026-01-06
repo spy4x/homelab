@@ -15,8 +15,8 @@ services:
       - PEERDNS=1.1.1.1,8.8.8.8,9.9.9.9
       - LOG_CONFS=true
     volumes:
-      - ${VOLUMES_PATH}/wireguard:/config
-      - /lib/modules:/lib/modules:ro
+      - ${VOLUMES_PATH}/wireguard:/config:z
+      - /lib/modules:/lib/modules:ro,z
     ports:
       - 51820:51820/udp
     restart: unless-stopped

@@ -10,7 +10,7 @@ services:
     container_name: dash
     image: nginx:alpine
     volumes:
-      - ./src:/usr/share/nginx/html:ro
+      - ./src:/usr/share/nginx/html:ro,z
     restart: unless-stopped
     deploy:
       resources:

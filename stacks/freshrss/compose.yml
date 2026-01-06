@@ -13,7 +13,7 @@ services:
       - PGID=${PGID:-1000}
       - TZ=${TIMEZONE}
     volumes:
-      - ${VOLUMES_PATH}/freshrss:/config:Z
+      - ${VOLUMES_PATH}/freshrss:/config:z
     restart: unless-stopped
     deploy:
       resources:

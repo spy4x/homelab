@@ -15,7 +15,7 @@ services:
       - PGID=${PGID:-1000}
     volumes:
       - ${VOLUMES_PATH}/syncthing:/var/syncthing:z
-      - /etc/localtime:/etc/localtime:ro
+      - /etc/localtime:/etc/localtime:ro,z
       - ${PATH_SYNC}:/sync:z
     ports:
       - 22000:22000/tcp # Sync protocol (BEP)

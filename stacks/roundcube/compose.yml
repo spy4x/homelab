@@ -19,8 +19,8 @@ services:
       - ROUNDCUBEMAIL_SKIN=elastic
       - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload,managesieve
     volumes:
-      - ${VOLUMES_PATH}/roundcube/www:/var/www/html
-      - ${VOLUMES_PATH}/roundcube/db:/var/roundcube/db
+      - ${VOLUMES_PATH}/roundcube/www:/var/www/html:z
+      - ${VOLUMES_PATH}/roundcube/db:/var/roundcube/db:z
     deploy:
       resources:
         limits:
