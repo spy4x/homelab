@@ -12,9 +12,13 @@ services:
   # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
   traefik:
     container_name: "traefik"
-    image: "traefik:latest"
+    image: "traefik:3.6.6"
     restart: unless-stopped
     user: "${PUID:-1000}:${PGID:-1000}"
+    group_add:
+      - "${DOCKER_GROUP_ID:-990}" # Allow access to docker.sock for Traefik
+    security_opt:
+      - label=type:container_runtime_t # Required for SELinux to access docker.sock
     command:
       # - "--log.level=DEBUG"
       - "--api.insecure=true"
@@ -40,7 +44,7 @@ services:
       - 80:80
     volumes:
       - ${VOLUMES_PATH}/traefik/letsencrypt:/letsencrypt:z
-      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - proxy
       - default

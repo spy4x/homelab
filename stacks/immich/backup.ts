@@ -1,4 +1,4 @@
-import { BackupConfig, VOLUMES_PATH, PATH_MEDIA } from "@scripts/backup"
+import { BackupConfig, PATH_MEDIA, VOLUMES_PATH } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "immich",

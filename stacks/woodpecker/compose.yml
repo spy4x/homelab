@@ -72,3 +72,4 @@ services:
           cpus: "4" # More CPU for parallel builds
     security_opt:
       - no-new-privileges:true
+      - label=type:container_runtime_t # Required for SELinux to access docker.sock
