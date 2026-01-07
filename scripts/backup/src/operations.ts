@@ -1,4 +1,5 @@
-import { absPath, logError, logInfo, USER } from "./+lib.ts"
+import { absPath, error, log } from "../../+lib.ts"
+import { USER } from "./+lib.ts"
 import { BackupConfigState, BackupStatus, ResticCommandOptions } from "./types.ts"
 
 export class BackupOperations {
@@ -20,7 +21,7 @@ export class BackupOperations {
     }
 
     for (const containerName of config.containers.stop) {
-      logInfo(`${action}ing container ${containerName}`)
+      log(`${action}ing container ${containerName}`)
 
       const cmd = new Deno.Command("docker", {
         args: [action, containerName],
@@ -49,8 +50,8 @@ export class BackupOperations {
     }
 
     for (const path of config.pathsToChangeOwnership) {
-      const absolutePath = absPath(path)
-      logInfo(`Changing ownership of ${absolutePath} to ${USER}:${USER}`)
+      const absolutePath = absPath(path, USER)
+      log(`Changing ownership of ${absolutePath} to ${USER}:${USER}`)
 
       const cmd = new Deno.Command("sudo", {
         args: ["chown", "-R", `${USER}:${USER}`, absolutePath],
@@ -67,7 +68,7 @@ export class BackupOperations {
       }
     }
 
-    logInfo("Ownership changed successfully")
+    log("Ownership changed successfully")
   }
 
   /**
@@ -82,7 +83,7 @@ export class BackupOperations {
     }
 
     const destName = config.destName || config.name
-    const repoPath = absPath(`${backupsOutputBasePath}/${destName}`)
+    const repoPath = absPath(`${backupsOutputBasePath}/${destName}`, USER)
 
     // Check if repository exists and initialize if needed
     if (!(await this.ensureRepository(config, repoPath))) {
@@ -103,7 +104,7 @@ export class BackupOperations {
     // Perform backup
     const backupArgs = [
       "backup",
-      ...((config.sourcePaths as string[]).map((path) => absPath(path))),
+      ...((config.sourcePaths as string[]).map((path) => absPath(path, USER))),
       "-r",
       repoPath,
     ]
@@ -151,7 +152,7 @@ export class BackupOperations {
    * Changes ownership of the backup repository to allow Syncthing sync
    */
   async changeRepoOwnership(repoPath: string): Promise<void> {
-    logInfo(`Changing repository ownership to ${USER}:${USER}`)
+    log(`Changing repository ownership to ${USER}:${USER}`)
 
     const cmd = new Deno.Command("sudo", {
       args: ["chown", "-R", `${USER}:${USER}`, repoPath],
@@ -165,10 +166,10 @@ export class BackupOperations {
       const errorMsg = `Warning: Could not change repository ownership:\n${
         new TextDecoder().decode(stderr)
       }`
-      logError(errorMsg)
+      error(errorMsg)
       // Don't fail the backup for this, just warn
     } else {
-      logInfo("Repository ownership changed successfully")
+      log("Repository ownership changed successfully")
     }
   }
 
@@ -198,7 +199,7 @@ export class BackupOperations {
     }
 
     // Initialize repository
-    logInfo(`Restic repo does not exist at ${repoPath}, initializing...`)
+    log(`Restic repo does not exist at ${repoPath}, initializing...`)
     config.error = `Restic repo does not exist at ${repoPath}, will initialize it.`
 
     if (!(await this.runResticCommand({ args: ["init", "-r", repoPath], config, step: "init" }))) {
@@ -234,7 +235,7 @@ export class BackupOperations {
     const errStr = new TextDecoder().decode(stderr)
 
     if (code === 0) {
-      logInfo(`Restic ${step} succeeded`)
+      log(`Restic ${step} succeeded`)
       return true
     }
 
@@ -280,7 +281,7 @@ export class BackupOperations {
     for (const backup of backups) {
       try {
         const destName = backup.destName || backup.name
-        const repoPath = absPath(`${backupsOutputBasePath}/${destName}`)
+        const repoPath = absPath(`${backupsOutputBasePath}/${destName}`, USER)
 
         // Check if repository directory exists
         if (!(await this.isValidRepository(backup, repoPath))) {
@@ -291,17 +292,17 @@ export class BackupOperations {
         const sizeBytes = await this.getDirectorySize(repoPath)
         if (sizeBytes === null) {
           backup.sizeError = "Failed to calculate directory size"
-          logError(`Repository ${backup.name}: failed to calculate size`)
+          error(`Repository ${backup.name}: failed to calculate size`)
           continue
         }
 
         // Convert bytes to GB
         backup.sizeGB = sizeBytes / (1024 * 1024 * 1024)
-        logInfo(`Repository ${backup.name}: ${backup.sizeGB.toFixed(2)} GB`)
+        log(`Repository ${backup.name}: ${backup.sizeGB.toFixed(2)} GB`)
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : String(err)
         backup.sizeError = `Unexpected error: ${errorMsg}`
-        logError(`Repository ${backup.name}: unexpected error calculating size - ${errorMsg}`)
+        error(`Repository ${backup.name}: unexpected error calculating size - ${errorMsg}`)
       }
     }
   }
@@ -314,13 +315,13 @@ export class BackupOperations {
       const stat = Deno.statSync(repoPath)
       if (!stat.isDirectory) {
         backup.sizeError = "Not a directory"
-        logError(`Repository ${backup.name}: path exists but is not a directory`)
+        error(`Repository ${backup.name}: path exists but is not a directory`)
         return false
       }
       return true
     } catch {
       backup.sizeError = "Repository not found"
-      logError(`Repository ${backup.name}: directory does not exist at ${repoPath}`)
+      error(`Repository ${backup.name}: directory does not exist at ${repoPath}`)
       return false
     }
   }
@@ -339,7 +340,7 @@ export class BackupOperations {
 
     if (code !== 0) {
       const errorMsg = new TextDecoder().decode(stderr)
-      logError(`du command failed: ${errorMsg}`)
+      error(`du command failed: ${errorMsg}`)
       return null
     }
 
@@ -347,7 +348,7 @@ export class BackupOperations {
     const sizeBytes = parseInt(output.split("\t")[0])
 
     if (isNaN(sizeBytes)) {
-      logError(`Could not parse size from du output: ${output}`)
+      error(`Could not parse size from du output: ${output}`)
       return null
     }
 
@@ -357,10 +358,10 @@ export class BackupOperations {
   /**
    * Marks a backup as failed with error details
    */
-  private markBackupFailed(backup: BackupConfigState, error: string, step: string): void {
+  private markBackupFailed(backup: BackupConfigState, err: string, step: string): void {
     backup.status = BackupStatus.ERROR
-    backup.error = error
+    backup.error = err
     backup.errorAtStep = step
-    logError(`[${step.toUpperCase()}] ${error}`)
+    error(`[${step.toUpperCase()}] ${err}`)
   }
 }

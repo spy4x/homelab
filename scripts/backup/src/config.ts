@@ -1,4 +1,5 @@
-import { absPath, logError, VOLUMES_PATH } from "./+lib.ts"
+import { absPath, error } from "../../+lib.ts"
+import { USER, VOLUMES_PATH } from "./+lib.ts"
 import { BackupConfigState, BackupStatus } from "./types.ts"
 
 export class BackupConfigProcessor {
@@ -53,7 +54,7 @@ export class BackupConfigProcessor {
    * Checks if a path exists and is accessible
    */
   private static checkPathExists(config: BackupConfigState, path: string): boolean {
-    const absolutePath = absPath(path)
+    const absolutePath = absPath(path, USER)
     try {
       const stat = Deno.statSync(absolutePath)
       if (!stat) {
@@ -70,11 +71,11 @@ export class BackupConfigProcessor {
   /**
    * Marks a configuration as failed with an error message
    */
-  private static markConfigFailed(config: BackupConfigState, error: string): void {
+  private static markConfigFailed(config: BackupConfigState, err: string): void {
     config.status = BackupStatus.ERROR
-    config.error = error
+    config.error = err
     config.errorAtStep = "config"
-    logError(`[CONFIG] ${error}`)
+    error(`[CONFIG] ${err}`)
   }
 
   /**

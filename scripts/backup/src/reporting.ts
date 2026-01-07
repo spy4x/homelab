@@ -1,4 +1,4 @@
-import { logError, logInfo } from "./+lib.ts"
+import { error, log } from "../../+lib.ts"
 import { BackupConfigState, BackupContext, BackupResult, BackupStatus } from "./types.ts"
 
 export class BackupReporter {
@@ -10,10 +10,10 @@ export class BackupReporter {
   async sendNotification(result: BackupResult): Promise<void> {
     const ntfySuccess = await this.sendNtfyNotification(result)
     if (ntfySuccess) {
-      logInfo("ntfy notification sent successfully to " + this.context.ntfyUrl)
+      log("ntfy notification sent successfully to " + this.context.ntfyUrl)
       return
     }
-    logError("ntfy notification failed to " + this.context.ntfyUrl)
+    error("ntfy notification failed to " + this.context.ntfyUrl)
   }
 
   /**
@@ -45,9 +45,13 @@ export class BackupReporter {
         body: message,
       })
 
+      log(`ntfy response status: ${response.status}`)
+      const responseBody = await response.text()
+      log(`ntfy response body: ${responseBody}`)
+
       return response.ok
     } catch (err) {
-      logError(`Failed to send ntfy notification: ${err}`)
+      error(`Failed to send ntfy notification: ${err}`)
       return false
     }
   }
@@ -107,8 +111,8 @@ export class BackupReporter {
     const durationMinutes = Math.floor(durationMs / 60000)
     const durationSeconds = Math.floor((durationMs % 60000) / 1000)
 
-    logInfo(`--------- Backups finished: ${successCount} / ${totalCount} successful ---------`)
-    logInfo(`Duration: ${durationMinutes}m ${durationSeconds}s`)
+    log(`--------- Backups finished: ${successCount} / ${totalCount} successful ---------`)
+    log(`Duration: ${durationMinutes}m ${durationSeconds}s`)
 
     // Print size summary
     this.printSizeSummary(backups, totalSizeGB)
@@ -125,12 +129,12 @@ export class BackupReporter {
     const sizeErrors = backups.filter((b) => b.sizeError).length
 
     if (backupsWithSize.length > 0) {
-      logInfo(`Total backup size: ${totalSizeGB.toFixed(2)} GB`)
+      log(`Total backup size: ${totalSizeGB.toFixed(2)} GB`)
       if (sizeErrors > 0) {
-        logInfo(`Size calculation errors: ${sizeErrors} repositories`)
+        log(`Size calculation errors: ${sizeErrors} repositories`)
       }
     } else if (sizeErrors > 0) {
-      logInfo(`Size calculation failed for all ${sizeErrors} repositories`)
+      log(`Size calculation failed for all ${sizeErrors} repositories`)
     }
   }
 
@@ -141,8 +145,8 @@ export class BackupReporter {
     // Sort backups by percentage descending
     const sortedBackups = this.sortBackupsBySize(backups, totalSizeGB)
 
-    logInfo("Status | Name                 | %     | Size      | Time")
-    logInfo("-------|----------------------|-------|-----------|-------")
+    log("Status | Name                 | %     | Size      | Time")
+    log("-------|----------------------|-------|-----------|-------")
 
     for (const backup of sortedBackups) {
       const statusEmoji = backup.status === BackupStatus.SUCCESS ? "✅" : "❌"
@@ -150,7 +154,7 @@ export class BackupReporter {
       const { percentage, size } = this.formatBackupSize(backup, totalSizeGB)
       const duration = this.formatDuration(backup.durationMs)
 
-      logInfo(`${statusEmoji}     | ${name} | ${percentage} | ${size.padEnd(9)} | ${duration}`)
+      log(`${statusEmoji}     | ${name} | ${percentage} | ${size.padEnd(9)} | ${duration}`)
     }
   }
 

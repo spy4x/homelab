@@ -3,7 +3,8 @@
 // Example: deno task backup:restore gatus
 // Example: deno task backup:restore gatus a1b2c3d4
 
-import { absPath, getEnvVar, logError, logInfo, PATH_APPS } from "./src/+lib.ts"
+import { absPath, error, log } from "../+lib.ts"
+import { getEnvVar, PATH_APPS, USER } from "./src/+lib.ts"
 import { BackupConfigProcessor } from "./src/config.ts"
 
 interface RestoreOptions {
@@ -19,22 +20,25 @@ class RestoreRunner {
 
   constructor() {
     this.backupsPassword = getEnvVar("BACKUPS_PASSWORD")
-    this.backupsBasePath = absPath(getEnvVar("PATH_SYNC") + "/backups")
-    this.configsPath = absPath(`${PATH_APPS}/configs/backup`)
+    this.backupsBasePath = absPath(getEnvVar("PATH_SYNC") + "/backups", USER)
+    this.configsPath = absPath(`${PATH_APPS}/configs/backup`, USER)
   }
 
   async run(options: RestoreOptions): Promise<void> {
-    logInfo(`Starting restore for service: ${options.serviceName}`)
+    log(`Starting restore for service: ${options.serviceName}`)
 
     // Load backup configs to find the service
-    const configs = await BackupConfigProcessor.loadConfigurations(this.configsPath)
+    const configs = await BackupConfigProcessor.loadConfigurations(
+      absPath(getEnvVar("PATH_APPS") + "/stacks", USER),
+      this.configsPath,
+    )
     const config = configs.find((c) => c.name === options.serviceName)
 
     if (!config) {
-      logError(`Service "${options.serviceName}" not found in backup configs`)
-      logInfo("Available services:")
+      error(`Service "${options.serviceName}" not found in backup configs`)
+      log("Available services:")
       for (const c of configs) {
-        logInfo(`  - ${c.name}${c.destName ? ` (backup: ${c.destName})` : ""}`)
+        log(`  - ${c.name}${c.destName ? ` (backup: ${c.destName})` : ""}`)
       }
       Deno.exit(1)
     }
@@ -44,14 +48,14 @@ class RestoreRunner {
 
     // Check if repository exists
     if (!await this.checkRepository(repoPath)) {
-      logError(`Backup repository not found at: ${repoPath}`)
+      error(`Backup repository not found at: ${repoPath}`)
       Deno.exit(1)
     }
 
     // List snapshots
     const snapshots = await this.listSnapshots(repoPath)
     if (snapshots.length === 0) {
-      logError("No snapshots found in repository")
+      error("No snapshots found in repository")
       Deno.exit(1)
     }
 
@@ -60,11 +64,11 @@ class RestoreRunner {
     const snapshot = snapshots.find((s) => s.id.startsWith(snapshotId))
 
     if (!snapshot) {
-      logError(`Snapshot "${snapshotId}" not found`)
+      error(`Snapshot "${snapshotId}" not found`)
       Deno.exit(1)
     }
 
-    logInfo(`Selected snapshot: ${snapshot.id} (${snapshot.time})`)
+    log(`Selected snapshot: ${snapshot.id} (${snapshot.time})`)
 
     // Confirm restore
     const confirm = prompt(
@@ -73,13 +77,13 @@ class RestoreRunner {
       }.\nType 'yes' to continue: `,
     )
     if (confirm?.toLowerCase() !== "yes") {
-      logInfo("Restore cancelled")
+      log("Restore cancelled")
       Deno.exit(0)
     }
 
     // Stop containers
     if (config.containers?.stop && config.containers.stop.length > 0) {
-      logInfo("Stopping containers...")
+      log("Stopping containers...")
       for (const container of config.containers.stop) {
         await this.stopContainer(container)
       }
@@ -88,17 +92,17 @@ class RestoreRunner {
     // Restore from backup
     const tempRestorePath = await Deno.makeTempDir({ prefix: "restore_" })
     try {
-      logInfo(`Restoring to temporary location: ${tempRestorePath}`)
+      log(`Restoring to temporary location: ${tempRestorePath}`)
       await this.restoreSnapshot(repoPath, snapshot.id, tempRestorePath)
 
       // Copy restored files to actual location
       for (const sourcePath of config.sourcePaths) {
-        const actualPath = absPath(sourcePath)
-        logInfo(`Copying restored files to: ${actualPath}`)
+        const actualPath = absPath(sourcePath, USER)
+        log(`Copying restored files to: ${actualPath}`)
 
         // Backup existing data
         const backupPath = `${actualPath}.backup-${Date.now()}`
-        logInfo(`Backing up existing data to: ${backupPath}`)
+        log(`Backing up existing data to: ${backupPath}`)
         await this.runCommand("mv", [actualPath, backupPath])
 
         // Copy restored data
@@ -107,32 +111,32 @@ class RestoreRunner {
         // Fix permissions
         if (config.pathsToChangeOwnership && config.pathsToChangeOwnership.length > 0) {
           for (const path of config.pathsToChangeOwnership) {
-            const actualPath = absPath(path)
+            const actualPath = absPath(path, USER)
             const user = getEnvVar("USER")
-            logInfo(`Fixing permissions for: ${actualPath}`)
+            log(`Fixing permissions for: ${actualPath}`)
             await this.runCommand("chown", ["-R", `${user}:${user}`, actualPath])
           }
         }
       }
 
-      logInfo("✅ Restore completed successfully!")
+      log("✅ Restore completed successfully!")
     } finally {
       // Cleanup temp directory
       await Deno.remove(tempRestorePath, { recursive: true })
 
       // Start containers
       if (config.containers?.stop && config.containers.stop.length > 0) {
-        logInfo("Starting containers...")
+        log("Starting containers...")
         for (const container of config.containers.stop) {
           await this.startContainer(container)
         }
       }
     }
 
-    logInfo("\nRestore verification:")
-    logInfo("1. Check if the service is running: docker compose ps")
-    logInfo("2. Check logs: docker compose logs -f <container-name>")
-    logInfo("3. Test service functionality")
+    log("\nRestore verification:")
+    log("1. Check if the service is running: docker compose ps")
+    log("2. Check logs: docker compose logs -f <container-name>")
+    log("3. Test service functionality")
   }
 
   private async checkRepository(repoPath: string): Promise<boolean> {
@@ -156,8 +160,8 @@ class RestoreRunner {
 
     const output = await cmd.output()
     if (!output.success) {
-      logError("Failed to list snapshots")
-      logError(new TextDecoder().decode(output.stderr))
+      error("Failed to list snapshots")
+      error(new TextDecoder().decode(output.stderr))
       Deno.exit(1)
     }
 
@@ -185,7 +189,7 @@ class RestoreRunner {
 
     const output = await cmd.output()
     if (!output.success) {
-      logError("Failed to restore snapshot")
+      error("Failed to restore snapshot")
       Deno.exit(1)
     }
   }
@@ -207,7 +211,7 @@ class RestoreRunner {
 
     const output = await command.output()
     if (!output.success) {
-      logError(`Command failed: ${cmd} ${args.join(" ")}`)
+      error(`Command failed: ${cmd} ${args.join(" ")}`)
     }
   }
 }
