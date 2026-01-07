@@ -20,11 +20,13 @@ NTFY_TOPIC=homelab-alerts      # Topic name
 ## Usage
 
 **Subscribe to alerts**:
+
 1. Install [ntfy app](https://docs.ntfy.sh/subscribe/phone/)
 2. Subscribe to: `https://ntfy.${DOMAIN}/homelab-alerts`
 3. Set auth credentials
 
 **Send test notification**:
+
 ```bash
 curl -H "Authorization: Bearer $NTFY_AUTH_TOKEN" \
   -d "Test message" \
