@@ -17,6 +17,7 @@ Web UI: `https://home.${DOMAIN}`
 ## SMTP Configuration
 
 For notification emails, configure in Home Assistant:
+
 - Settings → System → Network → Email Notifications
 - Or add to `configuration.yaml`
 

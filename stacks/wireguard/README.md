@@ -27,16 +27,19 @@ WG_ALLOWED_IPS=0.0.0.0/0           # Full tunnel (or specific ranges)
 ## Client Management
 
 **Add client**:
+
 ```bash
 docker exec -it wireguard wg-quick addconf peer1
 ```
 
 **List clients**:
+
 ```bash
 docker exec -it wireguard wg show
 ```
 
 **Get QR code**:
+
 ```bash
 docker exec -it wireguard /app/show-peer peer1
 ```

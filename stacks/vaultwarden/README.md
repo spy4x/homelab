@@ -30,6 +30,7 @@ HOME_SMTP_PASSWORD=...
 ## Clients
 
 Download [Bitwarden clients](https://bitwarden.com/download/):
+
 - Browser extensions (Chrome, Firefox, etc.)
 - Desktop apps (Windows, macOS, Linux)
 - Mobile apps (iOS, Android)

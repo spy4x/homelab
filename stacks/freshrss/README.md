@@ -17,6 +17,7 @@ Web UI: `https://rss.${DOMAIN}`
 ## Mobile Apps
 
 Use any RSS reader supporting FreshRSS API:
+
 - [Reeder](https://reederapp.com/) (iOS)
 - [FeedMe](https://play.google.com/store/apps/details?id=com.seazon.feedme) (Android)
 - [NetNewsWire](https://netnewswire.com/) (iOS/macOS)

@@ -23,6 +23,7 @@ PTR     <VPS-IP>            mail.yourdomain.com
 ```
 
 Get DKIM key:
+
 ```bash
 docker exec mailserver cat /tmp/docker-mailserver/opendkim/keys/*/mail.txt
 ```
@@ -59,6 +60,7 @@ telnet mail.yourdomain.com 25
 ## Clients
 
 Use any email client (Thunderbird, Apple Mail, Outlook, etc.):
+
 - IMAP: `mail.yourdomain.com:993` (SSL)
 - SMTP: `mail.yourdomain.com:587` (STARTTLS)
 

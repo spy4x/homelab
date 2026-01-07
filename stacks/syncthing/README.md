@@ -37,8 +37,8 @@ SYNCTHING_GUI_PASSWORD=...    # Generated password
 
 ## Folder Configuration
 
-**Send & Receive** - Default for backup sync  
-**Send Only** - For read-only distribution  
+**Send & Receive** - Default for backup sync\
+**Send Only** - For read-only distribution\
 **Receive Only** - For backup targets
 
 ## Access
