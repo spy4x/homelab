@@ -85,7 +85,7 @@ async function main() {
 
   for (const server of servers) {
     const env = await loadServerEnv(server)
-    const config = await loadServerConfig(server)
+    const _config = await loadServerConfig(server)
 
     // Parse SSH_ADDRESS for user@host format
     let user = Deno.env.get("HOMELAB_USER") || "homelab"

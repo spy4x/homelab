@@ -1,4 +1,5 @@
-import { absPath, getEnvVar, logInfo, PATH_APPS } from "./src/+lib.ts"
+import { absPath, log } from "../+lib.ts"
+import { getEnvVar, PATH_APPS, USER } from "./src/+lib.ts"
 import { BackupConfigProcessor } from "./src/config.ts"
 import { BackupOperations } from "./src/operations.ts"
 import { BackupReporter } from "./src/reporting.ts"
@@ -23,7 +24,7 @@ class BackupRunner {
    */
   async run(): Promise<void> {
     const startTime = Date.now()
-    logInfo(`[${new Date().toISOString()}] Starting backup process for: ${this.context.serverName}`)
+    log(`[${new Date().toISOString()}] Starting backup process for: ${this.context.serverName}`)
 
     try {
       // Load and validate configurations
@@ -39,7 +40,7 @@ class BackupRunner {
       await this.processBackups(backups)
 
       // Calculate repository sizes
-      logInfo("--------- Calculating repository sizes ---------")
+      log("--------- Calculating repository sizes ---------")
       await this.operations.calculateRepositorySizes(backups, this.context.backupsOutputBasePath)
 
       // Calculate total duration
@@ -47,7 +48,7 @@ class BackupRunner {
       const durationMinutes = Math.floor(durationMs / 60000)
       const durationSeconds = Math.floor((durationMs % 60000) / 1000)
 
-      logInfo(
+      log(
         `--------- Total backup duration: ${durationMinutes}m ${durationSeconds}s ---------`,
       )
 
@@ -73,12 +74,12 @@ class BackupRunner {
   private initializeContext(): BackupContext {
     return {
       serverName: getEnvVar("SERVER_NAME"),
-      backupsOutputBasePath: absPath(getEnvVar("PATH_BACKUPS")),
+      backupsOutputBasePath: absPath(getEnvVar("PATH_BACKUPS"), USER),
       backupsPassword: getEnvVar("BACKUPS_PASSWORD"),
       ntfyUrl: getEnvVar("NTFY_URL_BACKUPS"),
       ntfyAuth: getEnvVar("NTFY_TOKEN_BACKUPS"),
-      stacksPath: absPath(`${PATH_APPS}/stacks`),
-      configsPath: absPath(`${PATH_APPS}/configs/backup`),
+      stacksPath: absPath(`${PATH_APPS}/stacks`, USER),
+      configsPath: absPath(`${PATH_APPS}/configs/backup`, USER),
     }
   }
 
@@ -98,7 +99,7 @@ class BackupRunner {
   private async processBackups(backups: BackupConfigState[]): Promise<void> {
     for (const backup of backups) {
       const backupStartTime = Date.now()
-      logInfo(`--------- ${backup.name} ---------`)
+      log(`--------- ${backup.name} ---------`)
 
       // Skip if configuration is already failed
       if (backup.status === BackupStatus.ERROR) {
@@ -121,7 +122,7 @@ class BackupRunner {
       // Record duration
       backup.durationMs = Date.now() - backupStartTime
       const durationSeconds = (backup.durationMs / 1000).toFixed(1)
-      logInfo(`Completed in ${durationSeconds}s`)
+      log(`Completed in ${durationSeconds}s`)
     }
   }
 

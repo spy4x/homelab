@@ -15,24 +15,10 @@ export interface BackupConfig {
   }
 }
 
-export function logInfo(msg: string) {
-  console.log(`[INFO] ${msg}`)
-}
-export function logError(msg: string) {
-  console.error(`[ERROR] ${msg}`)
-}
-
 export function getEnvVar(key: string, isOptional = false): string {
   const value = Deno.env.get(key)
   if (!value && !isOptional) {
     throw new Error(`Missing environment variable: ${key}`)
   }
   return value || ""
-}
-
-export function absPath(path: string): string {
-  if (path.startsWith("~/")) {
-    return path.replace("~", `/home/${USER}`)
-  }
-  return path
 }

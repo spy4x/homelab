@@ -141,7 +141,7 @@ try {
     // Check for server-specific before.deploy.ts
     const serverBeforeDeployPath = `${tempDir}/configs/${deployAs}/before.deploy.ts`
     const hasServerBeforeDeploy = await Deno.stat(serverBeforeDeployPath).then(() => true).catch(
-      () => false
+      () => false,
     )
     if (hasServerBeforeDeploy) {
       log(`Running server-specific before.deploy.ts for ${deployAs}...`)
