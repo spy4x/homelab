@@ -1,5 +1,5 @@
-const templateFile = new URL("src/index.html.template", import.meta.url).pathname
-const outputFile = new URL("src/index.html", import.meta.url).pathname
+const templateFile = new URL("index.html.template", import.meta.url).pathname
+const outputFile = new URL("index.html", import.meta.url).pathname
 
 /**
  * Replaces all occurrences of ${ENV_VAR_NAME} in a template string

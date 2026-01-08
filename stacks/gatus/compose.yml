@@ -11,10 +11,11 @@ services:
   gatus:
     container_name: gatus
     image: twinproduction/gatus:latest
+    user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       - NTFY_URL=${NTFY_URL}
-      - NTFY_TOPIC=${NTFY_UPTIME_TOPIC}
-      - NTFY_TOKEN=${NTFY_UPTIME_AUTH_TOKEN}
+      - NTFY_TOPIC=${NTFY_TOPIC_UPTIME}
+      - NTFY_TOKEN=${NTFY_TOKEN_UPTIME}
       - BASIC_AUTH_BASE64=${BASIC_AUTH_BASE64}
       - DOMAIN=${DOMAIN}
     volumes:

@@ -15,5 +15,3 @@ node_modules
 !.env.root.example
 
 todos.txt
-servers/*
-!servers/demo
