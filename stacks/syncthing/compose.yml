@@ -21,6 +21,7 @@ services:
       - 22000:22000/tcp # Sync protocol (BEP)
       - 22000:22000/udp # QUIC connections
       - 21027:21027/udp # Discovery broadcasts
+      - 8384:8384 # Web GUI
     restart: unless-stopped
     deploy:
       resources:
@@ -37,6 +38,6 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
       - "traefik.http.routers.syncthing.rule=Host(`${SYNCTHING_SUBDOMAIN}.${DOMAIN}`)"
-      - "traefik.http.routers.syncthing.entrypoints=websecure"
-      - "traefik.http.routers.syncthing.tls=true"
-      - "traefik.http.routers.syncthing.tls.certresolver=myresolver"
+      # - "traefik.http.routers.syncthing.entrypoints=websecure"
+      # - "traefik.http.routers.syncthing.tls=true"
+      # - "traefik.http.routers.syncthing.tls.certresolver=myresolver"

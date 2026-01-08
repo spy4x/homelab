@@ -13,24 +13,29 @@ services:
   traefik:
     container_name: "traefik"
     image: "traefik:latest"
+    user: "0"
     restart: unless-stopped
+    environment:
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN} # Use the token from Step 1
     command:
-      # - "--log.level=DEBUG"
+      - "--log.level=DEBUG"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.address=:80"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      # - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      # - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      # - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
       # Timeout settings to allow large file uploads to Immich (up to 600s)
       - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=600s
       - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=600s
       - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=600s
       # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Use HTTP-01 challenge
-      - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use 'web' entrypoint (port 80) for the challenge
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=cloudflare"
+      # - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Use HTTP-01 challenge
+      # - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use 'web' entrypoint (port 80) for the challenge
       # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory" # Use staging server for testing
       - "--certificatesresolvers.myresolver.acme.email=${CONTACT_EMAIL}"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
@@ -38,8 +43,10 @@ services:
       - 443:443
       - 80:80
     volumes:
-      - ${VOLUMES_PATH}/traefik/letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${VOLUMES_PATH}/traefik/letsencrypt:/letsencrypt:z
+      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+    security_opt:
+      - label:disable
     networks:
       - proxy
       - default
@@ -53,8 +60,8 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.traefik.loadbalancer.server.port=8080"
       - "traefik.http.routers.traefik.rule=Host(`${PROXY_SUBDOMAIN}.${DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
+      # - "traefik.http.routers.traefik.entrypoints=websecure"
+      # - "traefik.http.routers.traefik.tls=true"
+      # - "traefik.http.routers.traefik.tls.certresolver=myresolver"
       - "traefik.http.routers.traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"

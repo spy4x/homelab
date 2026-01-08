@@ -22,7 +22,7 @@ services:
       # Real client IP from Cloudflare (enables proper logging and rate limiting)
       - IP_HEADER=CF-Connecting-IP
     volumes:
-      - ${VOLUMES_PATH}/vaultwarden:/data
+      - ${VOLUMES_PATH}/vaultwarden:/data:z
     restart: unless-stopped
     deploy:
       resources:
@@ -39,10 +39,10 @@ services:
       - "traefik.docker.network=proxy"
       # Main service (handles both HTTP and WebSocket on port 80 since v1.29.0)
       - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
-      - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
-      - "traefik.http.routers.vaultwarden.entrypoints=websecure"
-      - "traefik.http.routers.vaultwarden.tls=true"
-      - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
+      - "traefik.http.routers.vaultwarden.rule=Host(`pass.${DOMAIN}`)"
+      # - "traefik.http.routers.vaultwarden.entrypoints=websecure"
+      # - "traefik.http.routers.vaultwarden.tls=true"
+      # - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
       - "traefik.http.routers.vaultwarden.service=vaultwarden"
       # Cloudflare real IP middleware
       - "traefik.http.routers.vaultwarden.middlewares=vaultwarden-realip"
