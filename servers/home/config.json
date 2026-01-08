@@ -2,11 +2,17 @@
   "stacks": [
     { "name": "traefik" },
     { "name": "watchtower" },
+    { "name": "wireguard" },
     { "name": "syncthing" },
     { "name": "gatus" },
     { "name": "ntfy" },
-    { "name": "wireguard" },
-    { "name": "nginx", "deployAs": "homepage" },
+    {
+      "name": "nginx",
+      "deployAs": "dash",
+      "envs": {
+        "NGINX_HTML": "${PATH_APPS}/configs/dash"
+      }
+    },
     { "name": "immich" },
     { "name": "piped" },
     { "name": "transmission" },

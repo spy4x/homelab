@@ -31,7 +31,8 @@ if (!SSH_ADDRESS || !PATH_APPS) {
 
 // Load target's config.json to get required stacks
 const configPath = `${targetPath}/config.json`
-let config: { stacks?: Array<{ name: string; deployAs?: string }> } = {}
+let config: { stacks?: Array<{ name: string; deployAs?: string; envs?: Record<string, string> }> } =
+  {}
 try {
   const configContent = await Deno.readTextFile(configPath)
   config = JSON.parse(configContent)
@@ -51,7 +52,7 @@ log(`Created temp dir: ${tempDir}`)
 
 try {
   // Copy server folder contents to temp directory
-  const whitelist = [".env", "configs/", "stacks/"]
+  const whitelist = [".env", "configs/"]
   log("Copying files to temp dir...")
   for (const item of whitelist) {
     const srcPath = `${targetPath}/${item}`
@@ -108,6 +109,34 @@ try {
   for (const stackConfig of stacks) {
     const stackName = stackConfig.name
     const deployAs = stackConfig.deployAs || stackName
+    const envs = stackConfig.envs || {}
+
+    // fill placeholders in envs
+    for (const [key, value] of Object.entries(envs)) {
+      if (typeof value !== "string") {
+        error(`Invalid env value for key '${key}' in stack '${stackName}', must be a string`)
+        continue
+      }
+      const filledValue = value.replace(/\${([^}]+)}/g, (_match, envVarName) => {
+        const envValue = targetEnv[envVarName.trim()]
+        if (envValue === undefined) {
+          error(
+            `Environment variable '${envVarName.trim()}' not found for stack '${stackName}'`,
+          )
+          return _match
+        }
+        return envValue
+      })
+
+      // add env to .env file in tempDir, but only if not already present
+      const envFilePath = `${tempDir}/.env`
+      let envFileContent = await Deno.readTextFile(envFilePath)
+      if (!envFileContent.includes(`${key}=`)) {
+        envFileContent += `\n${key}=${filledValue}\n`
+        await Deno.writeTextFile(envFilePath, envFileContent)
+        log(`Added env ${key} for stack ${stackName} to .env file`)
+      }
+    }
 
     // Check for stack-level before.deploy.ts
     const stackBeforeDeployPath = `${tempDir}/stacks/${stackName}/before.deploy.ts`

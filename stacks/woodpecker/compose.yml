@@ -54,6 +54,9 @@ services:
   woodpecker-agent:
     container_name: woodpecker-agent
     image: woodpeckerci/woodpecker-agent:v3.11.0
+    user: "${PUID:-1000}:${PGID:-1000}"
+    group_add:
+      - "${DOCKER_GROUP_ID:-990}" # Allow access to docker.sock
     environment:
       - WOODPECKER_SERVER=woodpecker-server:9000
       - WOODPECKER_AGENT_SECRET=${WOODPECKER_AGENT_SECRET}
