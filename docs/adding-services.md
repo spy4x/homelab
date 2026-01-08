@@ -97,6 +97,39 @@ export default {
 
 **Skip backup config entirely** for stateless services (config-only via env vars, no volumes).
 
+## Pre-Deploy Scripts (before.deploy.ts)
+
+Some services need configuration generated before deployment. Create `stacks/myservice/before.deploy.ts`:
+
+```typescript
+// This script runs during deployment, before rsync to the server
+// Environment variables from .env and .env.root are available
+// DEPLOY_AS env var contains the deployment name (for renamed stacks)
+
+const templateFile = new URL("config.template", import.meta.url).pathname
+const outputFile = new URL("config.properties", import.meta.url).pathname
+
+// Read template and substitute environment variables
+const template = await Deno.readTextFile(templateFile)
+const output = template.replace(/\${([^}]+)}/g, (_match, envVarName) => {
+  const value = Deno.env.get(envVarName.trim())
+  if (value === undefined) {
+    throw new Error(`Environment variable '${envVarName.trim()}' not found.`)
+  }
+  return value
+})
+await Deno.writeTextFile(outputFile, output)
+
+console.log(`Generated '${outputFile}' from template`)
+```
+
+**Use cases**:
+- Generate config files from templates with env var substitution
+- Create dynamic configuration based on server settings
+- Pre-process files that can't use Docker env var expansion
+
+**Server-specific before.deploy.ts**: Place in `servers/{server}/configs/{service}/before.deploy.ts` for server-specific preprocessing.
+
 ### Advanced Backup Configs
 
 **Multiple paths**:

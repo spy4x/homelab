@@ -5,6 +5,19 @@
 import { error, log, runCommand, success } from "../+lib.ts"
 import { load } from "@std/dotenv"
 
+interface StackConfig {
+  name: string
+  deployAs?: string
+  envs?: Record<string, string>
+}
+
+interface DeployResult {
+  name: string
+  deployAs: string
+  success: boolean
+  error?: string
+}
+
 // Parse command line arguments
 const args = Deno.args
 if (args.length < 1) {
@@ -23,6 +36,8 @@ const targetEnv = await load({ envPath: targetEnvPath })
 
 const SSH_ADDRESS = targetEnv["SSH_ADDRESS"]
 const PATH_APPS = targetEnv["PATH_APPS"]
+const VOLUMES_PATH = targetEnv["VOLUMES_PATH"]
+const HOMELAB_USER = targetEnv["HOMELAB_USER"] || "spy4x"
 
 if (!SSH_ADDRESS || !PATH_APPS) {
   error(`SSH_ADDRESS and PATH_APPS must be set in ${targetEnvPath}`)
@@ -31,8 +46,7 @@ if (!SSH_ADDRESS || !PATH_APPS) {
 
 // Load target's config.json to get required stacks
 const configPath = `${targetPath}/config.json`
-let config: { stacks?: Array<{ name: string; deployAs?: string; envs?: Record<string, string> }> } =
-  {}
+let config: { stacks?: StackConfig[] } = {}
 try {
   const configContent = await Deno.readTextFile(configPath)
   config = JSON.parse(configContent)
@@ -230,29 +244,40 @@ try {
   }
   success("Proxy network ensured")
 
-  // Deploy stacks
+  // Deploy stacks in a single SSH session
   if (stacks.length > 0) {
     log("Deploying stacks...")
-    for (const stackConfig of stacks) {
-      const stackName = stackConfig.name
-      const deployAs = stackConfig.deployAs || stackName
-      log(`${stackName}${deployAs !== stackName ? ` (as ${deployAs})` : ""}...`)
 
-      // Use project name to allow same stack deployed multiple times
-      const projectFlag = `-p ${deployAs}`
-      const stackCmd =
-        `cd ${PATH_APPS} && docker compose ${projectFlag} --env-file=.env.root --env-file=.env -f stacks/${stackName}/compose.yml up -d`
-      const stackCommand = await runCommand(["ssh", SSH_ADDRESS, stackCmd])
-      if (!stackCommand.success) {
-        error(
-          `Failed to deploy stack: ${stackName}${
-            deployAs !== stackName ? ` (as ${deployAs})` : ""
-          }`,
-        )
-        error(stackCommand.error)
-        Deno.exit(1)
+    // Extract volume paths from compose files and create them on the remote server
+    const volumePaths = await extractVolumePaths(stacks, tempDir, targetEnv)
+    if (volumePaths.length > 0 && VOLUMES_PATH) {
+      log(`Creating ${volumePaths.length} volume directories with correct ownership...`)
+      const createVolumesScript = generateVolumeCreationScript(volumePaths, HOMELAB_USER)
+      const volumesCommand = await runCommand(["ssh", SSH_ADDRESS, createVolumesScript])
+      if (!volumesCommand.success) {
+        log(`Warning: Some volume directories may not have been created: ${volumesCommand.error}`)
+      } else {
+        success("Volume directories created")
       }
-      success(`✓ ${stackName}${deployAs !== stackName ? ` (as ${deployAs})` : ""}`)
+    }
+
+    // Build a single script that deploys all stacks and tracks results
+    const deployScript = generateDeployScript(stacks, PATH_APPS)
+
+    // Execute the deploy script in a single SSH session
+    const deployCommand = await runCommand(["ssh", SSH_ADDRESS, deployScript])
+
+    // Parse the results from the output
+    const results = parseDeployResults(deployCommand.output, stacks)
+
+    // Print summary
+    printDeploySummary(results)
+
+    // Check if any failed
+    const failedCount = results.filter((r) => !r.success).length
+    if (failedCount > 0) {
+      error(`${failedCount} stack(s) failed to deploy`)
+      // Don't exit immediately - we want to show the full summary
     }
   } else {
     log("No stacks to deploy")
@@ -267,6 +292,159 @@ try {
   } catch (err) {
     log(`Warning: Failed to clean up temp directory: ${err}`)
   }
+}
+
+/**
+ * Extract volume paths from compose files that need to be created
+ */
+async function extractVolumePaths(
+  stacks: StackConfig[],
+  tempDir: string,
+  env: Record<string, string>,
+): Promise<string[]> {
+  const volumePaths: Set<string> = new Set()
+
+  for (const stackConfig of stacks) {
+    const stackName = stackConfig.name
+    const composePath = `${tempDir}/stacks/${stackName}/compose.yml`
+
+    try {
+      const composeContent = await Deno.readTextFile(composePath)
+
+      // Extract volume mount paths that use VOLUMES_PATH
+      // Pattern: ${VOLUMES_PATH}/something:/container/path
+      const volumeMatches = composeContent.matchAll(/\$\{VOLUMES_PATH\}\/([^:]+):/g)
+
+      for (const match of volumeMatches) {
+        const volumeSubPath = match[1].split(":")[0] // Get just the path part
+        // Expand any env vars in the path
+        let expandedPath = `\${VOLUMES_PATH}/${volumeSubPath}`
+        expandedPath = expandedPath.replace(/\$\{([^}]+)\}/g, (_m, varName) => {
+          return env[varName.trim()] || `\${${varName}}`
+        })
+        volumePaths.add(expandedPath)
+      }
+    } catch {
+      // Compose file not found, skip
+    }
+  }
+
+  return Array.from(volumePaths)
+}
+
+/**
+ * Generate a shell script to create volume directories with correct ownership
+ */
+function generateVolumeCreationScript(volumePaths: string[], user: string): string {
+  const commands = volumePaths.map((path) => {
+    // Create directory and set ownership (ignore errors for already existing dirs)
+    return `mkdir -p "${path}" 2>/dev/null; chown -R ${user}:${user} "${path}" 2>/dev/null || true`
+  })
+
+  return commands.join(" && ")
+}
+
+/**
+ * Generate a bash script that deploys all stacks and outputs structured results
+ */
+function generateDeployScript(stacks: StackConfig[], pathApps: string): string {
+  const stackCommands: string[] = []
+
+  for (const stackConfig of stacks) {
+    const stackName = stackConfig.name
+    const deployAs = stackConfig.deployAs || stackName
+    const projectFlag = `-p ${deployAs}`
+
+    // Each stack deployment outputs a marker for parsing
+    stackCommands.push(`
+echo "DEPLOY_START:${stackName}:${deployAs}"
+cd ${pathApps} && docker compose ${projectFlag} --env-file=.env.root --env-file=.env -f stacks/${stackName}/compose.yml up -d 2>&1
+if [ $? -eq 0 ]; then
+  echo "DEPLOY_SUCCESS:${stackName}:${deployAs}"
+else
+  echo "DEPLOY_FAILED:${stackName}:${deployAs}"
+fi
+`)
+  }
+
+  return stackCommands.join("\n")
+}
+
+/**
+ * Parse the deploy output to extract results for each stack
+ */
+function parseDeployResults(output: string, stacks: StackConfig[]): DeployResult[] {
+  const results: DeployResult[] = []
+  const lines = output.split("\n")
+
+  for (const stackConfig of stacks) {
+    const stackName = stackConfig.name
+    const deployAs = stackConfig.deployAs || stackName
+
+    // Find the result marker for this stack
+    const successMarker = `DEPLOY_SUCCESS:${stackName}:${deployAs}`
+    const failedMarker = `DEPLOY_FAILED:${stackName}:${deployAs}`
+
+    const isSuccess = lines.some((line) => line.includes(successMarker))
+    const isFailed = lines.some((line) => line.includes(failedMarker))
+
+    // Extract error output between START and SUCCESS/FAILED markers
+    let errorOutput = ""
+    if (isFailed) {
+      const startIdx = lines.findIndex((l) => l.includes(`DEPLOY_START:${stackName}:${deployAs}`))
+      const endIdx = lines.findIndex((l) => l.includes(failedMarker))
+      if (startIdx !== -1 && endIdx !== -1) {
+        errorOutput = lines.slice(startIdx + 1, endIdx).join("\n")
+      }
+    }
+
+    results.push({
+      name: stackName,
+      deployAs,
+      success: isSuccess && !isFailed,
+      error: isFailed ? errorOutput : undefined,
+    })
+  }
+
+  return results
+}
+
+/**
+ * Print a summary of deployment results
+ */
+function printDeploySummary(results: DeployResult[]): void {
+  log("\n========== DEPLOYMENT SUMMARY ==========")
+
+  const successful = results.filter((r) => r.success)
+  const failed = results.filter((r) => !r.success)
+
+  if (successful.length > 0) {
+    success(`\n✅ Successful (${successful.length}/${results.length}):`)
+    for (const result of successful) {
+      const displayName = result.deployAs !== result.name
+        ? `${result.name} (as ${result.deployAs})`
+        : result.name
+      log(`   ✓ ${displayName}`)
+    }
+  }
+
+  if (failed.length > 0) {
+    error(`\n❌ Failed (${failed.length}/${results.length}):`)
+    for (const result of failed) {
+      const displayName = result.deployAs !== result.name
+        ? `${result.name} (as ${result.deployAs})`
+        : result.name
+      log(`   ✗ ${displayName}`)
+      if (result.error) {
+        log(
+          `     Error: ${result.error.substring(0, 200)}${result.error.length > 200 ? "..." : ""}`,
+        )
+      }
+    }
+  }
+
+  log("\n=========================================")
+  log(`Total: ${results.length} | Success: ${successful.length} | Failed: ${failed.length}`)
 }
 
 // Helper function to recursively copy a directory

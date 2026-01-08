@@ -226,3 +226,64 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
+
+  # External sites monitoring
+  - name: TOD API
+    group: external
+    url: "https://darechat.me/api/wake-up"
+    method: GET
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: GB front
+    group: external
+    url: "https://yumeiot.com"
+    method: GET
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: GB API
+    group: external
+    url: "https://yumeiot.com/api/health"
+    method: GET
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Michael's website
+    group: external
+    url: "https://michaeldistel.com"
+    method: GET
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ControlForge
+    group: external
+    url: "https://controlforge.dev"
+    method: GET
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Kicking Miles
+    group: external
+    url: "https://kickingmiles.com/"
+    method: GET
+    interval: 5m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy

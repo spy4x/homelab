@@ -1,25 +1,7 @@
+import { substituteEnvVars } from "../../scripts/+lib.ts"
+
 const templateFile = new URL("config.properties.template", import.meta.url).pathname
 const outputFile = new URL("config.properties", import.meta.url).pathname
-
-/**
- * Replaces all occurrences of ${ENV_VAR_NAME} in a template string
- * with the corresponding value from Deno.env.
- * @param template The template string content.
- * @returns The substituted string content.
- */
-function substituteEnvVars(template: string): string {
-  // Regex: Finds ${...} groups globally. The content inside the group (...)
-  // is captured as $1 (the environment variable name).
-  return template.replace(/\${([^}]+)}/g, (_match, envVarName) => {
-    const value = Deno.env.get(envVarName.trim())
-
-    if (value === undefined) {
-      throw new Error(`Environment variable '${envVarName.trim()}' not found.`)
-    }
-
-    return value
-  })
-}
 
 // --- Main execution ---
 try {

@@ -1,3 +1,8 @@
+import { getEnvVar } from "../../+lib.ts"
+
+// Re-export getEnvVar for consumers that import from this module
+export { getEnvVar } from "../../+lib.ts"
+
 export const USER = getEnvVar("USER")
 export const PATH_APPS = getEnvVar("PATH_APPS")
 export const VOLUMES_PATH = getEnvVar("VOLUMES_PATH")
@@ -13,12 +18,4 @@ export interface BackupConfig {
   containers?: {
     stop: "default" | string[]
   }
-}
-
-export function getEnvVar(key: string, isOptional = false): string {
-  const value = Deno.env.get(key)
-  if (!value && !isOptional) {
-    throw new Error(`Missing environment variable: ${key}`)
-  }
-  return value || ""
 }

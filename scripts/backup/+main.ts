@@ -80,6 +80,7 @@ class BackupRunner {
       ntfyAuth: getEnvVar("NTFY_TOKEN_BACKUPS"),
       stacksPath: absPath(`${PATH_APPS}/stacks`, USER),
       configsPath: absPath(`${PATH_APPS}/configs/backup`, USER),
+      healthchecksUrl: getEnvVar("HEALTHCHECKS_BACKUP_URL", true), // Optional
     }
   }
 

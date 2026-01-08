@@ -5,15 +5,87 @@ export class BackupReporter {
   constructor(private context: BackupContext) {}
 
   /**
-   * Sends a comprehensive backup report via ntfy
+   * Sends backup notifications via healthchecks and ntfy
+   * Healthchecks is used for "dead man's switch" monitoring
+   * ntfy is used for direct notifications
    */
   async sendNotification(result: BackupResult): Promise<void> {
-    const ntfySuccess = await this.sendNtfyNotification(result)
-    if (ntfySuccess) {
-      log("ntfy notification sent successfully to " + this.context.ntfyUrl)
+    // Send healthchecks ping first (if configured)
+    await this.sendHealthchecksPing(result)
+
+    // Then send ntfy notification with retry logic
+    const maxRetries = 5
+    const retryDelayMs = 3000 // 3 seconds between retries
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const ntfySuccess = await this.sendNtfyNotification(result)
+      if (ntfySuccess) {
+        log("ntfy notification sent successfully to " + this.context.ntfyUrl)
+        return
+      }
+
+      if (attempt < maxRetries) {
+        log(`ntfy notification attempt ${attempt}/${maxRetries} failed, retrying in ${retryDelayMs / 1000}s...`)
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs))
+      }
+    }
+
+    error(`ntfy notification failed after ${maxRetries} attempts to ` + this.context.ntfyUrl)
+  }
+
+  /**
+   * Pings healthchecks.io-style endpoint
+   * Uses /fail suffix if backup failed, otherwise pings success
+   */
+  private async sendHealthchecksPing(result: BackupResult): Promise<void> {
+    if (!this.context.healthchecksUrl) {
       return
     }
-    error("ntfy notification failed to " + this.context.ntfyUrl)
+
+    try {
+      const allSuccess = result.successCount === result.totalCount
+      // Healthchecks.io pattern: append /fail for failures
+      const url = allSuccess
+        ? this.context.healthchecksUrl
+        : `${this.context.healthchecksUrl}/fail`
+
+      const response = await fetch(url, {
+        method: "POST",
+        body: this.buildHealthchecksMessage(result),
+      })
+
+      if (response.ok) {
+        log(`healthchecks ping sent successfully (${allSuccess ? "success" : "fail"})`)
+      } else {
+        error(`healthchecks ping failed: ${response.status} ${response.statusText}`)
+      }
+    } catch (err) {
+      error(`Failed to send healthchecks ping: ${err}`)
+    }
+  }
+
+  /**
+   * Builds a summary message for healthchecks ping body
+   */
+  private buildHealthchecksMessage(result: BackupResult): string {
+    const { successCount, totalCount, totalSizeGB, durationMs } = result
+    const durationMinutes = Math.floor(durationMs / 60000)
+    const durationSeconds = Math.floor((durationMs % 60000) / 1000)
+
+    let message = `Server: ${this.context.serverName}\n`
+    message += `Success: ${successCount}/${totalCount}\n`
+    message += `Size: ${totalSizeGB.toFixed(2)} GB\n`
+    message += `Duration: ${durationMinutes}m ${durationSeconds}s\n`
+
+    const failedBackups = result.backups.filter((b) => b.status === BackupStatus.ERROR)
+    if (failedBackups.length > 0) {
+      message += "\nFailed:\n"
+      for (const backup of failedBackups) {
+        message += `- ${backup.name}: ${backup.error || "unknown error"}\n`
+      }
+    }
+
+    return message
   }
 
   /**

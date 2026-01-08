@@ -24,6 +24,7 @@ export interface BackupContext {
   ntfyAuth: string
   stacksPath: string
   configsPath: string
+  healthchecksUrl?: string // Optional healthchecks.io-style ping URL
 }
 
 export interface BackupResult {

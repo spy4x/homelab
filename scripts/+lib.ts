@@ -18,6 +18,38 @@ export function absPath(path: string, user: string): string {
 }
 
 /**
+ * Replaces all occurrences of ${ENV_VAR_NAME} in a template string
+ * with the corresponding value from Deno.env.
+ * @param template The template string content.
+ * @param envGetter Optional custom function to get env vars (defaults to Deno.env.get)
+ * @returns The substituted string content.
+ * @throws Error if an environment variable is not found.
+ */
+export function substituteEnvVars(
+  template: string,
+  envGetter: (key: string) => string | undefined = Deno.env.get.bind(Deno.env),
+): string {
+  return template.replace(/\${([^}]+)}/g, (_match, envVarName) => {
+    const value = envGetter(envVarName.trim())
+    if (value === undefined) {
+      throw new Error(`Environment variable '${envVarName.trim()}' not found.`)
+    }
+    return value
+  })
+}
+
+/**
+ * Get an environment variable, throwing an error if not found (unless optional)
+ */
+export function getEnvVar(key: string, isOptional = false): string {
+  const value = Deno.env.get(key)
+  if (!value && !isOptional) {
+    throw new Error(`Missing environment variable: ${key}`)
+  }
+  return value || ""
+}
+
+/**
  * Execute a shell command with optional sudo and return result
  */
 export async function runCommand(
