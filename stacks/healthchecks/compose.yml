@@ -13,6 +13,7 @@ services:
     environment:
       - TZ=${TIMEZONE}
       - SECRET_KEY=${HEALTHCHECKS_SECRET_KEY}
+      - DEBUG=False
       - SITE_ROOT=https://healthchecks.${DOMAIN}
       - SITE_NAME=Healthchecks
       - DEFAULT_FROM_EMAIL=noreply@${DOMAIN}
