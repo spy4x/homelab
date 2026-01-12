@@ -232,9 +232,9 @@ endpoints:
     group: external
     url: "https://darechat.me/api/wake-up"
     method: GET
-    interval: 5m
+    interval: 1m
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 202"
     alerts:
       - type: ntfy
 
@@ -242,7 +242,7 @@ endpoints:
     group: external
     url: "https://yumeiot.com"
     method: GET
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -252,7 +252,7 @@ endpoints:
     group: external
     url: "https://yumeiot.com/api/health"
     method: GET
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -262,7 +262,7 @@ endpoints:
     group: external
     url: "https://michaeldistel.com"
     method: GET
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -272,7 +272,7 @@ endpoints:
     group: external
     url: "https://controlforge.dev"
     method: GET
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -282,7 +282,7 @@ endpoints:
     group: external
     url: "https://kickingmiles.com/"
     method: GET
-    interval: 5m
+    interval: 1m
     conditions:
       - "[STATUS] == 200"
     alerts:
