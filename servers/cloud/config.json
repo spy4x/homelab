@@ -7,6 +7,15 @@
     { "name": "ntfy" },
     { "name": "mailserver" },
     { "name": "roundcube" },
-    { "name": "healthchecks" }
+    { "name": "healthchecks" },
+    {
+      "name": "nginx",
+      "deployAs": "neatsoft-landing",
+      "envs": {
+        "NGINX_HTML": "${PATH_APPS}/configs/neatsoft-landing",
+        "NGINX_CONTAINER_NAME": "neatsoft-landing",
+        "NGINX_ROUTER_RULE": "Host(`neatsoft.dev`) || Host(`www.neatsoft.dev`)"
+      }
+    }
   ]
 }

@@ -331,8 +331,17 @@
               <div class="service-name">YouTube</div>
               <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_piped/health/badge.svg" alt="Home YouTube Uptime Badge" />
             </a>
-          </li>
-        </ul>
+          </li>          <li class="service-item">
+            <a
+              href="https://code.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">💻</div>
+              <div class="service-name">Web IDE</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_code-server/health/badge.svg" alt="Home Web IDE Uptime Badge" />
+            </a>
+          </li>        </ul>
       </div>
 
       <div class="section">

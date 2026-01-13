@@ -1,0 +1,46 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  # code-server is VS Code running in the browser.
+  # It provides a full development environment accessible from any device with a web browser.
+  code-server:
+    container_name: code-server
+    image: lscr.io/linuxserver/code-server:latest
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TIMEZONE}
+      - PASSWORD=${CODE_SERVER_PASSWORD}
+      - SUDO_PASSWORD=${CODE_SERVER_SUDO_PASSWORD}
+      - DEFAULT_WORKSPACE=/workspace
+      # Enable VS Code marketplace for Copilot (licensing gray area)
+      - EXTENSIONS_GALLERY={"serviceUrl":"https://marketplace.visualstudio.com/_apis/public/gallery","cacheUrl":"https://vscode.blob.core.windows.net/gallery/index","itemUrl":"https://marketplace.visualstudio.com/items"}
+      # Install extensions on startup (optional, can also install via UI)
+      # - INSTALL_PACKAGES=github.copilot,github.copilot-chat
+    volumes:
+      - ${VOLUMES_PATH}/code-server/config:/config:z
+      - ${VOLUMES_PATH}/code-server/workspace:/workspace:z
+      # Mount the homelab repo directly for easy access
+      - ${CODE_SERVER_WORKDIR}:/workspace:z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+          cpus: "4.0"
+    # security_opt:
+    #   - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.routers.code-server.rule=Host(`code.${DOMAIN}`)"
+      - "traefik.http.routers.code-server.entrypoints=websecure"
+      - "traefik.http.routers.code-server.tls.certresolver=myresolver"
+      - "traefik.http.services.code-server.loadbalancer.server.port=8443"
+      # Larger timeout for long-running operations
+      - "traefik.http.routers.code-server.service=code-server"

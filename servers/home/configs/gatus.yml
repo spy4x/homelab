@@ -116,3 +116,12 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
+
+  - name: NeatSoft Landing
+    group: cloud
+    url: "https://neatsoft.dev"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy

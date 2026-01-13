@@ -10,7 +10,9 @@
       "name": "nginx",
       "deployAs": "dash",
       "envs": {
-        "NGINX_HTML": "${PATH_APPS}/configs/dash"
+        "NGINX_HTML": "${PATH_APPS}/configs/dash",
+        "NGINX_CONTAINER_NAME": "dash",
+        "NGINX_ROUTER_RULE": "Host(`dash.${DOMAIN}`)"
       }
     },
     { "name": "immich" },
@@ -26,6 +28,7 @@
     { "name": "filebrowser" },
     { "name": "freshrss" },
     { "name": "radicale" },
-    { "name": "woodpecker" }
+    { "name": "woodpecker" },
+    { "name": "code-server" }
   ]
 }

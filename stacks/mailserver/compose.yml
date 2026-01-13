@@ -3,6 +3,28 @@ networks:
     external: true
 
 services:
+  # Dummy HTTP service to obtain Let's Encrypt certificate for mail subdomain
+  # This allows Traefik to generate a certificate that mailserver can use
+  mail-cert-helper:
+    image: nginx:alpine
+    container_name: mail-cert-helper
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.mail-cert.loadbalancer.server.port=80"
+      - "traefik.http.routers.mail-cert.rule=Host(`mail.${DOMAIN}`)"
+      - "traefik.http.routers.mail-cert.entrypoints=websecure"
+      - "traefik.http.routers.mail-cert.tls=true"
+      - "traefik.http.routers.mail-cert.tls.certresolver=myresolver"
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 32M
+
   # Docker Mail Server (DMS) - Full-featured email server
   # Handles SMTP, IMAP, spam filtering, virus scanning, DKIM, SPF, DMARC
   # Documentation: https://docker-mailserver.github.io/docker-mailserver/latest/
@@ -22,6 +44,7 @@ services:
       - ${VOLUMES_PATH}/mailserver/mail-state:/var/mail-state:z
       - ${VOLUMES_PATH}/mailserver/mail-logs:/var/log/mail:z
       - ${VOLUMES_PATH}/mailserver/config:/tmp/docker-mailserver:z
+      - ${VOLUMES_PATH}/mailserver/config/ssl:/etc/letsencrypt/live/mail.${DOMAIN}:ro,z
       - /etc/localtime:/etc/localtime:ro,z
     environment:
       # Basic settings
@@ -34,7 +57,9 @@ services:
       - ENABLE_POLICYD_SPF=0 # DISABLED - Using Rspamd for SPF checking
 
       # SSL/TLS settings
-      - SSL_TYPE=self-signed # Use self-signed certificates
+      - SSL_TYPE=manual # Use manually provided certificates
+      - SSL_CERT_PATH=/etc/letsencrypt/live/mail.${DOMAIN}/cert.pem
+      - SSL_KEY_PATH=/etc/letsencrypt/live/mail.${DOMAIN}/key.pem
       - SSL_DOMAIN=${DOMAIN} # Main domain
 
       # Dovecot (IMAP) settings

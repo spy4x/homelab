@@ -5,8 +5,9 @@ networks:
 services:
   # Roundcube - Modern webmail client (optional but recommended)
   # Provides a user-friendly web interface for accessing email
+  # Note: First deployment may take a minute to initialize static assets
   roundcube:
-    image: roundcube/roundcubemail:latest
+    image: roundcube/roundcubemail:1.6.x-apache-nonroot
     container_name: roundcube
     restart: unless-stopped
     environment:
@@ -19,13 +20,14 @@ services:
       - ROUNDCUBEMAIL_SKIN=elastic
       - ROUNDCUBEMAIL_PLUGINS=archive,zipdownload,managesieve
     volumes:
-      - ${VOLUMES_PATH}/roundcube/www:/var/www/html:z
       - ${VOLUMES_PATH}/roundcube/db:/var/roundcube/db:z
+      # Custom PHP configs placed here are auto-included (e.g., custom.inc.php for SSL settings)
+      - ${VOLUMES_PATH}/roundcube/config:/var/roundcube/config:z
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 256M
+          cpus: "1.0"
+          memory: 512M
     security_opt:
       - no-new-privileges:true
     networks:
@@ -34,7 +36,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.roundcube.loadbalancer.server.port=80"
+      - "traefik.http.services.roundcube.loadbalancer.server.port=8000"
       - "traefik.http.routers.roundcube.rule=Host(`webmail.${DOMAIN}`)"
       - "traefik.http.routers.roundcube.entrypoints=websecure"
       - "traefik.http.routers.roundcube.tls=true"

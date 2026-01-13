@@ -287,3 +287,12 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
+
+  - name: Code Server
+    group: home
+    url: "https://code.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
