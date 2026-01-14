@@ -28,7 +28,6 @@
     { "name": "filebrowser" },
     { "name": "freshrss" },
     { "name": "radicale" },
-    { "name": "woodpecker" },
-    { "name": "code-server" }
+    { "name": "woodpecker" }
   ]
 }
