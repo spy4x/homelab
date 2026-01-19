@@ -33,6 +33,33 @@
     },
     // #endregion Backup
 
+    // #region Encryption
+    "encrypt:init": {
+      "command": "deno run -A ./scripts/encryption/+main.ts init --server",
+      "description": "🔐 Initialize encryption for server (generate keys, create config)"
+    },
+    "encrypt:env": {
+      "command": "deno run -A ./scripts/encryption/+main.ts env --server",
+      "description": "🔒 Encrypt .env file to .env.age using SOPS + age"
+    },
+    "decrypt:env": {
+      "command": "deno run -A ./scripts/encryption/decrypt.ts",
+      "description": "🔓 Decrypt .env.age file to .env using SOPS + age"
+    },
+    "encrypt:root:init": {
+      "command": "deno run -A ./scripts/encryption/root.ts init",
+      "description": "🔐 Initialize encryption for root .env.root"
+    },
+    "encrypt:root": {
+      "command": "deno run -A ./scripts/encryption/root.ts encrypt",
+      "description": "🔒 Encrypt .env.root to .env.root.age"
+    },
+    "decrypt:root": {
+      "command": "deno run -A ./scripts/encryption/root.ts decrypt",
+      "description": "🔓 Decrypt .env.root.age to .env.root"
+    },
+    // #endregion Encryption
+
     // #region Checks
     "check": {
       "command": "echo '✅ All checks passed!'",
@@ -80,7 +107,9 @@
   },
   "imports": {
     "@scripts/backup": "./scripts/backup/src/+lib.ts",
-    "@std/dotenv": "jsr:@std/dotenv"
+    "@std/dotenv": "jsr:@std/dotenv",
+    "@std/fs": "jsr:@std/fs@^1.0.21",
+    "@std/path": "jsr:@std/path@^1.1.4"
   },
   "exclude": [
     "**/.vite/*",

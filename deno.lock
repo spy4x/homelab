@@ -2,11 +2,30 @@
   "version": "5",
   "specifiers": {
     "jsr:@std/dotenv@*": "0.225.5",
+    "jsr:@std/fs@^1.0.21": "1.0.21",
+    "jsr:@std/internal@^1.0.12": "1.0.12",
+    "jsr:@std/path@^1.1.4": "1.1.4",
     "npm:yaml@*": "2.8.2"
   },
   "jsr": {
     "@std/dotenv@0.225.5": {
       "integrity": "9ce6f9d0ec3311f74a32535aa1b8c62ed88b1ab91b7f0815797d77a6f60c922f"
+    },
+    "@std/fs@1.0.21": {
+      "integrity": "d720fe1056d78d43065a4d6e0eeb2b19f34adb8a0bc7caf3a4dbf1d4178252cd",
+      "dependencies": [
+        "jsr:@std/internal",
+        "jsr:@std/path"
+      ]
+    },
+    "@std/internal@1.0.12": {
+      "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
+    },
+    "@std/path@1.1.4": {
+      "integrity": "1d2d43f39efb1b42f0b1882a25486647cb851481862dc7313390b2bb044314b5",
+      "dependencies": [
+        "jsr:@std/internal"
+      ]
     }
   },
   "npm": {
@@ -17,7 +36,9 @@
   },
   "workspace": {
     "dependencies": [
-      "jsr:@std/dotenv@*"
+      "jsr:@std/dotenv@*",
+      "jsr:@std/fs@^1.0.21",
+      "jsr:@std/path@^1.1.4"
     ]
   }
 }
