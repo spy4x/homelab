@@ -19,6 +19,13 @@ services:
       - INCOMPLETE_2FA_TIME_LIMIT=${VAULTWARDEN_INCOMPLETE_2FA_TIME_LIMIT}
       - LOG_LEVEL=${VAULTWARDEN_LOG_LEVEL}
       - EMERGENCY_ACCESS_ALLOWED=${VAULTWARDEN_EMERGENCY_ACCESS_ALLOWED}
+      # SMTP configuration for email notifications
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_FROM=${SMTP_FROM}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_SECURITY=starttls
       # Real client IP from Cloudflare (enables proper logging and rate limiting)
       - IP_HEADER=CF-Connecting-IP
     volumes:

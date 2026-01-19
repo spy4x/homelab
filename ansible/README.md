@@ -36,6 +36,7 @@ All playbooks are in the `playbooks/` directory:
 - `maintenance.yml` - System updates, log rotation, cleanup
 - `backup-cronjob.yml` - Setup automated backups
 - `fail2ban.yml` - Configure fail2ban for Docker containers
+- `mailserver-certs-renewal.yml` - Setup automatic SSL certificate renewal for mailserver
 
 ### Monitoring
 
