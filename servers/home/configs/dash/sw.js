@@ -1,7 +1,7 @@
 // Service Worker for PWA installability
 // No caching implemented
 
-self.addEventListener("install", function (event) {
+self.addEventListener("install", function (_event) {
   // Force the waiting service worker to become the active service worker
   self.skipWaiting()
 })

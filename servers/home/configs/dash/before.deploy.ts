@@ -10,7 +10,7 @@ const outputFile = new URL("index.html", import.meta.url).pathname
 function substituteEnvVars(template: string): string {
   // Regex: Finds ${...} groups globally. The content inside the group (...)
   // is captured as $1 (the environment variable name).
-  return template.replace(/\${([^}]+)}/g, (match, envVarName) => {
+  return template.replace(/\${([^}]+)}/g, (_match, envVarName) => {
     const value = Deno.env.get(envVarName.trim())
 
     if (value === undefined) {
