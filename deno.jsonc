@@ -34,31 +34,22 @@
     // #endregion Backup
 
     // #region Encryption
-    "encrypt:init": {
-      "command": "deno run -A ./scripts/encryption/+main.ts init --server",
-      "description": "🔐 Initialize encryption for server (generate keys, create config)"
+    "env:encrypt": {
+      "command": "deno run -A scripts/encryption/encrypt.ts",
+      "description": "🔐 Encrypt all .env files to .env.age"
     },
-    "encrypt:env": {
-      "command": "deno run -A ./scripts/encryption/+main.ts env --server",
-      "description": "🔒 Encrypt .env file to .env.age using SOPS + age"
-    },
-    "decrypt:env": {
-      "command": "deno run -A ./scripts/encryption/decrypt.ts",
-      "description": "🔓 Decrypt .env.age file to .env using SOPS + age"
-    },
-    "encrypt:root:init": {
-      "command": "deno run -A ./scripts/encryption/root.ts init",
-      "description": "🔐 Initialize encryption for root .env.root"
-    },
-    "encrypt:root": {
-      "command": "deno run -A ./scripts/encryption/root.ts encrypt",
-      "description": "🔒 Encrypt .env.root to .env.root.age"
-    },
-    "decrypt:root": {
-      "command": "deno run -A ./scripts/encryption/root.ts decrypt",
-      "description": "🔓 Decrypt .env.root.age to .env.root"
+    "env:decrypt": {
+      "command": "deno run -A scripts/encryption/decrypt.ts",
+      "description": "🔓 Decrypt all .env.age files to .env"
     },
     // #endregion Encryption
+
+    // #region Git Hooks
+    "hooks:install": "deno run -R=deno.json,deno.jsonc,.git/hooks/ -W=.git/hooks/ jsr:@hongminhee/deno-task-hooks",
+    "hooks:pre-commit": "deno task check && deno task env:encrypt",
+    "hooks:post-checkout": "deno task env:decrypt",
+    "hooks:post-merge": "deno task env:decrypt",
+    // #endregion Git Hooks
 
     // #region Checks
     "check": {
@@ -107,6 +98,7 @@
   },
   "imports": {
     "@scripts/backup": "./scripts/backup/src/+lib.ts",
+    "@std/assert": "jsr:@std/assert@^1.0.17",
     "@std/dotenv": "jsr:@std/dotenv",
     "@std/fs": "jsr:@std/fs@^1.0.21",
     "@std/path": "jsr:@std/path@^1.1.4"
