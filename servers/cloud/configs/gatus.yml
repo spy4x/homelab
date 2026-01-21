@@ -287,3 +287,23 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
+
+  - name: Anton Shubin
+    group: external
+    url: "https://antonshubin.com"
+    method: GET
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: NeatSoft
+    group: external
+    url: "https://neatsoft.dev"
+    method: GET
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
