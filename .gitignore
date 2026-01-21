@@ -15,6 +15,7 @@ node_modules
 !.env.root.example
 !.env.age
 !*.env.age
+!.env.root.age
 
 # Age encryption keys (never commit!)
 .age/
