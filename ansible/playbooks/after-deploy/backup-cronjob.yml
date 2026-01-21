@@ -9,8 +9,9 @@
 
   vars:
     # Backup scheduling configuration
-    backup_cron_hour: "{{ lookup('env', 'BACKUP_CRON_HOUR') | default('2', true) }}"
-    backup_cron_minute: "{{ lookup('env', 'BACKUP_CRON_MINUTE') | default('30', true) }}"
+    # Default: 19:00 UTC (3:00 AM next day UTC+8 Singapore time)
+    backup_cron_hour: "{{ lookup('env', 'BACKUP_CRON_HOUR') | default('19', true) }}"
+    backup_cron_minute: "{{ lookup('env', 'BACKUP_CRON_MINUTE') | default('0', true) }}"
 
   tasks:
     - name: Ensure backup script exists
