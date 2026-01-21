@@ -5,6 +5,7 @@ This file contains guidelines for agentic coding agents (including AI assistants
 ## 🚀 Quick Start Commands
 
 ### Essential Development Commands
+
 ```bash
 # Run all checks (lint, format, type-check, tests)
 deno task check
@@ -22,12 +23,14 @@ deno task test           # Run tests
 ```
 
 ### Running Single Tests
+
 ```bash
 deno test path/to/specific.test.ts     # Run single test file
 deno test --watch path/to/test.ts       # Watch mode
 ```
 
 ### Infrastructure Commands
+
 ```bash
 deno task deploy <server>     # Deploy services to server
 deno task ansible <playbook>  # Run Ansible playbooks
@@ -38,6 +41,7 @@ deno task ssh <server>        # SSH into server
 ## 📋 Code Style Guidelines
 
 ### TypeScript Formatting (from deno.jsonc)
+
 - **Indentation**: 2 spaces (no tabs)
 - **Line width**: 100 characters
 - **Quotes**: Double quotes only
@@ -45,10 +49,11 @@ deno task ssh <server>        # SSH into server
 - **Prose wrap**: Preserve
 
 ### Import Patterns
+
 ```typescript
 // Use relative imports for local modules
 import { BackupConfig } from "./+lib.ts"
-import { success, error } from "./+lib.ts"
+import { error, success } from "./+lib.ts"
 
 // Use JSR modules for standard library
 import { getEnvVar } from "@std/dotenv"
@@ -58,6 +63,7 @@ import { BackupConfig } from "@scripts/backup"
 ```
 
 ### File Naming Conventions
+
 - **TypeScript files**: `kebab-case.ts` (e.g., `backup-config.ts`)
 - **Main entry files**: `+main.ts` (Deno convention)
 - **Library files**: `+lib.ts` (Deno convention)
@@ -65,6 +71,7 @@ import { BackupConfig } from "@scripts/backup"
 - **Backup configs**: `{service-name}.backup.ts`
 
 ### Type Definitions
+
 ```typescript
 // Use interfaces for object shapes
 export interface BackupContext {
@@ -90,6 +97,7 @@ export type BackupConfigState = BackupConfig & {
 ```
 
 ### Function Patterns
+
 ```typescript
 // Export named functions with clear names
 export function success(...args: unknown[]) {
@@ -114,12 +122,47 @@ export default backupConfig
 
 ## 🛠️ Environment Variable Management
 
+### Encryption Setup (Required)
+
+**Before working with .env files, you MUST set up encryption:**
+
+1. **Install dependencies** (requires sudo on Linux):
+   ```bash
+   # macOS
+   brew install sops age
+
+   # Linux 
+   sudo apt install sops age    # Debian/Ubuntu
+   sudo dnf install sops age    # Fedora/RHEL
+   ```
+
+2. **Initialize encryption**:
+   ```bash
+   deno task encrypt:root:init          # For root .env.root
+   deno task encrypt:init <server-name> # For each server
+   ```
+
+3. **Install git hooks for automation**:
+   ```bash
+   deno task hooks:install              # Auto encrypt/decrypt on git ops
+   ```
+
+### Working with Environment Files
+
 **CRITICAL: Always add environment variables to BOTH files:**
 
-1. **`servers/{name}/.env`** - Actual values (gitignored)
+1. **`servers/{name}/.env`** - Actual values (encrypted to .env.age)
 2. **`servers/{name}/.env.example`** - Placeholders (committed)
 
+### Core Operations
+
+```bash
+deno task env:encrypt      # Encrypt all .env files to .env.age
+deno task env:decrypt      # Decrypt all .env.age files to .env
+```
+
 ### .env.example Format
+
 ```bash
 #region ServiceName
 # Database password for ServiceName
@@ -129,6 +172,7 @@ SERVICE_DB_PASSWORD=REPLACE_WITH_SECURE_PASSWORD
 ```
 
 ### .env Format
+
 ```bash
 #region ServiceName
 SERVICE_DB_PASSWORD=abC123...32charSecureString
@@ -137,24 +181,40 @@ SERVICE_DB_PASSWORD=abC123...32charSecureString
 
 **Default username:** `spy4x`
 
+### Git Hooks Automation
+
+The git hooks provide automatic encryption/decryption:
+
+- **pre-commit**: Auto-encrypts .env files before commit
+- **post-checkout**: Auto-decrypts .env.age files after branch switch
+- **pre-push**: Blocks pushes containing plaintext .env files
+
+**Hook Management:**
+
+```bash
+deno task hooks:install          # Install hooks using JSR package
+```
+
 ## 🏗️ Service Addition Guidelines
 
 Every new service MUST include:
 
 ### 1. Stack Definition (`stacks/{name}/compose.yml`)
+
 - Follow existing patterns (networks, Traefik labels, resource limits)
 - Container names must match stack name
 - Add to server's `config.json` stacks array
 
 ### 2. Backup Configuration (`stacks/{name}/backup.ts`)
+
 ```typescript
 import { BackupConfig } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "service-name",
-  sourcePaths: "default",  // or custom paths
+  sourcePaths: "default", // or custom paths
   containers: {
-    stop: "default",       // or ["container1", "container2"]
+    stop: "default", // or ["container1", "container2"]
   },
 }
 
@@ -164,12 +224,14 @@ export default backupConfig
 **Skip backup configs** for stateless services (no persistent volumes).
 
 ### 3. Documentation (`stacks/{name}/README.md`)
+
 - Service description and purpose
 - Setup instructions
 - Configuration notes
 - Troubleshooting tips
 
 ### 4. Dashboard Entry (`servers/home/configs/homepage/index.html`)
+
 - Add to appropriate section (Primary/Secondary)
 - Use emoji icon and clear naming
 - Pattern: subdomain, icon, name
@@ -249,12 +311,12 @@ export async function runCommand(
 
 ## 📋 Quick Reference
 
-| Task | Command | Description |
-|------|---------|-------------|
-| All checks | `deno task check` | Run lint, fmt, type-check, tests |
-| Fix all | `deno task fix` | Auto-fix linting and formatting |
-| Deploy | `deno task deploy <server>` | Deploy services |
-| Backup | `deno task backup` | Run backup system |
-| SSH | `deno task ssh <server>` | SSH into server |
-| Ansible | `deno task ansible <playbook>` | Run Ansible playbooks |
-| Test single | `deno test path/to/file.test.ts` | Run specific test |
+| Task        | Command                          | Description                      |
+| ----------- | -------------------------------- | -------------------------------- |
+| All checks  | `deno task check`                | Run lint, fmt, type-check, tests |
+| Fix all     | `deno task fix`                  | Auto-fix linting and formatting  |
+| Deploy      | `deno task deploy <server>`      | Deploy services                  |
+| Backup      | `deno task backup`               | Run backup system                |
+| SSH         | `deno task ssh <server>`         | SSH into server                  |
+| Ansible     | `deno task ansible <playbook>`   | Run Ansible playbooks            |
+| Test single | `deno test path/to/file.test.ts` | Run specific test                |
