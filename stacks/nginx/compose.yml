@@ -7,7 +7,7 @@ services:
   # Can be used for dashboards, landing pages, etc.
   # Set NGINX_HTML to specify the HTML directory path
   # Set NGINX_ROUTER_RULE to customize routing (default: Host(`<stack-name>.${DOMAIN}`))
-  # 
+  #
   nginx:
     container_name: ${NGINX_CONTAINER_NAME}
     image: nginx:alpine

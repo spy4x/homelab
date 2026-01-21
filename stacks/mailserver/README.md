@@ -35,12 +35,14 @@ Full-featured self-hosted email server based on [Docker Mailserver](https://dock
 The mailserver uses Let's Encrypt certificates obtained by Traefik. A helper service (`mail-cert-helper`) runs to trigger certificate generation for mail subdomains.
 
 **Certificate Management:**
+
 - Certificates are extracted from Traefik's `acme.json` during deployment (via `before.deploy.ts`)
 - **Automatic renewal**: Daily cronjob at 03:15 copies updated certificates from Traefik and restarts mailserver
 - Let's Encrypt certificates auto-renew every 60-90 days in Traefik, cronjob keeps mailserver in sync
 - Logs: `~/.local/share/homelab/apps/.logs/mailserver-cert-renewal.log`
 
 **Manual certificate update:**
+
 ```bash
 cd ~/homelab/apps
 VOLUMES_PATH=~/.local/share/homelab/apps/.volumes bash stacks/mailserver/extract-certs.sh mail.antonshubin.com

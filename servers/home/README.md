@@ -4,9 +4,9 @@ Primary services: media, automation, productivity.
 
 ## Services
 
-**Media** - [Jellyfin](docs/jellyfin.md), [Immich](docs/immich.md), [Audiobookshelf](docs/audiobookshelf.md), [MeTube](docs/metube.md), [Transmission](docs/transmission.md)  
-**Productivity** - [Vaultwarden](docs/vaultwarden.md), [FreshRSS](docs/freshrss.md), [FileBrowser](docs/filebrowser.md), [Open WebUI](docs/open-webui.md)  
-**Automation** - [Home Assistant](docs/home-assistant.md), [AdGuard Home](docs/adguard.md)  
+**Media** - [Jellyfin](docs/jellyfin.md), [Immich](docs/immich.md), [Audiobookshelf](docs/audiobookshelf.md), [MeTube](docs/metube.md), [Transmission](docs/transmission.md)\
+**Productivity** - [Vaultwarden](docs/vaultwarden.md), [FreshRSS](docs/freshrss.md), [FileBrowser](docs/filebrowser.md), [Open WebUI](docs/open-webui.md)\
+**Automation** - [Home Assistant](docs/home-assistant.md), [AdGuard Home](docs/adguard.md)\
 **Infrastructure** - [Traefik](../../sharedStacks/traefik/), [Gatus](../../sharedStacks/gatus/), [Syncthing](../../sharedStacks/syncthing/), [WireGuard](../../sharedStacks/wireguard/), [Watchtower](../../sharedStacks/watchtower/), [ntfy](../../sharedStacks/ntfy/), [Woodpecker CI](docs/woodpecker.md)
 
 ## Hardware

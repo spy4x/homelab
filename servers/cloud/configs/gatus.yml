@@ -287,4 +287,3 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
-

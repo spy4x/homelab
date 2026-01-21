@@ -4,7 +4,7 @@ import { BackupConfigProcessor } from "./src/config.ts"
 import { BackupOperations } from "./src/operations.ts"
 import { BackupReporter } from "./src/reporting.ts"
 import { BackupConfigState, BackupContext, BackupResult, BackupStatus } from "./src/types.ts"
-import { ensureDecryptedEnv, cleanupDecryptedEnv } from "./src/encryption.ts"
+import { cleanupDecryptedEnv, ensureDecryptedEnv } from "./src/encryption.ts"
 
 /**
  * Main backup orchestration class
@@ -71,10 +71,9 @@ class BackupRunner {
       if (failedCount > 0) {
         Deno.exit(1)
       }
-      
+
       // Clean up decrypted environment file
       await cleanupDecryptedEnv(serverPath)
-      
     } catch (error) {
       console.error("Fatal error during backup process:", error)
       Deno.exit(1)

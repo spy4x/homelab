@@ -4,8 +4,8 @@ Email infrastructure and external monitoring on Hetzner VPS.
 
 ## Services
 
-**Email** - [Mail Server](docs/mailserver.md), [Roundcube](docs/roundcube.md)  
-**Monitoring** - [Gatus](../../sharedStacks/gatus/), [Healthchecks](docs/healthchecks.md), [ntfy](../../sharedStacks/ntfy/)  
+**Email** - [Mail Server](docs/mailserver.md), [Roundcube](docs/roundcube.md)\
+**Monitoring** - [Gatus](../../sharedStacks/gatus/), [Healthchecks](docs/healthchecks.md), [ntfy](../../sharedStacks/ntfy/)\
 **Infrastructure** - [Traefik](../../sharedStacks/traefik/), [Syncthing](../../sharedStacks/syncthing/)
 
 ## Hardware
@@ -26,6 +26,7 @@ PTR     <VPS-IP>            mail.yourdomain.com
 ```
 
 Get DKIM key after deployment:
+
 ```bash
 docker exec mailserver cat /tmp/docker-mailserver/opendkim/keys/*/mail.txt
 ```

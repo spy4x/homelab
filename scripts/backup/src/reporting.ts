@@ -25,7 +25,11 @@ export class BackupReporter {
       }
 
       if (attempt < maxRetries) {
-        log(`ntfy notification attempt ${attempt}/${maxRetries} failed, retrying in ${retryDelayMs / 1000}s...`)
+        log(
+          `ntfy notification attempt ${attempt}/${maxRetries} failed, retrying in ${
+            retryDelayMs / 1000
+          }s...`,
+        )
         await new Promise((resolve) => setTimeout(resolve, retryDelayMs))
       }
     }
@@ -45,9 +49,7 @@ export class BackupReporter {
     try {
       const allSuccess = result.successCount === result.totalCount
       // Healthchecks.io pattern: append /fail for failures
-      const url = allSuccess
-        ? this.context.healthchecksUrl
-        : `${this.context.healthchecksUrl}/fail`
+      const url = allSuccess ? this.context.healthchecksUrl : `${this.context.healthchecksUrl}/fail`
 
       const response = await fetch(url, {
         method: "POST",
