@@ -16,10 +16,19 @@
     >
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
     >
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      >
+    </noscript>
     <style>
       :root {
         --primary: #4f46e5;
@@ -55,6 +64,13 @@
         color: var(--text);
         line-height: 1.6;
         background: var(--bg);
+        font-display: swap;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+        height: auto;
       }
 
       .container {
@@ -227,6 +243,19 @@
 
       .hero-image {
         position: relative;
+      }
+
+      .hero-badge {
+        position: absolute;
+        bottom: -20px;
+        right: -20px;
+        background: white;
+        padding: 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
 
       .hero-image img {
@@ -751,8 +780,8 @@
         height: 120px;
         border-radius: 50%;
         margin: 0 auto 20px;
-        background-size: cover;
-        background-position: center;
+        object-fit: cover;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.15);
       }
 
       .founder-card h3 {
@@ -1163,10 +1192,28 @@
           </div>
         </div>
         <div class="hero-image">
-          <img
-            src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=600&h=400&fit=crop"
-            alt="Team collaboration on web development"
-          >
+          <picture>
+            <source
+              media="(max-width: 768px)"
+              srcset="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=332&h=222&q=65"
+            >
+            <source
+              media="(max-width: 1200px)"
+              srcset="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=665&h=443&q=65"
+            >
+            <source
+              srcset="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=998&h=665&q=70"
+            >
+            <img
+              src="https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=665&h=443&q=65"
+              alt="Team collaboration on web development"
+              width="665"
+              height="443"
+              loading="eager"
+              decoding="async"
+              fetchpriority="high"
+            >
+          </picture>
           <div class="hero-badge">
             <div class="badge-icon">✓</div>
             <div class="badge-text">
@@ -1744,7 +1791,15 @@
         </div>
         <div class="founders-grid">
           <div class="founder-card">
-            <div class="founder-img" style="background-image: url('assets/anton.webp')"></div>
+            <img
+              class="founder-img"
+              src="assets/anton.webp"
+              alt="Anton Shubin"
+              width="120"
+              height="120"
+              loading="lazy"
+              decoding="async"
+            >
             <h3>Anton Shubin</h3>
             <div class="founder-role">CEO & Technical Lead</div>
             <div class="founder-bio">
@@ -1790,7 +1845,15 @@
             </div>
           </div>
           <div class="founder-card">
-            <div class="founder-img" style="background-image: url('assets/michael.webp')"></div>
+            <img
+              class="founder-img"
+              src="assets/michael.webp"
+              alt="Michael Distel"
+              width="120"
+              height="120"
+              loading="lazy"
+              decoding="async"
+            >
             <h3>Michael Distel</h3>
             <div class="founder-role">Director & Business Strategy</div>
             <div class="founder-bio">

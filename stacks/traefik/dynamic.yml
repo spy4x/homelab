@@ -1,0 +1,22 @@
+http:
+  middlewares:
+    compression:
+      compress:
+        excludedContentTypes:
+          - text/event-stream
+    security-headers:
+      headers:
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: strict-origin-when-cross-origin
+        stsSeconds: 15552000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        permissionsPolicy: >-
+          geolocation=(), microphone=(), camera=(), payment=(), usb=(),
+          interest-cohort=(), browsing-topics=(), accelerometer=(),
+          gyroscope=(), magnetometer=(), clipboard-write=()
+        customResponseHeaders:
+          Cross-Origin-Opener-Policy: same-origin
+          Cross-Origin-Resource-Policy: same-site
+          Cross-Origin-Embedder-Policy: require-corp

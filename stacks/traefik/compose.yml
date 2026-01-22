@@ -24,15 +24,21 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+      - "--providers.file.watch=true"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.http3"
+      - "--entrypoints.websecure.http3.advertisedport=443"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
       - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.transport.lifecycle.graceTimeOut=30s"
       # Timeout settings to allow large file uploads to Immich (up to 600s)
       - --entrypoints.websecure.transport.respondingTimeouts.readTimeout=600s
       - --entrypoints.websecure.transport.respondingTimeouts.idleTimeout=600s
       - --entrypoints.websecure.transport.respondingTimeouts.writeTimeout=600s
+      - "--entrypoints.websecure.http.middlewares=security-headers@file,compression@file"
       # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.httpchallenge=true" # Use HTTP-01 challenge
       - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web" # Use 'web' entrypoint (port 80) for the challenge
@@ -42,9 +48,11 @@ services:
     ports:
       - 443:443
       - 80:80
+      - 443:443/udp
     volumes:
       - ${VOLUMES_PATH}/traefik/letsencrypt:/letsencrypt:z
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
     networks:
       - proxy
       - default
