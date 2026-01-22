@@ -4,7 +4,6 @@ import { BackupConfigProcessor } from "./src/config.ts"
 import { BackupOperations } from "./src/operations.ts"
 import { BackupReporter } from "./src/reporting.ts"
 import { BackupConfigState, BackupContext, BackupResult, BackupStatus } from "./src/types.ts"
-import { cleanupDecryptedEnv, ensureDecryptedEnv } from "./src/encryption.ts"
 
 /**
  * Main backup orchestration class
@@ -28,14 +27,6 @@ class BackupRunner {
     log(`[${new Date().toISOString()}] Starting backup process for: ${this.context.serverName}`)
 
     try {
-      // Ensure environment file is decrypted if encrypted
-      const serverPath = absPath("servers", this.context.serverName)
-      if (!await ensureDecryptedEnv(serverPath)) {
-        console.error("No environment file found (neither .env nor .env.age)")
-        await this.reporter.sendNotification(this.createEmptyResult(0))
-        Deno.exit(1)
-      }
-
       // Load and validate configurations
       const backups = await this.loadConfigurations()
 
@@ -71,9 +62,6 @@ class BackupRunner {
       if (failedCount > 0) {
         Deno.exit(1)
       }
-
-      // Clean up decrypted environment file
-      await cleanupDecryptedEnv(serverPath)
     } catch (error) {
       console.error("Fatal error during backup process:", error)
       Deno.exit(1)

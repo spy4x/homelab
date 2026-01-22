@@ -7,13 +7,20 @@ export class BackupReporter {
   /**
    * Sends backup notifications via healthchecks and ntfy
    * Healthchecks is used for "dead man's switch" monitoring
-   * ntfy is used for direct notifications
+   * ntfy is used for direct notifications (failures only)
    */
   async sendNotification(result: BackupResult): Promise<void> {
     // Send healthchecks ping first (if configured)
     await this.sendHealthchecksPing(result)
 
-    // Then send ntfy notification with retry logic
+    // Only send ntfy notification for failures
+    const allSuccess = result.successCount === result.totalCount
+    if (allSuccess) {
+      log("All backups successful, skipping ntfy notification")
+      return
+    }
+
+    // Send ntfy notification with retry logic for failures
     const maxRetries = 5
     const retryDelayMs = 3000 // 3 seconds between retries
 
@@ -67,23 +74,49 @@ export class BackupReporter {
   }
 
   /**
-   * Builds a summary message for healthchecks ping body
+   * Builds a detailed message for healthchecks ping body
+   * Includes all backup statuses, sizes, durations, and full error details
    */
   private buildHealthchecksMessage(result: BackupResult): string {
-    const { successCount, totalCount, totalSizeGB, durationMs } = result
+    const { backups, successCount, totalCount, totalSizeGB, durationMs } = result
+    const successRate = totalCount > 0 ? ((successCount / totalCount) * 100).toFixed(0) : "0"
     const durationMinutes = Math.floor(durationMs / 60000)
     const durationSeconds = Math.floor((durationMs % 60000) / 1000)
+    const durationText = durationMinutes > 0
+      ? `${durationMinutes}m ${durationSeconds}s`
+      : `${durationSeconds}s`
 
+    // Header with summary
     let message = `Server: ${this.context.serverName}\n`
-    message += `Success: ${successCount}/${totalCount}\n`
-    message += `Size: ${totalSizeGB.toFixed(2)} GB\n`
-    message += `Duration: ${durationMinutes}m ${durationSeconds}s\n`
+    message += `Success: ${successCount}/${totalCount} (${successRate}%)\n`
+    message += `Total Size: ${totalSizeGB.toFixed(2)} GB\n`
+    message += `Duration: ${durationText}\n`
+    message += "\n"
 
-    const failedBackups = result.backups.filter((b) => b.status === BackupStatus.ERROR)
+    // Detailed list of all backups sorted by size
+    const sortedBackups = this.sortBackupsBySize(backups, totalSizeGB)
+    message += "All Backups:\n"
+    message += "Status | Name                 | %     | Size      | Time\n"
+    message += "-------|----------------------|-------|-----------|-------\n"
+
+    for (const backup of sortedBackups) {
+      const statusSymbol = backup.status === BackupStatus.SUCCESS ? "OK" : "FAIL"
+      const name = backup.name.padEnd(20, " ").substring(0, 20)
+      const { percentage, size } = this.formatBackupSize(backup, totalSizeGB)
+      const duration = this.formatDuration(backup.durationMs)
+      message += `${statusSymbol.padEnd(6)} | ${name} | ${percentage} | ${
+        size.padEnd(9)
+      } | ${duration}\n`
+    }
+
+    // Detailed error section if any failures
+    const failedBackups = backups.filter((b) => b.status === BackupStatus.ERROR)
     if (failedBackups.length > 0) {
-      message += "\nFailed:\n"
+      message += "\nError Details:\n"
       for (const backup of failedBackups) {
-        message += `- ${backup.name}: ${backup.error || "unknown error"}\n`
+        const errorStep = backup.errorAtStep ? `[${backup.errorAtStep.toUpperCase()}]` : ""
+        const errorMsg = backup.error || "unknown error"
+        message += `- ${backup.name}: ${errorStep} ${errorMsg}\n`
       }
     }
 
