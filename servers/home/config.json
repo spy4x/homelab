@@ -20,6 +20,7 @@
     { "name": "transmission" },
     { "name": "jellyfin" },
     { "name": "vaultwarden" },
+    { "name": "playwright" },
     { "name": "open-webui" },
     { "name": "audiobookshelf" },
     { "name": "metube" },

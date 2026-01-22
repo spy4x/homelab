@@ -1,0 +1,18 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  playwright:
+    container_name: playwright
+    image: mcr.microsoft.com/playwright:v1.57.0-noble
+    restart: unless-stopped
+    command: npx -y playwright@1.57.0 run-server --port 3000 --host 0.0.0.0
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+    networks:
+      - proxy
+      - default

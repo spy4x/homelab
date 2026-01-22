@@ -8,6 +8,9 @@ services:
     image: ghcr.io/open-webui/open-webui:latest
     # Note: Cannot run as non-root - needs to write to /app directory
     restart: unless-stopped
+    environment:
+      - WEB_LOADER_ENGINE=playwright
+      - PLAYWRIGHT_WS_URL=ws://playwright:3000
     volumes:
       - ${VOLUMES_PATH}/open-webui:/app/backend/data:z
     deploy:
