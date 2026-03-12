@@ -110,6 +110,34 @@ docker exec -it mailserver setup email update user@domain.com
 docker exec -it mailserver setup email del user@domain.com
 ```
 
+## Email Forwarding & Aliases
+
+Email aliases and catch-all forwarding are configured in `servers/cloud/configs/postfix-virtual.cf`.
+
+**Current configuration:**
+
+- Catch-all for `@neatsoft.dev` → `anton@neatsoft.dev`
+- Catch-all for `@antonshubin.com` → `anton@antonshubin.com`
+- RFC 2142 required aliases (postmaster, abuse, hostmaster, webmaster)
+- Common aliases (admin, info, support, hello)
+
+**To update aliases:**
+
+1. Edit `servers/cloud/configs/postfix-virtual.cf` in source repo
+2. Copy to server: `scp servers/cloud/configs/postfix-virtual.cf cloudlab:~/cloudlab/apps/.volumes/mailserver/config/`
+3. Rebuild database: `ssh cloudlab 'docker exec mailserver postmap /tmp/docker-mailserver/postfix-virtual.cf'`
+4. Reload Postfix: `ssh cloudlab 'docker exec mailserver postfix reload'`
+
+**Test forwarding:**
+
+```bash
+# Test catch-all forwarding
+echo "Test" | mail -s "Test subject" randomtest@neatsoft.dev
+
+# Check mail logs
+ssh cloudlab 'docker logs mailserver --tail 50 | grep randomtest'
+```
+
 ## Rspamd Web UI
 
 Access spam filter management at: `https://rspamd.antonshubin.com`
