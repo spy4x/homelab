@@ -14,14 +14,19 @@ services:
       - ${PATH_MEDIA}:/media:z
       - ${PATH_VIDEOS}:/videos:z
       - ${PATH_MUSIC}:/music:z
-    devices:
-      - /dev/dri:/dev/dri # for GPU transcoding
     restart: unless-stopped
     deploy:
       resources:
         limits:
           memory: 8192M
           cpus: "3"
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities:
+                - gpu
+                - video
     security_opt:
       - no-new-privileges:true
     networks:

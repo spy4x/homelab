@@ -36,7 +36,7 @@ See [Jellyfin naming guide](https://jellyfin.org/docs/general/server/media/shows
 
 ## Hardware Acceleration
 
-Configured for Intel QuickSync. See [Jellyfin HWA docs](https://jellyfin.org/docs/general/administration/hardware-acceleration/).
+Configured for NVIDIA NVENC/NVDEC (RTX 3070). See [Jellyfin HWA docs](https://jellyfin.org/docs/general/administration/hardware-acceleration/).
 
 ## Resources
 
