@@ -8,6 +8,7 @@
     { "name": "mailserver" },
     { "name": "roundcube" },
     { "name": "healthchecks" },
+    { "name": "mail-ai" },
     {
       "name": "nginx",
       "deployAs": "neatsoft-landing",
