@@ -1,0 +1,37 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  upwork-triage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: upwork-triage
+    environment:
+      - UPWORK_TRIAGE_DEEPSEEK_API_KEY=${UPWORK_TRIAGE_DEEPSEEK_API_KEY}
+      - UPWORK_TRIAGE_TELEGRAM_BOT_TOKEN=${UPWORK_TRIAGE_TELEGRAM_BOT_TOKEN}
+      - UPWORK_TRIAGE_TELEGRAM_CHAT_ID=${UPWORK_TRIAGE_TELEGRAM_CHAT_ID}
+      - UPWORK_TRIAGE_WEBHOOK_AUTH_TOKEN=${UPWORK_TRIAGE_WEBHOOK_AUTH_TOKEN}
+      - PORT=8000
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.upwork-triage.loadbalancer.server.port=8000"
+      - "traefik.http.routers.upwork-triage.rule=Host(`upwork-triage.${DOMAIN}`)"
+      - "traefik.http.routers.upwork-triage.entrypoints=websecure"
+      - "traefik.http.routers.upwork-triage.tls=true"
+      - "traefik.http.routers.upwork-triage.tls.certresolver=myresolver"

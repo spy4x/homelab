@@ -1,6 +1,7 @@
 {
   "version": "5",
   "specifiers": {
+    "jsr:@hono/hono@4": "4.12.21",
     "jsr:@std/assert@^1.0.17": "1.0.17",
     "jsr:@std/dotenv@*": "0.225.5",
     "jsr:@std/fs@^1.0.21": "1.0.21",
@@ -12,6 +13,9 @@
     "npm:yaml@*": "2.8.2"
   },
   "jsr": {
+    "@hono/hono@4.12.21": {
+      "integrity": "27d39e6c93e123f206012b8ab3af70da887fe1da923ca945ec87d4b5f9ef5c94"
+    },
     "@std/assert@1.0.17": {
       "integrity": "df5ebfffe77c03b3fa1401e11c762cc8f603d51021c56c4d15a8c7ab45e90dbe",
       "dependencies": [

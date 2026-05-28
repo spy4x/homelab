@@ -9,6 +9,7 @@
     { "name": "roundcube" },
     { "name": "healthchecks" },
     { "name": "mail-ai" },
+    { "name": "upwork-triage" },
     {
       "name": "nginx",
       "deployAs": "neatsoft-landing",
