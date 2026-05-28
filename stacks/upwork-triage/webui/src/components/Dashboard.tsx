@@ -1,6 +1,8 @@
 import type { JobRecord } from "../types.ts"
 import { Charts } from "./Charts.tsx"
 
+// KPI card component — keeps Dashboard.tsx clean
+
 interface Props {
   jobs: JobRecord[]
 }

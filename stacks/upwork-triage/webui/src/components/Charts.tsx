@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "preact/hooks"
-import Chart from "chart.js/auto"
+import { useEffect, useRef } from "npm:preact/hooks"
+import Chart from "npm:chart.js/auto"
 import type { JobRecord } from "../types.ts"
 
 interface Props {

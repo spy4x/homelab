@@ -28,6 +28,12 @@ function uid(): string {
   return crypto.randomUUID().slice(0, 8)
 }
 
+function normalizeSkills(v: unknown): string[] | null {
+  if (Array.isArray(v)) return v.filter((s): s is string => typeof s === "string")
+  if (typeof v === "string") return v.split(",").map((s) => s.trim()).filter(Boolean)
+  return null
+}
+
 async function readJobs(): Promise<JobRecord[]> {
   try {
     const raw = await Deno.readTextFile(dataFile)
@@ -149,7 +155,7 @@ async function handleBatch(c: Context, data: VollnaWebhookPayload) {
       title: p.title,
       description: p.description,
       url: p.url,
-      skills: (p.skills as string[] | undefined) ?? undefined,
+      skills: normalizeSkills(p.skills) ?? undefined,
       budget: (p.budget as string | undefined) ?? undefined,
     }
     processAndStore(payload, filterName)
@@ -170,7 +176,7 @@ function processAndStore(payload: VollnaPayload, filterName: string | undefined)
       url: payload.url,
       description: payload.description,
       budget: payload.budget ?? null,
-      skills: payload.skills ?? null,
+      skills: normalizeSkills(payload.skills),
       filterName,
       verdict: result.verdict,
       reason: result.reason,
@@ -223,44 +229,24 @@ app.get("/api/jobs", async (c) => {
   })
 })
 
-app.get("/api/jobs/:id", async (c) => {
-  const id = c.req.param("id")
-  const jobs = await readJobs()
-  const job = jobs.find((j) => j.id === id)
-  if (!job) return c.json({ error: "Not found" }, 404)
-  return c.json(job)
-})
-
-// ── WebUI static files ──
+// ── WebUI static files (Deno-built, served from webui/dist/) ──
 
 const WEBUI_ROOT = `${Deno.cwd()}/webui`
-const MIME_TYPES: Record<string, string> = {
+const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".png": "image/png",
-  ".ico": "image/x-icon",
-  ".json": "application/json",
-  ".woff2": "font/woff2",
 }
 
-app.get("/", async (c) => {
+app.get("*", async (c) => {
+  const path = c.req.path === "/" ? "/index.html" : c.req.path
+  const full = `${WEBUI_ROOT}${path}`
   try {
-    const content = await Deno.readTextFile(`${WEBUI_ROOT}/index.html`)
-    return c.html(content)
-  } catch {
-    return c.text("WebUI not built. Run: cd webui && npm run build", 501)
-  }
-})
-
-app.get("/assets/*", async (c) => {
-  const filePath = `${WEBUI_ROOT}${c.req.path}`
-  try {
-    const content = await Deno.readFile(filePath)
-    const ext = filePath.substring(filePath.lastIndexOf("."))
-    const contentType = MIME_TYPES[ext] || "application/octet-stream"
-    return new Response(content, { headers: { "Content-Type": contentType } })
+    const ext = full.substring(full.lastIndexOf("."))
+    const body = await Deno.readFile(full)
+    return new Response(body, {
+      headers: { "Content-Type": MIME[ext] || "application/octet-stream" },
+    })
   } catch {
     return c.text("Not found", 404)
   }

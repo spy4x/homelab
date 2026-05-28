@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks"
+import { useState } from "npm:preact/hooks"
 import type { JobRecord } from "../types.ts"
 
 interface Props {

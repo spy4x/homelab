@@ -1,10 +1,9 @@
-# ── Stage 1: Build webui ──
-FROM node:22-alpine AS webui
-WORKDIR /app
-COPY webui/package.json webui/package-lock.json ./
-RUN npm ci
+# ── Stage 1: Build webui (Deno-native, no Node.js) ──
+FROM denoland/deno:alpine AS webui
+WORKDIR /app/webui
 COPY webui/ ./
-RUN npm run build
+# cache first for layer caching, then build
+RUN deno cache +build.ts && deno run -A +build.ts
 
 # ── Stage 2: Deno backend ──
 FROM denoland/deno:alpine
@@ -13,6 +12,6 @@ COPY deno.jsonc ./
 COPY types.ts evaluator.ts notifier.ts +main.ts ./
 RUN deno cache +main.ts
 COPY prompt.txt ./
-COPY --from=webui /app/dist ./webui
+COPY --from=webui /app/webui/dist ./webui
 EXPOSE 8000
 CMD ["deno", "run", "--allow-net", "--allow-env", "--allow-read", "--allow-write", "+main.ts"]

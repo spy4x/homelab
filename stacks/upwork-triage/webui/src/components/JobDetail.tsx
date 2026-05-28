@@ -59,7 +59,7 @@ export function JobDetail({ job, onClose }: Props) {
           </div>
 
           {/* Skills */}
-          {job.skills && job.skills.length > 0 && (
+          {Array.isArray(job.skills) && job.skills.length > 0 && (
             <div>
               <span class="text-gray-500 text-xs uppercase tracking-wider block mb-2">Skills</span>
               <div class="flex flex-wrap gap-1.5">

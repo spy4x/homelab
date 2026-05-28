@@ -1,9 +1,19 @@
-import { useEffect, useState } from "preact/hooks"
+import { useEffect, useState } from "npm:preact/hooks"
 import { fetchJobs } from "./api.ts"
 import type { JobRecord } from "./types.ts"
 import { Dashboard } from "./components/Dashboard.tsx"
 import { JobTable } from "./components/JobTable.tsx"
 import { JobDetail } from "./components/JobDetail.tsx"
+
+function getIdFromUrl(): string | null {
+  const m = window.location.pathname.match(/^\/jobs\/([a-z0-9]+)$/i)
+  return m?.[1] ?? null
+}
+
+function pushUrl(id: string | null): void {
+  const url = id ? `/jobs/${id}` : "/"
+  window.history.pushState({ jobId: id }, "", url)
+}
 
 export function App() {
   const [jobs, setJobs] = useState<JobRecord[]>([])
@@ -11,19 +21,54 @@ export function App() {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<JobRecord | null>(null)
 
+  const load = () => {
+    setLoading(true)
+    setError(null)
+    fetchJobs().then((data) => {
+      setJobs(data)
+      // restore job from URL if present
+      const id = getIdFromUrl()
+      if (id) {
+        const found = data.find((j) => j.id === id)
+        if (found) setSelected(found)
+      }
+    }).catch((e) => setError(e.message)).finally(() => setLoading(false))
+  }
+
+  // Initial load
+  useEffect(() => { load() }, [])
+
+  // Handle browser back/forward
   useEffect(() => {
-    fetchJobs()
-      .then(setJobs)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [])
+    const cb = () => {
+      const id = getIdFromUrl()
+      if (id) {
+        const found = jobs.find((j) => j.id === id)
+        if (found) setSelected(found)
+        else setSelected(null)
+      } else {
+        setSelected(null)
+      }
+    }
+    globalThis.addEventListener("popstate", cb)
+    return () => globalThis.removeEventListener("popstate", cb)
+  }, [jobs])
+
+  const selectJob = (job: JobRecord) => {
+    setSelected(job)
+    pushUrl(job.id)
+  }
+
+  const closeJob = () => {
+    setSelected(null)
+    pushUrl(null)
+  }
 
   const yesCount = jobs.filter((j) => j.verdict === "Yes").length
-  const noCount = jobs.filter((j) => j.verdict === "No").length
+  const noCount = jobs.length - yesCount
 
   return (
     <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      {/* Header */}
       <header class="flex items-center justify-between">
         <div>
           <h1 class="text-2xl font-bold text-white flex items-center gap-2">
@@ -32,12 +77,12 @@ export function App() {
           <p class="text-sm text-gray-500 mt-1">
             {loading
               ? "Loading…"
-              : `${jobs.length} jobs evaluated · ${yesCount} accepted · ${noCount} filtered`}
+              : `${jobs.length} jobs · ${yesCount} accepted · ${noCount} filtered`}
           </p>
         </div>
         {!loading && (
           <button
-            onClick={() => { setLoading(true); setError(null); fetchJobs().then(setJobs).catch((e) => setError(e.message)).finally(() => setLoading(false)) }}
+            onClick={load}
             class="text-xs text-gray-500 hover:text-white px-3 py-1.5 rounded border border-gray-800 hover:border-gray-600 transition-colors"
           >
             Refresh
@@ -46,9 +91,7 @@ export function App() {
       </header>
 
       {error && (
-        <div class="bg-red-900/30 border border-red-800 rounded-lg p-4 text-red-300 text-sm">
-          {error}
-        </div>
+        <div class="bg-red-900/30 border border-red-800 rounded-lg p-4 text-red-300 text-sm">{error}</div>
       )}
 
       {loading && (
@@ -65,11 +108,11 @@ export function App() {
       {!loading && !error && jobs.length > 0 && (
         <>
           <Dashboard jobs={jobs} />
-          <JobTable jobs={jobs} onSelect={setSelected} />
+          <JobTable jobs={jobs} onSelect={selectJob} />
         </>
       )}
 
-      {selected && <JobDetail job={selected} onClose={() => setSelected(null)} />}
+      {selected && <JobDetail job={selected} onClose={closeJob} />}
     </div>
   )
 }
