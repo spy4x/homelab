@@ -1,4 +1,4 @@
-import { useState } from "npm:preact/hooks"
+import { useEffect, useState } from "npm:preact/hooks"
 import type { JobRecord } from "../types.ts"
 
 interface Props {
@@ -31,6 +31,14 @@ async function clip(text: string): Promise<boolean> {
 export function JobDetail({ job, onClose }: Props) {
   const [copyMsg, setCopyMsg] = useState<string | null>(null)
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [onClose])
+
   const copyHook = async () => {
     const ok = await clip(job.applicationHook)
     setCopyMsg(ok ? "Copied!" : "Copy failed")
@@ -39,13 +47,23 @@ export function JobDetail({ job, onClose }: Props) {
 
   const openJob = () => window.open(job.url, "_blank", "noopener")
 
-  const badge =
-    job.verdict === "Yes"
-      ? <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-green-900/40 text-green-400 border border-green-800">&#10003; Accepted</span>
-      : <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-red-900/40 text-red-400 border border-red-800">&#10007; Filtered</span>
+  const badge = job.verdict === "Yes"
+    ? (
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-green-900/40 text-green-400 border border-green-800">
+        &#10003; Accepted
+      </span>
+    )
+    : (
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-semibold bg-red-900/40 text-red-400 border border-red-800">
+        &#10007; Filtered
+      </span>
+    )
 
   return (
-    <div class="fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+    <div
+      class="fixed inset-0 z-50 flex items-start justify-center pt-10 pb-10 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
         class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl mx-4"
         onClick={(e) => e.stopPropagation()}
@@ -56,7 +74,12 @@ export function JobDetail({ job, onClose }: Props) {
             <h2 class="text-lg font-bold text-white truncate">{job.title}</h2>
             <div class="flex items-center gap-3 mt-2">{badge}</div>
           </div>
-          <button onClick={onClose} class="text-gray-600 hover:text-white shrink-0 text-xl leading-none">&times;</button>
+          <button
+            onClick={onClose}
+            class="text-gray-600 hover:text-white shrink-0 text-xl leading-none"
+          >
+            &times;
+          </button>
         </div>
 
         {/* Body */}
@@ -75,7 +98,9 @@ export function JobDetail({ job, onClose }: Props) {
             </div>
             <div>
               <span class="text-gray-500 text-xs uppercase tracking-wider">Notified</span>
-              <p class={job.notified ? "text-green-400" : "text-gray-500"}>{job.notified ? "Yes" : "No"}</p>
+              <p class={job.notified ? "text-green-400" : "text-gray-500"}>
+                {job.notified ? "Yes" : "No"}
+              </p>
             </div>
             {job.filterName && (
               <div>
@@ -91,7 +116,9 @@ export function JobDetail({ job, onClose }: Props) {
               <span class="text-gray-500 text-xs uppercase tracking-wider block mb-2">Skills</span>
               <div class="flex flex-wrap gap-1.5">
                 {job.skills.map((s) => (
-                  <span class="px-2.5 py-0.5 bg-gray-800 text-gray-300 rounded-md text-xs border border-gray-700">{s}</span>
+                  <span class="px-2.5 py-0.5 bg-gray-800 text-gray-300 rounded-md text-xs border border-gray-700">
+                    {s}
+                  </span>
                 ))}
               </div>
             </div>
@@ -99,7 +126,9 @@ export function JobDetail({ job, onClose }: Props) {
 
           {/* Reason */}
           <div>
-            <span class="text-gray-500 text-xs uppercase tracking-wider block mb-1">Evaluation</span>
+            <span class="text-gray-500 text-xs uppercase tracking-wider block mb-1">
+              Evaluation
+            </span>
             <p class="text-gray-300 text-sm leading-relaxed">{job.reason}</p>
           </div>
 
@@ -129,7 +158,9 @@ export function JobDetail({ job, onClose }: Props) {
 
           {/* Description */}
           <div>
-            <span class="text-gray-500 text-xs uppercase tracking-wider block mb-1">Description</span>
+            <span class="text-gray-500 text-xs uppercase tracking-wider block mb-1">
+              Description
+            </span>
             <p class="text-gray-500 text-sm leading-relaxed line-clamp-6">{job.description}</p>
           </div>
         </div>

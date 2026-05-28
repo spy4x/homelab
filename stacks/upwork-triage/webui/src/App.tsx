@@ -36,7 +36,9 @@ export function App() {
   }
 
   // Initial load
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   // Handle browser back/forward
   useEffect(() => {
@@ -91,12 +93,12 @@ export function App() {
       </header>
 
       {error && (
-        <div class="bg-red-900/30 border border-red-800 rounded-lg p-4 text-red-300 text-sm">{error}</div>
+        <div class="bg-red-900/30 border border-red-800 rounded-lg p-4 text-red-300 text-sm">
+          {error}
+        </div>
       )}
 
-      {loading && (
-        <div class="text-center py-20 text-gray-600 text-sm">Loading jobs…</div>
-      )}
+      {loading && <div class="text-center py-20 text-gray-600 text-sm">Loading jobs…</div>}
 
       {!loading && !error && jobs.length === 0 && (
         <div class="text-center py-20 text-gray-600">

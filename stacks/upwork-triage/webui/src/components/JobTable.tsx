@@ -23,13 +23,27 @@ export function JobTable({ jobs, onSelect }: Props) {
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   // Reset to page 1 when filter/search changes
-  const onChangeFilter = (v: typeof filter) => { setFilter(v); setPage(1) }
-  const onChangeSearch = (v: string) => { setSearch(v); setPage(1) }
+  const onChangeFilter = (v: typeof filter) => {
+    setFilter(v)
+    setPage(1)
+  }
+  const onChangeSearch = (v: string) => {
+    setSearch(v)
+    setPage(1)
+  }
 
   const badge = (verdict: "Yes" | "No") =>
     verdict === "Yes"
-      ? <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-900/50 text-green-400 border border-green-800">&#10003; Yes</span>
-      : <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-900/50 text-red-400 border border-red-800">&#10007; No</span>
+      ? (
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-900/50 text-green-400 border border-green-800">
+          &#10003; Yes
+        </span>
+      )
+      : (
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-900/50 text-red-400 border border-red-800">
+          &#10007; No
+        </span>
+      )
 
   return (
     <div class="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
@@ -80,7 +94,12 @@ export function JobTable({ jobs, onSelect }: Props) {
                 <td class="px-4 py-3 text-gray-300 max-w-[280px] truncate">{job.title}</td>
                 <td class="px-4 py-3 text-gray-500 hidden sm:table-cell">{job.budget ?? "—"}</td>
                 <td class="px-4 py-3 text-gray-500 text-xs hidden md:table-cell whitespace-nowrap">
-                  {new Date(job.processedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                  {new Date(job.processedAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </td>
                 <td class="px-4 py-3 hidden lg:table-cell">
                   {job.notified

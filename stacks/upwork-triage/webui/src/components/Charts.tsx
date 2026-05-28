@@ -47,67 +47,93 @@ export function Charts({ jobs }: Props) {
     const charts: Chart[] = []
 
     if (pieRef.current) {
-      charts.push(new Chart(pieRef.current, {
-        type: "doughnut",
-        data: {
-          labels: ["Accepted", "Filtered"],
-          datasets: [{
-            data: [yes, no],
-            backgroundColor: ["#22c55e", "#ef4444"],
-            borderWidth: 0,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: "bottom", labels: { color: "#9ca3af" } },
+      charts.push(
+        new Chart(pieRef.current, {
+          type: "doughnut",
+          data: {
+            labels: ["Accepted", "Filtered"],
+            datasets: [{
+              data: [yes, no],
+              backgroundColor: ["#22c55e", "#ef4444"],
+              borderWidth: 0,
+            }],
           },
-        },
-      }))
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "bottom", labels: { color: "#9ca3af" } },
+            },
+          },
+        }),
+      )
     }
 
     const weekData = getWeekdayStats(jobs)
     if (weekRef.current) {
-      charts.push(new Chart(weekRef.current, {
-        type: "bar",
-        data: {
-          labels: weekData.map((d) => d.day),
-          datasets: [
-            { label: "Accepted", data: weekData.map((d) => d.yes), backgroundColor: "#22c55e", borderRadius: 4 },
-            { label: "Filtered", data: weekData.map((d) => d.no), backgroundColor: "#ef4444", borderRadius: 4 },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: "bottom", labels: { color: "#9ca3af" } } },
-          scales: {
-            x: { ticks: { color: "#6b7280" }, grid: { display: false } },
-            y: { ticks: { color: "#6b7280" }, grid: { color: "#1f2937" } },
+      charts.push(
+        new Chart(weekRef.current, {
+          type: "bar",
+          data: {
+            labels: weekData.map((d) => d.day),
+            datasets: [
+              {
+                label: "Accepted",
+                data: weekData.map((d) => d.yes),
+                backgroundColor: "#22c55e",
+                borderRadius: 4,
+              },
+              {
+                label: "Filtered",
+                data: weekData.map((d) => d.no),
+                backgroundColor: "#ef4444",
+                borderRadius: 4,
+              },
+            ],
           },
-        },
-      }))
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom", labels: { color: "#9ca3af" } } },
+            scales: {
+              x: { ticks: { color: "#6b7280" }, grid: { display: false } },
+              y: { ticks: { color: "#6b7280" }, grid: { color: "#1f2937" } },
+            },
+          },
+        }),
+      )
     }
 
     const dailyData = getDailyStats(jobs)
     if (dailyRef.current) {
-      charts.push(new Chart(dailyRef.current, {
-        type: "bar",
-        data: {
-          labels: dailyData.map((d) => d[0].slice(5)),
-          datasets: [
-            { label: "Accepted", data: dailyData.map((d) => d[1].yes), backgroundColor: "#22c55e", borderRadius: 4 },
-            { label: "Filtered", data: dailyData.map((d) => d[1].no), backgroundColor: "#ef4444", borderRadius: 4 },
-          ],
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: "bottom", labels: { color: "#9ca3af" } } },
-          scales: {
-            x: { ticks: { color: "#6b7280" }, grid: { display: false } },
-            y: { ticks: { color: "#6b7280" }, grid: { color: "#1f2937" } },
+      charts.push(
+        new Chart(dailyRef.current, {
+          type: "bar",
+          data: {
+            labels: dailyData.map((d) => d[0].slice(5)),
+            datasets: [
+              {
+                label: "Accepted",
+                data: dailyData.map((d) => d[1].yes),
+                backgroundColor: "#22c55e",
+                borderRadius: 4,
+              },
+              {
+                label: "Filtered",
+                data: dailyData.map((d) => d[1].no),
+                backgroundColor: "#ef4444",
+                borderRadius: 4,
+              },
+            ],
           },
-        },
-      }))
+          options: {
+            responsive: true,
+            plugins: { legend: { position: "bottom", labels: { color: "#9ca3af" } } },
+            scales: {
+              x: { ticks: { color: "#6b7280" }, grid: { display: false } },
+              y: { ticks: { color: "#6b7280" }, grid: { color: "#1f2937" } },
+            },
+          },
+        }),
+      )
     }
 
     return () => charts.forEach((c) => c.destroy())
@@ -118,15 +144,21 @@ export function Charts({ jobs }: Props) {
   return (
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
-        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Verdict Split</h3>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Verdict Split
+        </h3>
         <canvas ref={pieRef} />
       </div>
       <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
-        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">By Weekday</h3>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          By Weekday
+        </h3>
         <canvas ref={weekRef} />
       </div>
       <div class="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
-        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Last 14 Days</h3>
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">
+          Last 14 Days
+        </h3>
         <canvas ref={dailyRef} />
       </div>
     </div>
