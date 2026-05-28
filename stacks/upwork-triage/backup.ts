@@ -2,9 +2,9 @@ import { BackupConfig } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "upwork-triage",
-  sourcePaths: "default",
+  sourcePaths: ["${VOLUMES_PATH}/upwork-triage/data/jobs.json"],
   containers: {
-    stop: "default",
+    stop: ["upwork-triage"],
   },
 }
 

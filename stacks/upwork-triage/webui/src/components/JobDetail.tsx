@@ -1,3 +1,4 @@
+import { useState } from "npm:preact/hooks"
 import type { JobRecord } from "../types.ts"
 
 interface Props {
@@ -5,9 +6,35 @@ interface Props {
   onClose: () => void
 }
 
+async function clip(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch {
+    // Fallback for Brave and other strict browsers
+    try {
+      const ta = document.createElement("textarea")
+      ta.value = text
+      ta.style.position = "fixed"
+      ta.style.opacity = "0"
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand("copy")
+      document.body.removeChild(ta)
+      return ok
+    } catch {
+      return false
+    }
+  }
+}
+
 export function JobDetail({ job, onClose }: Props) {
-  const copyHook = () => {
-    navigator.clipboard.writeText(job.applicationHook)
+  const [copyMsg, setCopyMsg] = useState<string | null>(null)
+
+  const copyHook = async () => {
+    const ok = await clip(job.applicationHook)
+    setCopyMsg(ok ? "Copied!" : "Copy failed")
+    setTimeout(() => setCopyMsg(null), 2000)
   }
 
   const openJob = () => window.open(job.url, "_blank", "noopener")
@@ -83,9 +110,15 @@ export function JobDetail({ job, onClose }: Props) {
                 <span class="text-gray-500 text-xs uppercase tracking-wider">Proposal Hook</span>
                 <button
                   onClick={copyHook}
-                  class="text-xs text-purple-400 hover:text-purple-300 transition-colors px-2 py-0.5 rounded border border-purple-800/50 hover:border-purple-600"
+                  class={`text-xs transition-colors px-2 py-0.5 rounded border ${
+                    copyMsg === "Copied!"
+                      ? "text-green-400 border-green-800"
+                      : copyMsg === "Copy failed"
+                      ? "text-red-400 border-red-800"
+                      : "text-purple-400 border-purple-800/50 hover:border-purple-600 hover:text-purple-300"
+                  }`}
                 >
-                  Copy
+                  {copyMsg ?? "Copy"}
                 </button>
               </div>
               <pre class="bg-gray-950 border border-gray-800 rounded-lg p-4 text-sm text-gray-400 leading-relaxed whitespace-pre-wrap font-sans">

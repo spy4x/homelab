@@ -239,8 +239,9 @@ const MIME: Record<string, string> = {
 }
 
 app.get("*", async (c) => {
-  const path = c.req.path === "/" ? "/index.html" : c.req.path
-  const full = `${WEBUI_ROOT}${path}`
+  // Try exact file first
+  const reqPath = c.req.path === "/" ? "/index.html" : c.req.path
+  const full = `${WEBUI_ROOT}${reqPath}`
   try {
     const ext = full.substring(full.lastIndexOf("."))
     const body = await Deno.readFile(full)
@@ -248,7 +249,15 @@ app.get("*", async (c) => {
       headers: { "Content-Type": MIME[ext] || "application/octet-stream" },
     })
   } catch {
-    return c.text("Not found", 404)
+    // SPA fallback: serve index.html for client-side routes (/jobs/:id etc.)
+    try {
+      const body = await Deno.readFile(`${WEBUI_ROOT}/index.html`)
+      return new Response(body, {
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      })
+    } catch {
+      return c.text("Not found", 404)
+    }
   }
 })
 
