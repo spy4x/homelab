@@ -87,8 +87,11 @@ export function JobTable({ jobs, onSelect }: Props) {
             {paged.map((job) => (
               <tr
                 key={job.id}
+                tabIndex={0}
+                role="button"
                 onClick={() => onSelect(job)}
-                class="cursor-pointer hover:bg-gray-800/30 transition-colors"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(job) } }}
+                class="cursor-pointer hover:bg-gray-800/30 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:bg-gray-800/30"
               >
                 <td class="px-4 py-3">{badge(job.verdict)}</td>
                 <td class="px-4 py-3 text-gray-300 max-w-[280px] truncate">{job.title}</td>
