@@ -37,12 +37,27 @@ export interface VollnaWebhookPayload {
   results_url: string
 }
 
-// ── Shared types ──
+// ── Evaluation / notification ──
 
 export interface EvaluationResult {
   verdict: "Yes" | "No"
   reason: string
   applicationHook: string
+}
+
+export interface JobRecord {
+  id: string
+  title: string
+  url: string
+  description: string
+  budget?: string | null
+  skills?: string[] | null
+  filterName?: string
+  verdict: "Yes" | "No"
+  reason: string
+  applicationHook: string
+  notified: boolean
+  processedAt: string
 }
 
 export interface IEvaluatorModule {

@@ -7,6 +7,7 @@ export class DeepSeekEvaluator implements IEvaluatorModule {
   private apiKey: string
   private model: string
   private requestTimeout: number
+  private retryDelayMs: number
 
   constructor() {
     this.apiKey = Deno.env.get("UPWORK_TRIAGE_DEEPSEEK_API_KEY") ?? ""
@@ -19,12 +20,23 @@ export class DeepSeekEvaluator implements IEvaluatorModule {
       Deno.env.get("UPWORK_TRIAGE_DEEPSEEK_TIMEOUT_MS") || "30000",
       10,
     )
+    this.retryDelayMs = parseInt(
+      Deno.env.get("UPWORK_TRIAGE_RETRY_DELAY_MS") || "2000",
+      10,
+    )
 
     const promptPath = Deno.env.get("UPWORK_TRIAGE_PROMPT_PATH") || "./prompt.txt"
     this.systemPrompt = Deno.readTextFileSync(promptPath)
   }
 
   async evaluate(payload: VollnaPayload): Promise<EvaluationResult> {
+    return this.evaluateWithRetry(payload, 2) // 1 initial + 1 retry
+  }
+
+  private async evaluateWithRetry(
+    payload: VollnaPayload,
+    attemptsLeft: number,
+  ): Promise<EvaluationResult> {
     const messages = [
       { role: "system", content: this.systemPrompt },
       {
@@ -62,15 +74,43 @@ export class DeepSeekEvaluator implements IEvaluatorModule {
           model: this.model,
           messages,
           temperature: 0.2,
-          max_tokens: 600,
+          max_tokens: 1000,
           reasoning_effort: "high",
           thinking: { type: "enabled" },
         }),
         signal: controller.signal,
       })
 
+      if (response.status === 429 && attemptsLeft > 1) {
+        // Rate limited — retry after delay
+        console.error(
+          JSON.stringify({
+            event: "deepseek.rate_limited",
+            retriesLeft: attemptsLeft - 1,
+          }),
+        )
+        clearTimeout(timeoutId)
+        await this.sleep(this.retryDelayMs)
+        return this.evaluateWithRetry(payload, attemptsLeft - 1)
+      }
+
       if (!response.ok) {
         const errBody = await response.text()
+
+        // Retry on 5xx
+        if (response.status >= 500 && attemptsLeft > 1) {
+          console.error(
+            JSON.stringify({
+              event: "deepseek.server_error",
+              status: response.status,
+              retriesLeft: attemptsLeft - 1,
+            }),
+          )
+          clearTimeout(timeoutId)
+          await this.sleep(this.retryDelayMs)
+          return this.evaluateWithRetry(payload, attemptsLeft - 1)
+        }
+
         console.error(
           JSON.stringify({
             event: "deepseek.api_error",
@@ -111,12 +151,33 @@ export class DeepSeekEvaluator implements IEvaluatorModule {
             timeoutMs: this.requestTimeout,
           }),
         )
+
+        // Retry on timeout
+        if (attemptsLeft > 1) {
+          await this.sleep(this.retryDelayMs)
+          return this.evaluateWithRetry(payload, attemptsLeft - 1)
+        }
+
         return {
           verdict: "No",
           reason: "Evaluation timed out",
           applicationHook: "",
         }
       }
+
+      // Network error — retry if attempts remain
+      if (attemptsLeft > 1) {
+        console.error(
+          JSON.stringify({
+            event: "deepseek.retrying",
+            error: err instanceof Error ? err.message : String(err),
+            retriesLeft: attemptsLeft - 1,
+          }),
+        )
+        await this.sleep(this.retryDelayMs)
+        return this.evaluateWithRetry(payload, attemptsLeft - 1)
+      }
+
       console.error(
         JSON.stringify({
           event: "deepseek.request_failed",
@@ -133,12 +194,36 @@ export class DeepSeekEvaluator implements IEvaluatorModule {
     }
   }
 
+  /** Check DeepSeek API connectivity (used by health endpoint) */
+  async ping(): Promise<boolean> {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      const res = await fetch("https://api.deepseek.com/models", {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      return res.ok
+    } catch {
+      return false
+    }
+  }
+
+  private async sleep(ms: number): Promise<void> {
+    return new Promise((r) => setTimeout(r, ms))
+  }
+
   private parseResponse(text: string): EvaluationResult {
     const verdictMatch = text.match(/\[VERDICT\]\s*(Yes|No)/i)
     const whyMatch = text.match(
-      /\[WHY\]\s*([\s\S]*?)(?=\[APPLICATION HOOK\]|$)/,
+      /\[WHY\]\s*([\s\S]*?)(?=\[APPLICATION(?: HOOK)?\]|$)/,
     )
-    const hookMatch = text.match(/\[APPLICATION HOOK\]\s*([\s\S]*)$/)
+    // Try full tag first, then fallback to partial [APPLICATION
+    let hookMatch = text.match(/\[APPLICATION HOOK\]\s*([\s\S]*)$/)
+    if (!hookMatch) {
+      hookMatch = text.match(/\[APPLICATION[^\]]*\]\s*([\s\S]*)$/)
+    }
 
     const verdictRaw = verdictMatch?.[1]
     const verdict = verdictRaw?.toLowerCase() === "yes" ? "Yes" : "No"

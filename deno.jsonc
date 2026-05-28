@@ -114,6 +114,7 @@
     "build",
     "docs",
     "infra",
+    "stacks/**/webui/**",
     "*.lock"
   ],
   "lint": {
