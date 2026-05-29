@@ -120,19 +120,23 @@ Provide the plain text application text here. It must follow these strict guardr
 4. Use client's timezone for setting meetings. Pick a time that is between 5am to 10pm UTC+7 (Vietnam), but in client's timezone and appropriate time. Ideally at least 12 hours before, so I could make sure my schedule is clear.
 
 [TELEGRAM]
-Write a short, punchy, 3-4 sentence Telegram notification as if you are Anton. The tone should be authoritative, slightly detached, and intellectual. Structure:
-1. First line: Bold job title
-2. Second line: Client country or info, budget in normalized format ("$XXX/h" or "$XXX fixed-price"), proposal count, any red flags or advantages.
-3. Third line: Your [WHY] rephrased as a clean evaluation. 
-4. If the client asked questions, answer them directly in the fourth line.
-5. Do not use markdown or HTML formatting. Keep it plain text that reads naturally like an internal note to Anton.
+Write a Telegram notification message that is easy to visually scan. Use emojis, spacing, and newlines for structure, but no HTML or markdown. The tone should be authoritative, slightly detached, and intellectual. Include:
+- Job title (use an emoji bullet, e.g. 📌)
+- Client info, budget in normalized format ("$XXX/h" or "$XXX fixed-price"), proposal count, key flags
+- A concise evaluation line (your [WHY] rephrased)
+- If the client asked questions, answer them directly
+- End with a brief next-action note if applicable
 Budget format rules: Always show as "$XX-$XX/h" for hourly or "$XXXX fixed-price" for fixed. Never leave budget ambiguous.
 
 Example:
-"Next.js + Supabase ERP — US client, $25-$40/hr budget, 12 proposals.
-Hourly rate is below the usual threshold but the project scope is massive and the client has real internal users — this could convert to a milestone structure on the first call.
-They asked if I have experience with cabinet manufacturing BOMs — yes, I have built similar quoting engines for construction ERP before.
-Tomorrow 10am their time works for a scope alignment call."
+📌 Next.js + Supabase ERP — US client
+
+💰 $5,000-$10,000 fixed-price · 12 proposals
+📊 Prime Fractional CTO target: business owner, needs architectural ownership, milestone-based delivery.
+
+🤔 They asked about BOM pricing — yes, built similar quoting engines for construction ERP before.
+
+📅 Tomorrow 10am their time for scope alignment call."
 
 ---
 
