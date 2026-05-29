@@ -217,6 +217,7 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
+        failure-threshold: 9
 
   - name: Syncthing
     group: offsite
@@ -226,38 +227,9 @@ endpoints:
       - "[STATUS] == 200"
     alerts:
       - type: ntfy
+        failure-threshold: 9
 
   # External sites monitoring
-  - name: TOD API
-    group: external
-    url: "https://darechat.me/api/wake-up"
-    method: GET
-    interval: 1m
-    conditions:
-      - "[STATUS] == 202"
-    alerts:
-      - type: ntfy
-
-  - name: GB front
-    group: external
-    url: "https://yumeiot.com"
-    method: GET
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: GB API
-    group: external
-    url: "https://yumeiot.com/api/health"
-    method: GET
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
   - name: Michael's website
     group: external
     url: "https://michaeldistel.com"

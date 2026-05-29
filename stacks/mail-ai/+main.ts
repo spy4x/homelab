@@ -1,11 +1,10 @@
 // Mail AI Filter
 // Polls IMAP inbox, classifies emails with DeepSeek, tags them in-place
 // (AI-Urgent / AI-Normal / AI-Noise IMAP keywords so they stay in Inbox),
-// sends instant ntfy push for urgent mail, delivers an HTML morning digest.
+// sends instant ntfy push for urgent mail.
 
 import { ImapFlow } from "npm:imapflow@1"
 import { simpleParser } from "npm:mailparser@3"
-import nodemailer from "npm:nodemailer@6"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,14 +16,6 @@ interface Config {
   deepseekApiKey: string
   ntfyUrl: string // full URL incl. topic
   ntfyToken: string
-  smtpHost: string
-  smtpPort: number
-  smtpUser: string
-  smtpPassword: string
-  smtpFrom: string
-  digestTo: string
-  digestHour: number // 0-23 in local timezone
-  timezone: string
   dataPath: string
   pollIntervalMs: number
 }
@@ -40,25 +31,13 @@ interface Classification {
   transaction_currency?: string | null
 }
 
-interface DigestItem {
-  uid: number
-  from: string
-  subject: string
-  date: string
-  category: Category
-  classification: Classification
-  processedAt: string
-}
-
 interface ProcessedEntry {
   uid: number
-  processedAt: string // ISO — used for TTL pruning
+  processedAt: string
 }
 
 interface State {
   processed: ProcessedEntry[]
-  digestQueue: DigestItem[]
-  lastDigestDate: string // YYYY-MM-DD
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -93,7 +72,7 @@ normal  →  Worth reading today, no fire
   • Actionable service notification (not purely automated)
   • Business or collaboration opportunity worth considering
 
-noise   →  Background; skim in the digest
+noise   →  Background; skim later
   • Newsletter, marketing, promotional, cold outreach
   • Small transaction: < $50 USD (or < 1 000 000 VND)
   • Fully automated notification (uptime, deploy, backup, shipping)
@@ -137,14 +116,6 @@ function loadConfig(): Config {
     deepseekApiKey: require("MAIL_AI_DEEPSEEK_API_KEY"),
     ntfyUrl: require("MAIL_AI_NTFY_URL"),
     ntfyToken: require("MAIL_AI_NTFY_TOKEN"),
-    smtpHost: require("MAIL_AI_SMTP_HOST"),
-    smtpPort: parseInt(optional("MAIL_AI_SMTP_PORT", "587")),
-    smtpUser: require("MAIL_AI_SMTP_USER"),
-    smtpPassword: require("MAIL_AI_SMTP_PASSWORD"),
-    smtpFrom: require("MAIL_AI_SMTP_FROM"),
-    digestTo: require("MAIL_AI_DIGEST_TO"),
-    digestHour: parseInt(optional("MAIL_AI_DIGEST_HOUR", "8")),
-    timezone: optional("MAIL_AI_TIMEZONE", "UTC"),
     dataPath: optional("MAIL_AI_DATA_PATH", "/app/data"),
     pollIntervalMs: parseInt(optional("MAIL_AI_POLL_INTERVAL_MS", "300000")),
   }
@@ -167,10 +138,6 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
 }
 
-function escHtml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-}
-
 // ─── State ────────────────────────────────────────────────────────────────────
 
 const stateFile = (dataPath: string) => `${dataPath}/state.json`
@@ -179,14 +146,9 @@ async function loadState(dataPath: string): Promise<State> {
   try {
     const raw = await Deno.readTextFile(stateFile(dataPath))
     const parsed = JSON.parse(raw) as Partial<State>
-    // Migrate: older state files may lack the `processed` field
-    return {
-      processed: parsed.processed ?? [],
-      digestQueue: parsed.digestQueue ?? [],
-      lastDigestDate: parsed.lastDigestDate ?? "",
-    }
+    return { processed: parsed.processed ?? [] }
   } catch {
-    return { processed: [], digestQueue: [], lastDigestDate: "" }
+    return { processed: [] }
   }
 }
 
@@ -195,7 +157,6 @@ async function saveState(state: State, dataPath: string): Promise<void> {
   await Deno.writeTextFile(stateFile(dataPath), JSON.stringify(state, null, 2))
 }
 
-/** Drop entries older than PROCESSED_TTL_DAYS to keep state.json lean */
 function pruneProcessed(state: State): void {
   const cutoff = new Date()
   cutoff.setDate(cutoff.getDate() - PROCESSED_TTL_DAYS)
@@ -251,7 +212,7 @@ async function classify(
   let lastErr: Error = new Error("no attempts")
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    if (attempt > 1) await sleep(1000 * 2 ** (attempt - 1)) // 2s, 4s
+    if (attempt > 1) await sleep(1000 * 2 ** (attempt - 1))
     try {
       const res = await fetch("https://api.deepseek.com/chat/completions", {
         method: "POST",
@@ -289,12 +250,17 @@ async function classify(
 
 // ─── NTFY Alert ───────────────────────────────────────────────────────────────
 
-async function sendNtfyAlert(item: DigestItem, config: Config): Promise<void> {
+async function sendNtfyAlert(
+  from: string,
+  subject: string,
+  classification: Classification,
+  config: Config,
+): Promise<void> {
   const body = [
-    `From: ${item.from}`,
-    item.classification.urgency_reason ? `Why: ${item.classification.urgency_reason}` : "",
+    `From: ${from}`,
+    classification.urgency_reason ? `Why: ${classification.urgency_reason}` : "",
     "",
-    item.classification.summary,
+    classification.summary,
   ]
     .filter(Boolean)
     .join("\n")
@@ -303,7 +269,7 @@ async function sendNtfyAlert(item: DigestItem, config: Config): Promise<void> {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${config.ntfyToken}`,
-      "Title": `🚨 ${item.subject}`,
+      "Title": `URGENT: ${subject}`,
       "Priority": "urgent",
       "Tags": "rotating_light,email",
       "Content-Type": "text/plain; charset=utf-8",
@@ -312,7 +278,7 @@ async function sendNtfyAlert(item: DigestItem, config: Config): Promise<void> {
   })
 
   if (!res.ok) throw new Error(`ntfy ${res.status}: ${await res.text()}`)
-  log(`  ntfy sent: "${item.subject}"`)
+  log(`  ntfy sent: "${subject}"`)
 }
 
 // ─── IMAP Processing ──────────────────────────────────────────────────────────
@@ -352,7 +318,6 @@ async function processEmails(config: Config, state: State): Promise<void> {
       }
       log(`Processing ${toProcess.length} new email(s) of ${allUnseen.length} unseen`)
 
-      // Fetch all before iterating — avoids mid-loop IMAP state changes
       const rawMessages: RawMessage[] = []
       for await (
         const msg of client.fetch(
@@ -384,7 +349,6 @@ async function processEmails(config: Config, state: State): Promise<void> {
           const classification = await classify(raw.from, raw.subject, raw.body, config)
           log(`  → [${classification.category}] ${classification.summary}`)
 
-          // Tag in-place; email stays in INBOX (Unified Inbox compatible)
           await client.messageFlagsAdd(
             String(raw.uid),
             [TAG[classification.category], TAG_PROCESSED],
@@ -392,28 +356,16 @@ async function processEmails(config: Config, state: State): Promise<void> {
           )
           log(`  → tagged ${TAG[classification.category]}`)
 
-          const item: DigestItem = {
-            uid: raw.uid,
-            from: raw.from,
-            subject: raw.subject,
-            date: raw.date.toISOString(),
-            category: classification.category,
-            classification,
-            processedAt: new Date().toISOString(),
-          }
-
-          state.processed.push({ uid: raw.uid, processedAt: item.processedAt })
-          state.digestQueue.push(item)
+          state.processed.push({ uid: raw.uid, processedAt: new Date().toISOString() })
           await saveState(state, config.dataPath)
 
           if (classification.category === "urgent") {
-            await sendNtfyAlert(item, config).catch((err) =>
+            await sendNtfyAlert(raw.from, raw.subject, classification, config).catch((err) =>
               logError(`ntfy failed for "${raw.subject}"`, err)
             )
           }
         } catch (err) {
           logError(`Failed to process "${raw.subject}"`, err)
-          // Leave untagged — will retry next poll
         }
       }
     } finally {
@@ -425,208 +377,22 @@ async function processEmails(config: Config, state: State): Promise<void> {
   }
 }
 
-// ─── Daily Digest ─────────────────────────────────────────────────────────────
-
-function getTodayString(timezone: string): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(new Date())
-}
-
-function getCurrentHour(timezone: string): number {
-  const s = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    hour: "numeric",
-    hour12: false,
-  }).format(new Date())
-  return parseInt(s) % 24
-}
-
-function buildDigest(items: DigestItem[], date: string): { text: string; html: string } {
-  const urgent = items.filter((i) => i.category === "urgent")
-  const normal = items.filter((i) => i.category === "normal")
-  const noise = items.filter((i) => i.category === "noise")
-
-  const noiseTxns = noise
-    .filter((i) => i.classification.is_transaction && i.classification.transaction_amount != null)
-    .sort(
-      (a, b) =>
-        (b.classification.transaction_amount ?? 0) - (a.classification.transaction_amount ?? 0),
-    )
-  const noiseOther = noise.filter(
-    (i) => !(i.classification.is_transaction && i.classification.transaction_amount != null),
-  )
-
-  // ── Plain text ──
-  const txt: string[] = [
-    `Daily Email Digest — ${date}`,
-    `${items.length} email(s) processed`,
-    "",
-  ]
-
-  const addTxtSection = (
-    title: string,
-    sectionItems: DigestItem[],
-    extra?: (i: DigestItem) => string,
-  ) => {
-    txt.push(`═══ ${title} (${sectionItems.length}) ═══`)
-    if (!sectionItems.length) {
-      txt.push("  (none)", "")
-      return
-    }
-    for (const item of sectionItems) {
-      txt.push(`• ${item.from}`)
-      txt.push(`  ${item.subject}`)
-      if (item.classification.urgency_reason) txt.push(`  ⚠ ${item.classification.urgency_reason}`)
-      if (extra) txt.push(`  ${extra(item)}`)
-      txt.push(`  ${item.classification.summary}`, "")
-    }
-  }
-
-  addTxtSection("URGENT — already notified", urgent)
-  addTxtSection("NORMAL", normal)
-  addTxtSection("NOISE — Transactions", noiseTxns, (i) => {
-    const amt = i.classification.transaction_amount?.toLocaleString("en-US", {
-      maximumFractionDigits: 2,
-    })
-    return `💳 ${i.classification.transaction_currency ?? ""} ${amt}`
-  })
-  addTxtSection("NOISE — Other", noiseOther)
-
-  // ── HTML ──
-  const itemRow = (item: DigestItem, extra?: string) => `
-    <tr>
-      <td style="padding:10px 0;border-bottom:1px solid #f0f0f0;vertical-align:top">
-        <div style="font-weight:600;font-size:15px">${escHtml(item.subject)}</div>
-        <div style="color:#666;font-size:12px;margin-top:2px">${escHtml(item.from)}</div>
-        ${
-    item.classification.urgency_reason
-      ? `<div style="color:#c0392b;font-size:13px;margin-top:4px">⚠ ${
-        escHtml(item.classification.urgency_reason)
-      }</div>`
-      : ""
-  }
-        ${extra ? `<div style="font-size:13px;font-weight:600;margin-top:4px">${extra}</div>` : ""}
-        <div style="margin-top:6px;font-size:13px;color:#333;line-height:1.4">${
-    escHtml(item.classification.summary)
-  }</div>
-      </td>
-    </tr>`
-
-  const htmlSection = (
-    title: string,
-    color: string,
-    sectionItems: DigestItem[],
-    extra?: (i: DigestItem) => string,
-  ) => `
-    <h3 style="margin:28px 0 10px;padding:8px 14px;background:${color};color:#fff;border-radius:5px;font-size:14px;letter-spacing:.5px">
-      ${escHtml(title)} (${sectionItems.length})
-    </h3>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
-      ${
-    sectionItems.length
-      ? sectionItems.map((i) =>
-        itemRow(
-          i,
-          extra
-            ? `💳 ${escHtml(i.classification.transaction_currency ?? "")} ${
-              i.classification.transaction_amount?.toLocaleString("en-US", {
-                maximumFractionDigits: 2,
-              }) ?? ""
-            }`
-            : undefined,
-        )
-      ).join("")
-      : `<tr><td style="padding:10px 0;color:#999;font-style:italic">(none)</td></tr>`
-  }
-    </table>`
-
-  const html = `<!DOCTYPE html>
-<html><head><meta charset="utf-8">
-<style>body{font-family:system-ui,-apple-system,sans-serif;max-width:680px;margin:0 auto;padding:24px;color:#222;line-height:1.5}</style>
-</head>
-<body>
-  <h2 style="margin:0 0 4px;font-size:20px">Daily Email Digest</h2>
-  <p style="margin:0 0 4px;color:#666;font-size:14px">${escHtml(date)}</p>
-  <p style="margin:0 0 20px;color:#999;font-size:13px">${items.length} email(s) processed</p>
-  ${htmlSection("🚨 URGENT — already notified", "#c0392b", urgent)}
-  ${htmlSection("📬 NORMAL", "#2980b9", normal)}
-  ${
-    htmlSection("💳 NOISE — Transactions", "#27ae60", noiseTxns, (i) =>
-      i.classification.transaction_currency ?? "")
-  }
-  ${htmlSection("🔇 NOISE — Other", "#7f8c8d", noiseOther)}
-  <p style="margin-top:36px;font-size:11px;color:#bbb">Generated by mail-ai</p>
-</body></html>`
-
-  return { text: txt.join("\n"), html }
-}
-
-async function sendDigest(state: State, config: Config): Promise<void> {
-  if (!state.digestQueue.length) {
-    log("Digest: queue empty, skipping")
-    return
-  }
-
-  const today = getTodayString(config.timezone)
-  const subject = `Daily Digest — ${today} (${state.digestQueue.length} emails)`
-  const { text, html } = buildDigest(state.digestQueue, today)
-
-  const transporter = nodemailer.createTransport({
-    host: config.smtpHost,
-    port: config.smtpPort,
-    secure: false,
-    auth: { user: config.smtpUser, pass: config.smtpPassword },
-    tls: { rejectUnauthorized: false },
-  })
-
-  await transporter.sendMail({
-    from: config.smtpFrom,
-    to: config.digestTo,
-    subject,
-    text,
-    html,
-  })
-  log(`Digest sent: "${subject}"`)
-
-  state.digestQueue = []
-  state.lastDigestDate = today
-  await saveState(state, config.dataPath)
-}
-
-async function checkAndSendDigest(config: Config, state: State): Promise<void> {
-  const today = getTodayString(config.timezone)
-  if (state.lastDigestDate === today) return
-
-  const hour = getCurrentHour(config.timezone)
-  if (hour < config.digestHour) return
-
-  log(`Digest trigger (hour ${hour} >= ${config.digestHour})`)
-  await sendDigest(state, config)
-}
-
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
   const config = loadConfig()
   log(`Mail AI starting — ${config.imapUser}`)
-  log(`Poll: ${config.pollIntervalMs / 1000}s | Digest: ${config.digestHour}:00 ${config.timezone}`)
+  log(`Poll: ${config.pollIntervalMs / 1000}s`)
   log(`Mode: IMAP keyword tags (emails stay in Inbox)`)
 
   while (true) {
-    let state = await loadState(config.dataPath)
+    const state = await loadState(config.dataPath)
     pruneProcessed(state)
 
     try {
       await processEmails(config, state)
     } catch (err) {
       logError("processEmails failed", err)
-    }
-
-    state = await loadState(config.dataPath)
-
-    try {
-      await checkAndSendDigest(config, state)
-    } catch (err) {
-      logError("digest failed", err)
     }
 
     log(`Sleeping ${config.pollIntervalMs / 1000}s...`)
