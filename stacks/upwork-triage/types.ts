@@ -43,6 +43,7 @@ export interface EvaluationResult {
   verdict: "Yes" | "No"
   reason: string
   applicationHook: string
+  notificationText?: string
 }
 
 export interface JobRecord {
@@ -56,6 +57,7 @@ export interface JobRecord {
   verdict: "Yes" | "No"
   reason: string
   applicationHook: string
+  notificationText?: string
   notified: boolean
   processedAt: string
 }

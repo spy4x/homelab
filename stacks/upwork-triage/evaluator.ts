@@ -219,17 +219,23 @@ export class DeepSeekEvaluator implements IEvaluatorModule {
     const whyMatch = text.match(
       /\[WHY\]\s*([\s\S]*?)(?=\[APPLICATION(?: HOOK)?\]|$)/,
     )
-    // Try full tag first, then fallback to partial [APPLICATION
-    let hookMatch = text.match(/\[APPLICATION HOOK\]\s*([\s\S]*)$/)
+    // APPLICATION HOOK — bounded by [TELEGRAM] or end-of-string
+    let hookMatch = text.match(
+      /\[APPLICATION HOOK\]\s*([\s\S]*?)(?=\[TELEGRAM\]|$)/,
+    )
     if (!hookMatch) {
-      hookMatch = text.match(/\[APPLICATION[^\]]*\]\s*([\s\S]*)$/)
+      hookMatch = text.match(/\[APPLICATION[^\]]*\]\s*([\s\S]*?)(?=\[TELEGRAM\]|$)/)
     }
+
+    // TELEGRAM notification text
+    const telegramMatch = text.match(/\[TELEGRAM\]\s*([\s\S]*)$/)
 
     const verdictRaw = verdictMatch?.[1]
     const verdict = verdictRaw?.toLowerCase() === "yes" ? "Yes" : "No"
     const reason = whyMatch?.[1]?.trim() || "No reason provided by evaluator"
     const applicationHook = verdict === "Yes" ? (hookMatch?.[1]?.trim() || "") : ""
+    const notificationText = telegramMatch?.[1]?.trim()
 
-    return { verdict, reason, applicationHook }
+    return { verdict, reason, applicationHook, notificationText }
   }
 }

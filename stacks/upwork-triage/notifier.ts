@@ -34,19 +34,25 @@ export class TelegramNotifier implements INotificationModule {
     payload: VollnaPayload,
     result: EvaluationResult,
   ): Promise<boolean> {
-    const text = this.buildMessage(payload, result)
+    // Use AI-generated notification text if available, fallback to structured builder
+    const text = result.notificationText
+      ? result.notificationText
+      : this.buildMessage(payload, result)
     const url = `${TELEGRAM_API_BASE}/bot${this.botToken}/sendMessage`
 
-    const body = {
+    const body: Record<string, unknown> = {
       chat_id: this.chatId,
       text,
-      parse_mode: "HTML",
       disable_web_page_preview: true,
       reply_markup: {
         inline_keyboard: [[
           { text: "Open Job", url: payload.url },
         ]],
       },
+    }
+    // Only set parse_mode for structured (HTML) messages; AI messages are plain text
+    if (!result.notificationText) {
+      body.parse_mode = "HTML"
     }
 
     try {

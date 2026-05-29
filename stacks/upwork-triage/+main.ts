@@ -181,6 +181,7 @@ function processAndStore(payload: VollnaPayload, filterName: string | undefined)
       verdict: result.verdict,
       reason: result.reason,
       applicationHook: result.applicationHook,
+      notificationText: result.notificationText,
       notified,
       processedAt: new Date().toISOString(),
     }
