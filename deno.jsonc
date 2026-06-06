@@ -115,6 +115,7 @@
     "docs",
     "infra",
     "stacks/**/webui/**",
+    ".playwright-mcp",
     "*.lock"
   ],
   "lint": {

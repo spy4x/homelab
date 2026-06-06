@@ -57,15 +57,6 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: Home Assistant
-    group: home
-    url: "https://home.${DOMAIN}"
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
   - name: AdGuard Home
     group: home
     url: "https://dns.${DOMAIN}"
