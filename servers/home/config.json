@@ -4,7 +4,7 @@
     { "name": "watchtower" },
     { "name": "wireguard" },
     { "name": "syncthing" },
-    { "name": "gatus" },
+    { "name": "gatus", "watchFilesAndRestartIfChanged": ["configs/gatus.yml"] },
     { "name": "ntfy" },
     {
       "name": "nginx",

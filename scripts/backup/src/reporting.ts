@@ -53,24 +53,43 @@ export class BackupReporter {
       return
     }
 
-    try {
-      const allSuccess = result.successCount === result.totalCount
-      // Healthchecks.io pattern: append /fail for failures
-      const url = allSuccess ? this.context.healthchecksUrl : `${this.context.healthchecksUrl}/fail`
+    const allSuccess = result.successCount === result.totalCount
+    const url = allSuccess ? this.context.healthchecksUrl : `${this.context.healthchecksUrl}/fail`
+    const body = this.buildHealthchecksMessage(result)
 
-      const response = await fetch(url, {
-        method: "POST",
-        body: this.buildHealthchecksMessage(result),
-      })
+    const maxRetries = 10
+    const baseDelayMs = 60000
+    const maxDelayMs = 600000 // cap at 10min to fit Healthchecks 1h window
 
-      if (response.ok) {
-        log(`healthchecks ping sent successfully (${allSuccess ? "success" : "fail"})`)
-      } else {
-        error(`healthchecks ping failed: ${response.status} ${response.statusText}`)
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          body,
+        })
+
+        if (response.ok) {
+          log(`healthchecks ping sent successfully (${allSuccess ? "success" : "fail"})`)
+          return
+        } else {
+          error(`healthchecks ping failed: ${response.status} ${response.statusText}`)
+        }
+      } catch (err) {
+        error(`Failed to send healthchecks ping: ${err}`)
       }
-    } catch (err) {
-      error(`Failed to send healthchecks ping: ${err}`)
+
+      if (attempt < maxRetries) {
+        const delayMs = Math.min(baseDelayMs * Math.pow(2, attempt - 1), maxDelayMs)
+        log(
+          `healthchecks ping attempt ${attempt}/${maxRetries} failed, retrying in ${
+            delayMs / 1000
+          }s...`,
+        )
+        await new Promise((resolve) => setTimeout(resolve, delayMs))
+      }
     }
+
+    error(`healthchecks ping failed after ${maxRetries} attempts`)
   }
 
   /**

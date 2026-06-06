@@ -9,6 +9,7 @@ interface StackConfig {
   name: string
   deployAs?: string
   envs?: Record<string, string>
+  watchFilesAndRestartIfChanged?: string[]
 }
 
 interface DeployResult {
@@ -210,6 +211,23 @@ try {
     }
   }
 
+  // Snapshot checksums of watched config files before rsync
+  const stacksWithConfigFiles = stacks.filter((s) =>
+    s.watchFilesAndRestartIfChanged && s.watchFilesAndRestartIfChanged.length > 0
+  )
+  const checksumsBefore = new Map<string, Map<string, string>>()
+  if (stacksWithConfigFiles.length > 0) {
+    for (const stack of stacksWithConfigFiles) {
+      const deployAs = stack.deployAs || stack.name
+      const checksums = await getRemoteChecksums(
+        SSH_ADDRESS,
+        PATH_APPS,
+        stack.watchFilesAndRestartIfChanged!,
+      )
+      checksumsBefore.set(deployAs, checksums)
+    }
+  }
+
   // Rsync temp directory to remote server
   log(`Syncing files to ${SSH_ADDRESS}:${PATH_APPS}...`)
   const rsyncArgs = [
@@ -229,6 +247,30 @@ try {
     Deno.exit(1)
   }
   success("Synced completed successfully")
+
+  // Snapshot checksums after rsync and detect changes
+  const restartStacks = new Set<string>()
+  if (stacksWithConfigFiles.length > 0) {
+    for (const stack of stacksWithConfigFiles) {
+      const deployAs = stack.deployAs || stack.name
+      const checksumsAfter = await getRemoteChecksums(
+        SSH_ADDRESS,
+        PATH_APPS,
+        stack.watchFilesAndRestartIfChanged!,
+      )
+      const before = checksumsBefore.get(deployAs)
+
+      if (before) {
+        for (const [filePath, hashAfter] of checksumsAfter) {
+          const hashBefore = before.get(filePath)
+          if (hashBefore !== hashAfter) {
+            log(`Config changed for ${deployAs}: ${filePath}`)
+            restartStacks.add(deployAs)
+          }
+        }
+      }
+    }
+  }
 
   // Run docker compose on remote server
   // First, ensure proxy network exists
@@ -262,7 +304,7 @@ try {
     }
 
     // Build a single script that deploys all stacks and tracks results
-    const deployScript = generateDeployScript(stacks, PATH_APPS)
+    const deployScript = generateDeployScript(stacks, PATH_APPS, restartStacks)
 
     // Execute the deploy script in a single SSH session
     const deployCommand = await runCommand(["ssh", SSH_ADDRESS, deployScript])
@@ -347,13 +389,18 @@ function generateVolumeCreationScript(volumePaths: string[], user: string): stri
 /**
  * Generate a bash script that deploys all stacks and outputs structured results
  */
-function generateDeployScript(stacks: StackConfig[], pathApps: string): string {
+function generateDeployScript(
+  stacks: StackConfig[],
+  pathApps: string,
+  restartStacks: Set<string>,
+): string {
   const stackCommands: string[] = []
 
   for (const stackConfig of stacks) {
     const stackName = stackConfig.name
     const deployAs = stackConfig.deployAs || stackName
     const projectFlag = `-p ${deployAs}`
+    const needsRestart = restartStacks.has(deployAs)
 
     // Each stack deployment outputs a marker for parsing
     stackCommands.push(`
@@ -364,6 +411,15 @@ if [ $? -eq 0 ]; then
 else
   echo "DEPLOY_FAILED:${stackName}:${deployAs}"
 fi
+${
+      needsRestart
+        ? `
+echo "RESTARTING:${stackName}:${deployAs}"
+cd ${pathApps} && docker compose ${projectFlag} -f stacks/${stackName}/compose.yml restart 2>&1
+echo "RESTART_DONE:${stackName}:${deployAs}"
+`
+        : ""
+    }
 `)
   }
 
@@ -445,6 +501,34 @@ function printDeploySummary(results: DeployResult[]): void {
 
   log("\n=========================================")
   log(`Total: ${results.length} | Success: ${successful.length} | Failed: ${failed.length}`)
+}
+
+/**
+ * Compute SHA256 checksums of config files on remote server
+ * Returns map of file path (relative to PATH_APPS) to checksum
+ */
+async function getRemoteChecksums(
+  sshAddress: string,
+  pathApps: string,
+  watchFilesAndRestartIfChanged: string[],
+): Promise<Map<string, string>> {
+  const checksums = new Map<string, string>()
+
+  for (const filePath of watchFilesAndRestartIfChanged) {
+    const remotePath = `${pathApps}/${filePath}`
+    const cmd = `sha256sum "${remotePath}" 2>/dev/null || true`
+    const result = await runCommand(["ssh", sshAddress, cmd])
+
+    if (result.success && result.output) {
+      // sha256sum output: "<hash>  <path>"
+      const hash = result.output.split(/\s+/)[0]
+      if (hash && hash.length === 64) {
+        checksums.set(filePath, hash)
+      }
+    }
+  }
+
+  return checksums
 }
 
 // Helper function to recursively copy a directory

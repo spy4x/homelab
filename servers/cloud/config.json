@@ -3,7 +3,7 @@
     { "name": "traefik" },
     { "name": "watchtower" },
     { "name": "syncthing" },
-    { "name": "gatus" },
+    { "name": "gatus", "watchFilesAndRestartIfChanged": ["configs/gatus.yml"] },
     { "name": "ntfy" },
     { "name": "mailserver" },
     { "name": "healthchecks" },
