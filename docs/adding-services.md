@@ -13,12 +13,15 @@ Complete workflow for integrating new services into the infrastructure.
 
 ## Service Definition
 
-Create `stacks/myservice/compose.yml`:
+Create `stacks/myservice/compose.yml`. **Important: never add a `default` network unless the service communicates with other containers within the same stack** (e.g., app ↔ db). Single-service stacks must use this pattern:
 
 ```yaml
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   myservice:
@@ -26,7 +29,7 @@ services:
     container_name: myservice
     volumes:
       - ${VOLUMES_PATH}/myservice:/data
-    networks: [proxy, default]
+    networks: [proxy]
     restart: unless-stopped
     labels:
       - "traefik.enable=true"

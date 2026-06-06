@@ -1,0 +1,95 @@
+# SearXNG settings - deployed via init script
+# Uses defaults + overrides
+use_default_settings: true
+
+general:
+  instance_name: "Homelab Search"
+  debug: false
+  privacypolicy_url: false
+  contact_url: false
+  enable_metrics: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: ""
+  formats:
+    - html
+    - json
+
+server:
+  secret_key: "${SEARXNG_SECRET_KEY}"
+  bind_address: "0.0.0.0"
+  port: 8080
+  limiter: false
+  image_proxy: true
+  # Allow JSON API access from OpenWebUI without CORS issues
+  method: "GET"
+  default_http_headers:
+    X-Content-Type-Options: nosniff
+    X-Frame-Options: DENY
+    X-XSS-Protection: 1; mode=block
+
+ui:
+  static_use_hash: true
+  default_theme: simple
+  default_locale: ""
+  search_on_category_select: true
+
+engines:
+  # Basic text search engines
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    disabled: false
+
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+
+  - name: wikipedia
+    engine: wikipedia
+    shortcut: wp
+    disabled: false
+
+  - name: stackoverflow
+    engine: stackoverflow
+    shortcut: so
+    disabled: false
+
+  - name: github
+    engine: github
+    shortcut: gh
+    disabled: false
+
+  - name: reddit
+    engine: reddit
+    shortcut: reddit
+    disabled: false
+
+  - name: bing
+    engine: bing
+    shortcut: bi
+    disabled: false
+
+  # Image search
+  - name: google images
+    engine: google_images
+    shortcut: gi
+    disabled: false
+
+  # News
+  - name: google news
+    engine: google_news
+    shortcut: gn
+    disabled: false
+
+outgoing:
+  request_timeout: 10.0
+  max_request_timeout: 10.0
+  useragent_suffix: ""
+  # Using public proxies is optional, remove if not needed
+  # proxies:
+  #   all://:
+  #     - socks5h://proxy:1080

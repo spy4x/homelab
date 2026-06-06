@@ -2,6 +2,27 @@
 
 This file contains guidelines for agentic coding agents (including AI assistants) working in this homelab infrastructure repository.
 
+## 📝 Commit Convention (Angular-adapted)
+
+```
+<type>(<scope>): <short summary>
+```
+
+**Types:** `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `perf`, `ci`
+
+**Scope:** stack name, server name, or area (e.g. `gatus`, `backup`, `deploy`). Omit if change is broad.
+
+**Summary:** lowercase, no period, imperative mood (e.g. "add", "drop", "fix", "move").
+
+Examples:
+
+```
+feat(immich): add hardware transcoding
+fix(gatus): correct Healthchecks endpoint URL
+refactor: drop freshrss, roundcube stacks
+chore(deps): bump traefik to v3.3
+```
+
 ## 🚀 Quick Start Commands
 
 ### Essential Development Commands
@@ -294,7 +315,8 @@ export async function runCommand(
 3. **Backups First**: Services with data MUST have backup configs
 4. **Follow Patterns**: Check existing examples for similar services
 5. **Keep It Simple**: Use defaults unless custom configuration is necessary
-6. **Documentation**: Every stack needs README.md
+6. **No Default Docker Network**: Single-service stacks must alias `default` to `proxy` to avoid wasting Docker subnets. Only multi-service stacks (app ↔ db) get a real `default` network.
+7. **Documentation**: Every stack needs README.md
 
 ## 🧪 Testing
 

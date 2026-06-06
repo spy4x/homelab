@@ -1,0 +1,10 @@
+[botdetection.ip_limit]
+# Limit to 10 requests per minute per IP
+link_token = false  # requires ping to get cookies
+
+[botdetection.ip_lists]
+pass_searxng_org = false
+
+[botdetection.ip_limit]
+# 10 requests per minute
+max_request = 10

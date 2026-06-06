@@ -1,6 +1,9 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   # Audiobookshelf is a self-hosted audio & epub/pdf book server.
@@ -25,7 +28,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

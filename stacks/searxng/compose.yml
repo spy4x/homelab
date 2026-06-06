@@ -1,0 +1,56 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  searxng-redis:
+    container_name: searxng-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ${VOLUMES_PATH}/searxng/redis:/data:z
+    command: redis-server --save 60 1 --loglevel warning
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.3"
+    networks:
+      - default
+
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    volumes:
+      - ${PATH_APPS}/stacks/searxng/settings.yml:/etc/searxng/settings.yml:ro,z
+    environment:
+      - SEARXNG_BASE_URL=https://search.${DOMAIN}
+      - SEARXNG_REDIS_URL=redis://searxng-redis:6379/0
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    depends_on:
+      - searxng-redis
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.searxng.loadbalancer.server.port=8080"
+      - "traefik.http.routers.searxng.rule=Host(`search.${DOMAIN}`)"
+      - "traefik.http.routers.searxng.entrypoints=websecure"
+      - "traefik.http.routers.searxng.tls=true"
+      - "traefik.http.routers.searxng.tls.certresolver=myresolver"

@@ -1,6 +1,9 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   # MeTube is a web GUI for youtube-dl with playlist support.
@@ -29,7 +32,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

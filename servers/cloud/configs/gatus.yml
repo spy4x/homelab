@@ -124,15 +124,6 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: FreshRSS
-    group: home
-    url: "https://rss.${DOMAIN}"
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
   - name: Radicale
     group: home
     url: "https://cal.${DOMAIN}"

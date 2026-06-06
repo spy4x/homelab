@@ -21,12 +21,12 @@
     { "name": "jellyfin" },
     { "name": "vaultwarden" },
     { "name": "playwright" },
+    { "name": "searxng" },
     { "name": "open-webui" },
     { "name": "audiobookshelf" },
     { "name": "metube" },
     { "name": "adguard" },
     { "name": "filebrowser" },
-    { "name": "freshrss" },
     { "name": "radicale" },
     { "name": "woodpecker" }
   ]

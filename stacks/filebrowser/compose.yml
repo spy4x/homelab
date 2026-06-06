@@ -1,10 +1,11 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
-  # FileBrowser is a web-based file manager that provides a simple interface for managing files.
-  # It allows you to upload, download, edit, and organize files through a web interface.
   filebrowser:
     container_name: filebrowser
     image: filebrowser/filebrowser:latest
@@ -33,7 +34,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

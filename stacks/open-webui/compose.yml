@@ -1,26 +1,67 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   open-webui:
     container_name: open-webui
     image: ghcr.io/open-webui/open-webui:latest
-    # Note: Cannot run as non-root - needs to write to /app directory
     restart: unless-stopped
     environment:
+      # --- Existing: Web loader via Playwright ---
       - WEB_LOADER_ENGINE=playwright
       - PLAYWRIGHT_WS_URL=ws://playwright:3000
+      - ENABLE_RAG_LOCAL_WEB_FETCH=true
+
+      # --- Web Search via SearXNG ---
+      - ENABLE_WEB_SEARCH=${ENABLE_WEB_SEARCH:-true}
+      - WEB_SEARCH_ENGINE=${WEB_SEARCH_ENGINE:-searxng}
+      - SEARXNG_QUERY_URL=${SEARXNG_QUERY_URL:-http://searxng:8080/search?format=json}
+      - WEB_SEARCH_RESULT_COUNT=${WEB_SEARCH_RESULT_COUNT:-5}
+      - BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL=${BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL:-false}
+
+      # --- LLM Providers (OpenAI-compatible) ---
+      - OPENAI_API_KEYS=${OPENAI_API_KEYS}
+      - OPENAI_API_BASE_URLS=${OPENAI_API_BASE_URLS}
+      - OPENAI_API_CONFIGS=${OPENAI_API_CONFIGS}
+
+      # --- Default Model Settings ---
+      - DEFAULT_MODELS=${DEFAULT_MODELS}
+      - DEFAULT_USER_ROLE=${DEFAULT_USER_ROLE:-user}
+      - ENABLE_SIGNUP=${ENABLE_SIGNUP:-false}
+      - ENABLE_LOGIN_FORM=${ENABLE_LOGIN_FORM:-true}
+
+      # --- RAG Document Extraction ---
+      - CONTENT_EXTRACTION_ENGINE=${CONTENT_EXTRACTION_ENGINE:-tika}
+      - TIKA_SERVER_URL=${TIKA_SERVER_URL:-http://tika:9998}
+      - RAG_TOP_K=${RAG_TOP_K:-5}
+      - RAG_FILE_MAX_COUNT=${RAG_FILE_MAX_COUNT:-10}
+      - RAG_FILE_MAX_SIZE=${RAG_FILE_MAX_SIZE:-52428800}
+
+      # --- User Permissions ---
+      - USER_PERMISSIONS_FEATURES_WEB_SEARCH=true
+      - USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=true
+      - USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS=true
+
+      # --- Config persistence ---
+      # Set to false to force env vars to override DB config
+      - ENABLE_PERSISTENT_CONFIG=${ENABLE_PERSISTENT_CONFIG:-true}
+
+      # --- Auth (if not using OAuth) ---
+      - WEBUI_NAME=${WEBUI_NAME:-Homelab AI}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
     volumes:
       - ${VOLUMES_PATH}/open-webui:/app/backend/data:z
     deploy:
       resources:
         limits:
-          memory: 512M
-          cpus: "0.5"
+          memory: 1G
+          cpus: "1.0"
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

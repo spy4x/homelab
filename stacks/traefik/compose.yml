@@ -3,6 +3,9 @@ name: ${PROJECT}
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   # Traefik is a reverse proxy and load balancer.
@@ -55,7 +58,6 @@ services:
       - ./dynamic.yml:/etc/traefik/dynamic.yml:ro
     networks:
       - proxy
-      - default
     deploy:
       resources:
         limits:

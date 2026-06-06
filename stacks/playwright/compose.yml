@@ -1,6 +1,9 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   playwright:
@@ -15,4 +18,3 @@ services:
           cpus: "1.0"
     networks:
       - proxy
-      - default

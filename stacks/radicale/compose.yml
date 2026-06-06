@@ -1,6 +1,9 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   # Radicale is a lightweight CalDAV and CardDAV server for calendars, contacts, and tasks.
@@ -24,7 +27,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

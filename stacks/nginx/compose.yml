@@ -1,6 +1,9 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   # A simple HTML page to display links to all the services.
@@ -23,7 +26,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

@@ -1,10 +1,11 @@
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
-  # Jellyfin is a media server for hosting and managing personal media libraries.
-  # Think of movies, TV shows, home videos, music, and pictures.
   jellyfin:
     container_name: jellyfin
     image: jellyfin/jellyfin
@@ -31,7 +32,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"

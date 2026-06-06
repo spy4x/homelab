@@ -30,15 +30,6 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: Webmail
-    group: cloud
-    url: "https://webmail.${DOMAIN}"
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
   - name: Rspamd
     group: cloud
     url: "https://rspamd.${DOMAIN}"

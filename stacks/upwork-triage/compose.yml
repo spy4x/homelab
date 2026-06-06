@@ -3,6 +3,9 @@ name: ${PROJECT}
 networks:
   proxy:
     external: true
+  default:
+    external: true
+    name: proxy
 
 services:
   upwork-triage:
@@ -29,7 +32,6 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
-      - default
     labels:
       # ── Shared labels ──
       - "traefik.enable=true"
