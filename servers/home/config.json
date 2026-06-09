@@ -28,6 +28,7 @@
     { "name": "adguard" },
     { "name": "filebrowser" },
     { "name": "radicale" },
-    { "name": "woodpecker" }
+    { "name": "woodpecker" },
+    { "name": "caldiy" }
   ]
 }
