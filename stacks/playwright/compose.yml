@@ -8,13 +8,27 @@ networks:
 services:
   playwright:
     container_name: playwright
-    image: mcr.microsoft.com/playwright:v1.57.0-noble
+    image: mcr.microsoft.com/playwright:v1.58.0-noble
     restart: unless-stopped
-    command: npx -y playwright@1.57.0 run-server --port 3000 --host 0.0.0.0
+    command: npx -y playwright@1.58.0 run-server --port 3000 --host 0.0.0.0
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 512M
           cpus: "1.0"
+    networks:
+      - proxy
+
+  playwright-mcp:
+    container_name: playwright-mcp
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp-proxy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: "0.5"
     networks:
       - proxy
