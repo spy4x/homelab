@@ -14,14 +14,22 @@ services:
       # --- Existing: Web loader via Playwright ---
       - WEB_LOADER_ENGINE=playwright
       - PLAYWRIGHT_WS_URL=ws://playwright:3000
+      - PLAYWRIGHT_TIMEOUT=5000
       - ENABLE_RAG_LOCAL_WEB_FETCH=true
 
       # --- Web Search via SearXNG ---
       - ENABLE_WEB_SEARCH=${ENABLE_WEB_SEARCH:-true}
       - WEB_SEARCH_ENGINE=${WEB_SEARCH_ENGINE:-searxng}
       - SEARXNG_QUERY_URL=${SEARXNG_QUERY_URL:-http://searxng:8080/search?format=json}
-      - WEB_SEARCH_RESULT_COUNT=${WEB_SEARCH_RESULT_COUNT:-5}
-      - BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL=${BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL:-false}
+      - WEB_SEARCH_RESULT_COUNT=${WEB_SEARCH_RESULT_COUNT:-3}
+      - BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL=${BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL:-true}
+
+      # --- MCP Tool Servers ---
+      - TOOL_SERVER_CONNECTIONS=[{"url":"http://playwright-mcp:8099","path":"/mcp","type":"mcp","headers":{"Accept":"application/json, text/event-stream","Content-Type":"application/json"}}]
+      - USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS=true
+
+      # --- HuggingFace ---
+      - HF_TOKEN=${HF_TOKEN}
 
       # --- LLM Providers (OpenAI-compatible) ---
       - OPENAI_API_KEYS=${OPENAI_API_KEYS}
@@ -37,7 +45,7 @@ services:
       # --- RAG Document Extraction ---
       - CONTENT_EXTRACTION_ENGINE=${CONTENT_EXTRACTION_ENGINE:-tika}
       - TIKA_SERVER_URL=${TIKA_SERVER_URL:-http://tika:9998}
-      - RAG_TOP_K=${RAG_TOP_K:-5}
+      - RAG_TOP_K=${RAG_TOP_K:-10}
       - RAG_FILE_MAX_COUNT=${RAG_FILE_MAX_COUNT:-10}
       - RAG_FILE_MAX_SIZE=${RAG_FILE_MAX_SIZE:-52428800}
 
@@ -48,7 +56,7 @@ services:
 
       # --- Config persistence ---
       # Set to false to force env vars to override DB config
-      - ENABLE_PERSISTENT_CONFIG=${ENABLE_PERSISTENT_CONFIG:-true}
+      - ENABLE_PERSISTENT_CONFIG=${ENABLE_PERSISTENT_CONFIG:-false}
 
       # --- Auth (if not using OAuth) ---
       - WEBUI_NAME=${WEBUI_NAME:-Homelab AI}
@@ -58,7 +66,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "1.0"
     networks:
       - proxy

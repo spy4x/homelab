@@ -21,4 +21,5 @@ node_modules
 .age/
 key.txt
 
+.playwright-mcp/
 todos.txt.playwright-mcp/
