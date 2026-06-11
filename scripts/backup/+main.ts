@@ -26,6 +26,9 @@ class BackupRunner {
     const startTime = Date.now()
     log(`[${new Date().toISOString()}] Starting backup process for: ${this.context.serverName}`)
 
+    // Send /start signal to healthchecks (if configured)
+    await this.reporter.sendStartSignal()
+
     try {
       // Load and validate configurations
       const backups = await this.loadConfigurations()

@@ -5,6 +5,34 @@ export class BackupReporter {
   constructor(private context: BackupContext) {}
 
   /**
+   * Sends /start signal to healthchecks to indicate backup has begun
+   * This enables Healthchecks to detect if the backup hangs/crashes
+   */
+  async sendStartSignal(): Promise<void> {
+    if (!this.context.healthchecksUrl) {
+      return
+    }
+
+    const url = `${this.context.healthchecksUrl}/start`
+    log(`Sending healthchecks start signal...`)
+
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        body: `Backup started for ${this.context.serverName}`,
+      })
+
+      if (response.ok) {
+        log("healthchecks start signal sent successfully")
+      } else {
+        error(`healthchecks start signal failed: ${response.status} ${response.statusText}`)
+      }
+    } catch (err) {
+      error(`Failed to send healthchecks start signal: ${err}`)
+    }
+  }
+
+  /**
    * Sends backup notifications via healthchecks and ntfy
    * Healthchecks is used for "dead man's switch" monitoring
    * ntfy is used for direct notifications (failures only)
