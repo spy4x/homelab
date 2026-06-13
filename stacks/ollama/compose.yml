@@ -1,0 +1,42 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+    volumes:
+      - ${VOLUMES_PATH}/ollama:/root/.ollama:z
+    group_add:
+      - "${DOCKER_GROUP_ID:-990}"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${OLLAMA_MEM_LIMIT:-8G}
+          cpus: ${OLLAMA_CPU_LIMIT:-2}
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.ollama.loadbalancer.server.port=11434"
+      - "traefik.http.routers.ollama.rule=Host(`ollama.${DOMAIN}`)"
+      - "traefik.http.routers.ollama.entrypoints=websecure"
+      - "traefik.http.routers.ollama.tls=true"
+      - "traefik.http.routers.ollama.tls.certresolver=myresolver"

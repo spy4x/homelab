@@ -1,0 +1,32 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # Reitti - Transit/journey planning app
+  reitti:
+    container_name: reitti
+    image: dedicatedcode/reitti:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${REITTI_MEM_LIMIT:-128M}
+          cpus: ${REITTI_CPU_LIMIT:-0.2}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.reitti.loadbalancer.server.port=3000"
+      - "traefik.http.routers.reitti.rule=Host(`loc.${DOMAIN}`)"
+      - "traefik.http.routers.reitti.entrypoints=websecure"
+      - "traefik.http.routers.reitti.tls=true"
+      - "traefik.http.routers.reitti.tls.certresolver=myresolver"

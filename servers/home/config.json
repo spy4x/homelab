@@ -30,6 +30,16 @@
     { "name": "radicale" },
     { "name": "woodpecker" },
     { "name": "caldiy" },
-    { "name": "monica" }
+    { "name": "monica" },
+    { "name": "mirotalk" },
+    { "name": "reitti" },
+    { "name": "it-tools" },
+    { "name": "usememos" },
+    { "name": "ollama" },
+    { "name": "grafana" },
+    { "name": "akaunting" },
+    { "name": "gitea" },
+    { "name": "timetracker" },
+    { "name": "stalwart" }
   ]
 }

@@ -1,0 +1,38 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # timetracker - Self-hosted time tracking with Traggo
+  # https://github.com/traggo/traggo
+  timetracker:
+    container_name: timetracker
+    image: traggo/server:latest
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+      - TRAGGO_PORT=3030
+    volumes:
+      - ${VOLUMES_PATH}/timetracker/data:/opt/traggo/data:z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${TIMETRACKER_MEM_LIMIT:-128M}
+          cpus: ${TIMETRACKER_CPU_LIMIT:-0.2}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.timetracker.loadbalancer.server.port=3030"
+      - "traefik.http.routers.timetracker.rule=Host(`time.${DOMAIN}`)"
+      - "traefik.http.routers.timetracker.entrypoints=websecure"
+      - "traefik.http.routers.timetracker.tls=true"
+      - "traefik.http.routers.timetracker.tls.certresolver=myresolver"

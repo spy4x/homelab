@@ -1,0 +1,66 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  akaunting-db:
+    container_name: akaunting-db
+    image: mariadb:11
+    restart: unless-stopped
+    volumes:
+      - ${VOLUMES_PATH}/akaunting/db:/var/lib/mysql:z
+    environment:
+      - MYSQL_ROOT_PASSWORD=${AKAUNTING_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=akaunting
+      - MYSQL_USER=akaunting
+      - MYSQL_PASSWORD=${AKAUNTING_DB_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--su-mysql", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  akaunting:
+    container_name: akaunting
+    image: akaunting/akaunting:latest
+    restart: unless-stopped
+    depends_on:
+      akaunting-db:
+        condition: service_healthy
+    volumes:
+      - ${VOLUMES_PATH}/akaunting/data:/var/www/akaunting/storage:z
+    environment:
+      - APP_URL=https://invoices.${DOMAIN}
+      - DB_CONNECTION=mysql
+      - DB_HOST=akaunting-db
+      - DB_PORT=3306
+      - DB_DATABASE=akaunting
+      - DB_USERNAME=akaunting
+      - DB_PASSWORD=${AKAUNTING_DB_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.akaunting.loadbalancer.server.port=80"
+      - "traefik.http.routers.akaunting.rule=Host(`invoices.${DOMAIN}`)"
+      - "traefik.http.routers.akaunting.entrypoints=websecure"
+      - "traefik.http.routers.akaunting.tls=true"
+      - "traefik.http.routers.akaunting.tls.certresolver=myresolver"

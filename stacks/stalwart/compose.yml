@@ -1,0 +1,42 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # Stalwart Mail Server - Modern mail server with JMAP support
+  # NOTE: This stack conflicts with the existing mailserver stack on ports 25, 465, 587, 993.
+  # Run only one mail server at a time. Disable mailserver before enabling stalwart.
+  stalwart:
+    container_name: stalwart
+    image: stalwartlabs/stalwart:latest
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+      - STALWART_MAIL_PORT=25
+      - STALWART_SUBMISSION_PORT=587
+      - STALWART_SUBMISSIONS_PORT=465
+      - STALWART_IMAPS_PORT=993
+    volumes:
+      - ${VOLUMES_PATH}/stalwart/data:/opt/stalwart-mail/data:z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${STALWART_MEM_LIMIT:-512M}
+          cpus: ${STALWART_CPU_LIMIT:-0.5}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.stalwart.loadbalancer.server.port=8080"
+      - "traefik.http.routers.stalwart.rule=Host(`${STALWART_SUBDOMAIN:-stalwart}.${DOMAIN}`)"
+      - "traefik.http.routers.stalwart.entrypoints=websecure"
+      - "traefik.http.routers.stalwart.tls=true"
+      - "traefik.http.routers.stalwart.tls.certresolver=myresolver"

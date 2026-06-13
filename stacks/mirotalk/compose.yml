@@ -1,0 +1,33 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  mirotalk:
+    container_name: mirotalk
+    image: mirotalk/p2p:latest
+    environment:
+      - TZ=${TIMEZONE:-UTC}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.3"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.mirotalk.loadbalancer.server.port=3000"
+      - "traefik.http.routers.mirotalk.rule=Host(`talk.${DOMAIN}`)"
+      - "traefik.http.routers.mirotalk.entrypoints=websecure"
+      - "traefik.http.routers.mirotalk.tls=true"
+      - "traefik.http.routers.mirotalk.tls.certresolver=myresolver"
