@@ -111,6 +111,12 @@ async function main() {
       backupsPath = backupsPath.replace("~/", `${homeDir}/`)
     }
 
+    // Derive volumes path (VOLUMES_PATH env or default under apps)
+    let volumesPath = env.VOLUMES_PATH || `${appsPath}/.volumes`
+    if (volumesPath.startsWith("~/")) {
+      volumesPath = volumesPath.replace("~/", `${homeDir}/`)
+    }
+
     const backupLogPath = `${homeDir}/backup.log`
     const envFilePath = `${appsPath}/.env`
     const rootEnvFilePath = `${appsPath}/.env.root`
@@ -127,6 +133,7 @@ async function main() {
       ssh_port: "{{ lookup('env', 'SSH_PORT') }}",
       deno_install_path: denoInstallPath,
       apps_path: appsPath,
+      volumes_path: volumesPath,
       backup_log_path: backupLogPath,
       env_file_path: envFilePath,
       root_env_file_path: rootEnvFilePath,
