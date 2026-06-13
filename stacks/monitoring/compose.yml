@@ -1,0 +1,90 @@
+name: ${PROJECT}
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # Loki - Log aggregation (receives from Promtail, serves to Grafana)
+  loki:
+    container_name: mon-loki
+    image: grafana/loki:latest
+    user: "${PUID:-1000}:${PGID:-1000}"
+    volumes:
+      - ${VOLUMES_PATH}/monitoring/loki:/loki:z
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.3"
+    networks:
+      - default
+
+  # Promtail - Log collector (reads container logs, ships to Loki)
+  promtail:
+    container_name: mon-promtail
+    image: grafana/promtail:latest
+    volumes:
+      - ${PATH_APPS}/configs/monitoring/promtail.yml:/etc/promtail/config.yml:ro,z
+      - /var/log:/var/log:ro,z
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro,z
+      - /var/run/docker.sock:/var/run/docker.sock:ro,z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.2"
+    group_add:
+      - "${DOCKER_GROUP_ID:-990}"
+    security_opt:
+      - label=type:container_runtime_t
+    networks:
+      - default
+
+  # Node Exporter - Host-level metrics (CPU, memory, disk, network)
+  node-exporter:
+    container_name: mon-node-exporter
+    image: prom/node-exporter:latest
+    volumes:
+      - /proc:/host/proc:ro,z
+      - /sys:/host/sys:ro,z
+      - /:/rootfs:ro,z
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.sysfs=/host/sys"
+      - "--path.rootfs=/rootfs"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.1"
+    networks:
+      - default
+
+  # cAdvisor - Container-level metrics (resource usage per container)
+  cadvisor:
+    container_name: mon-cadvisor
+    image: gcr.io/cadvisor/cadvisor:latest
+    volumes:
+      - /:/rootfs:ro,z
+      - /var/run:/var/run:ro,z
+      - /sys:/sys:ro,z
+      - /var/lib/docker:/var/lib/docker:ro,z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.3"
+    group_add:
+      - "${DOCKER_GROUP_ID:-990}"
+    security_opt:
+      - label=type:container_runtime_t
+    networks:
+      - default

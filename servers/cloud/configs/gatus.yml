@@ -220,6 +220,115 @@ endpoints:
       - type: ntfy
         failure-threshold: 9
 
+  - name: Monica
+    group: home
+    url: "https://crm.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Akaunting
+    group: home
+    url: "https://invoices.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Grafana
+    group: home
+    url: "https://metrics.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Ollama
+    group: home
+    url: "https://ollama.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: it-tools
+    group: home
+    url: "https://tools.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Traggo
+    group: home
+    url: "https://time.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Usememos
+    group: home
+    url: "https://notes.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Reitti
+    group: home
+    url: "https://loc.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Mirotalk
+    group: home
+    url: "https://talk.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Gitea
+    group: home
+    url: "https://git.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Stalwart
+    group: home
+    url: "https://stalwart.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   # External sites monitoring
   - name: Michael's website
     group: external

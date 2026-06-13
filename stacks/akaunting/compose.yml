@@ -63,4 +63,5 @@ services:
       - "traefik.http.routers.akaunting.rule=Host(`invoices.${DOMAIN}`)"
       - "traefik.http.routers.akaunting.entrypoints=websecure"
       - "traefik.http.routers.akaunting.tls=true"
+      - "traefik.http.routers.akaunting.middlewares=auth"
       - "traefik.http.routers.akaunting.tls.certresolver=myresolver"

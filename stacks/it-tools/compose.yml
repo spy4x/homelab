@@ -31,4 +31,5 @@ services:
       - "traefik.http.routers.it-tools.rule=Host(`tools.${DOMAIN}`)"
       - "traefik.http.routers.it-tools.entrypoints=websecure"
       - "traefik.http.routers.it-tools.tls=true"
+      - "traefik.http.routers.it-tools.middlewares=auth"
       - "traefik.http.routers.it-tools.tls.certresolver=myresolver"

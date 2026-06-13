@@ -39,7 +39,8 @@
     { "name": "grafana" },
     { "name": "akaunting" },
     { "name": "gitea" },
-    { "name": "timetracker" },
-    { "name": "stalwart" }
+    { "name": "traggo" },
+    { "name": "stalwart" },
+    { "name": "monitoring" }
   ]
 }

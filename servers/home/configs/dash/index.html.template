@@ -266,17 +266,7 @@
               <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_audiobookshelf/health/badge.svg" alt="Home Audiobooks Uptime Badge" />
             </a>
           </li>
-          <li class="service-item">
-            <a
-              href="https://home.${DOMAIN}"
-              target="_blank"
-              class="service-link"
-            >
-              <div class="service-icon">🏠</div>
-              <div class="service-name">Home Assistant</div>
-              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_home-assistant/health/badge.svg" alt="Home Home Assistant Uptime Badge" />
-            </a>
-          </li>
+
           <li class="service-item">
             <a
               href="https://dns.${DOMAIN}"
@@ -331,7 +321,118 @@
               <div class="service-name">YouTube</div>
               <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_piped/health/badge.svg" alt="Home YouTube Uptime Badge" />
             </a>
-          </li>        </ul>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://crm.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">💑</div>
+              <div class="service-name">CRM</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_monica/health/badge.svg" alt="Home CRM Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://git.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📦</div>
+              <div class="service-name">Git</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_gitea/health/badge.svg" alt="Home Git Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://invoices.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">💰</div>
+              <div class="service-name">Invoices</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_akaunting/health/badge.svg" alt="Home Invoices Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://loc.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🗺️</div>
+              <div class="service-name">Transit</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_reitti/health/badge.svg" alt="Home Transit Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://metrics.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📊</div>
+              <div class="service-name">Metrics</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_grafana/health/badge.svg" alt="Home Metrics Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://notes.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📝</div>
+              <div class="service-name">Notes</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_usememos/health/badge.svg" alt="Home Notes Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://ollama.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🧠</div>
+              <div class="service-name">Ollama</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_ollama/health/badge.svg" alt="Home Ollama Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://time.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">⏰</div>
+              <div class="service-name">Time Tracker</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_traggo/health/badge.svg" alt="Home Time Tracker Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://tools.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔧</div>
+              <div class="service-name">Tools</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_it-tools/health/badge.svg" alt="Home Tools Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://talk.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📹</div>
+              <div class="service-name">Talk</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_mirotalk/health/badge.svg" alt="Home Talk Uptime Badge" />
+            </a>
+          </li>
+        </ul>
       </div>
 
       <div class="section">

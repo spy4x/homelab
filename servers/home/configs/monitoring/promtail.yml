@@ -1,0 +1,30 @@
+# Promtail configuration for Homelab Monitoring
+# Sends container logs to Loki
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://mon-loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: "container"
+      - source_labels: ["__meta_docker_container_log_stream"]
+        target_label: "log_stream"
+      - source_labels: ["__meta_docker_compose_service_name"]
+        target_label: "service"
+      - source_labels: ["__meta_docker_compose_project_name"]
+        target_label: "project"
+      - source_labels: ["__meta_docker_container_id"]
+        target_label: "container_id"

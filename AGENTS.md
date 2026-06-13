@@ -308,6 +308,20 @@ export async function runCommand(
 }
 ```
 
+## 🏗️ Infrastructure as Code Priority
+
+**All configs must be defined in code before anything is deployed manually.** This repo must remain fully reproducible:
+
+1. **Compose files** define what runs, how it's networked, and resource limits
+2. **Gatus** monitors every service from the opposite server (cross-server monitoring)
+3. **Dashboard** at `dash.${DOMAIN}` lists every service with health badges
+4. **Backup configs** protect persistent data
+5. **.env + .env.example** (encrypted) contain all secrets
+6. **Traefik labels** control routing, TLS, and auth (basic auth middleware = `auth`)
+7. **config.json** declares which stacks each server deploys
+
+Before any manual container manipulation: check if the change can be codified in a compose.yml. If it cannot, document the manual step in a README.
+
 ## 📝 Key Principles
 
 1. **Infrastructure as Code First**: Everything defined in code, no manual UI changes

@@ -11,6 +11,7 @@ services:
   grafana:
     container_name: grafana
     image: grafana/grafana:latest
+    user: "${PUID:-1000}:${PGID:-1000}"
     environment:
       - GF_SERVER_ROOT_URL=https://metrics.${DOMAIN}
       - GF_SECURITY_ADMIN_USER=admin
@@ -18,7 +19,6 @@ services:
       - GF_INSTALL_PLUGINS=
     volumes:
       - ${VOLUMES_PATH}/grafana/data:/var/lib/grafana:z
-      - ${VOLUMES_PATH}/grafana/config:/etc/grafana:z
     restart: unless-stopped
     deploy:
       resources:
@@ -36,4 +36,5 @@ services:
       - "traefik.http.routers.grafana.rule=Host(`metrics.${DOMAIN}`)"
       - "traefik.http.routers.grafana.entrypoints=websecure"
       - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.middlewares=auth"
       - "traefik.http.routers.grafana.tls.certresolver=myresolver"

@@ -36,6 +36,11 @@ services:
       - OPENAI_API_BASE_URLS=${OPENAI_API_BASE_URLS}
       - OPENAI_API_CONFIGS=${OPENAI_API_CONFIGS}
 
+      # --- Ollama Local LLM ---
+      - ENABLE_OLLAMA_API=${ENABLE_OLLAMA_API:-true}
+      - OLLAMA_API_BASE_URL=${OLLAMA_API_BASE_URL:-http://ollama:11434}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
+
       # --- Default Model Settings ---
       - DEFAULT_MODELS=${DEFAULT_MODELS}
       - DEFAULT_USER_ROLE=${DEFAULT_USER_ROLE:-user}
