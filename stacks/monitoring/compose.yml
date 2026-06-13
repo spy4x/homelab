@@ -67,6 +67,25 @@ services:
     networks:
       - default
 
+  # Prometheus - Metrics storage & query engine
+  prometheus:
+    container_name: mon-prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ${VOLUMES_PATH}/monitoring/prometheus:/prometheus:z
+      - ${PATH_APPS}/configs/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro,z
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    networks:
+      - default
+
   # cAdvisor - Container-level metrics (resource usage per container)
   cadvisor:
     container_name: mon-cadvisor

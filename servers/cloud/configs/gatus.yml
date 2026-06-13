@@ -266,6 +266,17 @@ endpoints:
 
   - name: it-tools
     group: home
+    url: "https://it-tools.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Stirling PDF
+    group: home
     url: "https://tools.${DOMAIN}"
     interval: 1m
     headers:

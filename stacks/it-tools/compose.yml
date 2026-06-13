@@ -28,7 +28,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "traefik.http.services.it-tools.loadbalancer.server.port=80"
-      - "traefik.http.routers.it-tools.rule=Host(`tools.${DOMAIN}`)"
+      - "traefik.http.routers.it-tools.rule=Host(`it-tools.${DOMAIN}`)"
       - "traefik.http.routers.it-tools.entrypoints=websecure"
       - "traefik.http.routers.it-tools.tls=true"
       - "traefik.http.routers.it-tools.middlewares=auth"

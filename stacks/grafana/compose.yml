@@ -19,6 +19,8 @@ services:
       - GF_INSTALL_PLUGINS=
     volumes:
       - ${VOLUMES_PATH}/grafana/data:/var/lib/grafana:z
+      - ${PATH_APPS}/configs/grafana/datasources:/etc/grafana/provisioning/datasources:ro,z
+      - ${PATH_APPS}/configs/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro,z
     restart: unless-stopped
     deploy:
       resources:

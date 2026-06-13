@@ -13,9 +13,10 @@ http:
         stsIncludeSubdomains: true
         stsPreload: true
         permissionsPolicy: >-
-          geolocation=(), microphone=(), camera=(), payment=(), usb=(),
+          camera=(self), microphone=(self), clipboard-read=(self), clipboard-write=(self),
+          geolocation=(), payment=(), usb=(),
           interest-cohort=(), browsing-topics=(), accelerometer=(),
-          gyroscope=(), magnetometer=(), clipboard-write=()
+          gyroscope=(), magnetometer=()
         customResponseHeaders:
           Cross-Origin-Opener-Policy: same-origin
           Cross-Origin-Resource-Policy: same-site

@@ -3,30 +3,97 @@ name: ${PROJECT}
 networks:
   proxy:
     external: true
-  default:
-    external: true
-    name: proxy
+  reitti-net:
+    driver: bridge
+
+volumes:
+  reitti-data:
+  postgis-data:
+  redis-data:
+  tile-cache-data:
 
 services:
-  # Reitti - Transit/journey planning app
   reitti:
     container_name: reitti
     image: dedicatedcode/reitti:latest
     restart: unless-stopped
+    depends_on:
+      postgis:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+      tile-cache:
+        condition: service_healthy
     deploy:
       resources:
         limits:
-          memory: ${REITTI_MEM_LIMIT:-128M}
-          cpus: ${REITTI_CPU_LIMIT:-0.2}
+          memory: ${REITTI_MEM_LIMIT:-256M}
+          cpus: ${REITTI_CPU_LIMIT:-0.5}
     security_opt:
       - no-new-privileges:true
     networks:
+      - reitti-net
       - proxy
+    volumes:
+      - reitti-data:/data
+    environment:
+      POSTGIS_USER: ${REITTI_DB_USER:-reitti}
+      POSTGIS_PASSWORD: ${REITTI_DB_PASSWORD:-reitti}
+      POSTGIS_DB: ${REITTI_DB_NAME:-reittidb}
+      POSTGIS_HOST: postgis
+      POSTGIS_PORT: 5432
+      REDIS_HOST: redis
+      SERVER_PORT: 8080
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.reitti.loadbalancer.server.port=3000"
+      - "traefik.http.services.reitti.loadbalancer.server.port=8080"
       - "traefik.http.routers.reitti.rule=Host(`loc.${DOMAIN}`)"
       - "traefik.http.routers.reitti.entrypoints=websecure"
       - "traefik.http.routers.reitti.tls=true"
       - "traefik.http.routers.reitti.tls.certresolver=myresolver"
+
+  postgis:
+    image: postgis/postgis:17-3.5-alpine
+    restart: unless-stopped
+    networks:
+      - reitti-net
+    volumes:
+      - postgis-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${REITTI_DB_USER:-reitti}
+      POSTGRES_PASSWORD: ${REITTI_DB_PASSWORD:-reitti}
+      POSTGRES_DB: ${REITTI_DB_NAME:-reittidb}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${REITTI_DB_USER:-reitti} -d ${REITTI_DB_NAME:-reittidb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - reitti-net
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tile-cache:
+    image: dedicatedcode/reitti-tile-cache:latest
+    restart: unless-stopped
+    networks:
+      - reitti-net
+      - proxy
+    healthcheck:
+      test: ["CMD", "curl", "-s", "http://127.0.0.1/osm/0/0/0.png"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - tile-cache-data:/var/cache/nginx

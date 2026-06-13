@@ -41,6 +41,7 @@
     { "name": "gitea" },
     { "name": "traggo" },
     { "name": "stalwart" },
-    { "name": "monitoring" }
+    { "name": "monitoring" },
+    { "name": "stirling-pdf" }
   ]
 }
