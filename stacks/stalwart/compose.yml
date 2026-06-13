@@ -20,6 +20,7 @@ services:
       - STALWART_SUBMISSION_PORT=587
       - STALWART_SUBMISSIONS_PORT=465
       - STALWART_IMAPS_PORT=993
+      - STALWART_RECOVERY_ADMIN=admin:${STALWART_ADMIN_PASSWORD}
     volumes:
       - ${VOLUMES_PATH}/stalwart/data:/opt/stalwart-mail/data:z
     restart: unless-stopped
