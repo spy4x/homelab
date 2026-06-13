@@ -124,6 +124,15 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: SearXNG
+    group: home
+    url: "https://search.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   - name: Woodpecker CI
     group: home
     url: "https://ci.${DOMAIN}"
