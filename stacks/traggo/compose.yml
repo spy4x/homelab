@@ -11,7 +11,7 @@ services:
   # traggo - Self-hosted time tracking
   # https://github.com/traggo/traggo
   traggo:
-    container_name: traggo
+    container_name: hl-traggo
     image: traggo/server:latest
     environment:
       - TZ=${TIMEZONE:-UTC}
@@ -31,9 +31,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.traggo.loadbalancer.server.port=3030"
-      - "traefik.http.routers.traggo.rule=Host(`time.${DOMAIN}`)"
-      - "traefik.http.routers.traggo.entrypoints=websecure"
-      - "traefik.http.routers.traggo.tls=true"
-      - "traefik.http.routers.traggo.middlewares=auth"
-      - "traefik.http.routers.traggo.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-traggo.loadbalancer.server.port=3030"
+      - "traefik.http.routers.hl-traggo.rule=Host(`time.${DOMAIN}`)"
+      - "traefik.http.routers.hl-traggo.entrypoints=websecure"
+      - "traefik.http.routers.hl-traggo.tls=true"
+      - "traefik.http.routers.hl-traggo.middlewares=auth"
+      - "traefik.http.routers.hl-traggo.tls.certresolver=myresolver"

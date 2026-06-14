@@ -10,7 +10,7 @@ services:
   # Receives HTTP/email pings from scheduled tasks, alerts when they don't check in
   # https://github.com/healthchecks/healthchecks
   healthchecks:
-    container_name: healthchecks
+    container_name: hl-healthchecks
     image: healthchecks/healthchecks:latest
     user: "999:999" # Run as hc user (UID/GID 999)
     environment:
@@ -45,8 +45,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.healthchecks.loadbalancer.server.port=8000"
-      - "traefik.http.routers.healthchecks.rule=Host(`healthchecks.${DOMAIN}`)"
-      - "traefik.http.routers.healthchecks.entrypoints=websecure"
-      - "traefik.http.routers.healthchecks.tls=true"
-      - "traefik.http.routers.healthchecks.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-healthchecks.loadbalancer.server.port=8000"
+      - "traefik.http.routers.hl-healthchecks.rule=Host(`healthchecks.${DOMAIN}`)"
+      - "traefik.http.routers.hl-healthchecks.entrypoints=websecure"
+      - "traefik.http.routers.hl-healthchecks.tls=true"
+      - "traefik.http.routers.hl-healthchecks.tls.certresolver=myresolver"

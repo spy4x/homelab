@@ -8,7 +8,7 @@ networks:
 services:
   # Vaultwarden is a password manager which is compatible with Bitwarden clients.
   vaultwarden:
-    container_name: vaultwarden
+    container_name: hl-vaultwarden
     image: vaultwarden/server:latest
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
@@ -47,12 +47,12 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       # Main service (handles both HTTP and WebSocket on port 80 since v1.29.0)
-      - "traefik.http.services.vaultwarden.loadbalancer.server.port=80"
-      - "traefik.http.routers.vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
-      - "traefik.http.routers.vaultwarden.entrypoints=websecure"
-      - "traefik.http.routers.vaultwarden.tls=true"
-      - "traefik.http.routers.vaultwarden.tls.certresolver=myresolver"
-      - "traefik.http.routers.vaultwarden.service=vaultwarden"
+      - "traefik.http.services.hl-vaultwarden.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-vaultwarden.rule=Host(`passwords.${DOMAIN}`)"
+      - "traefik.http.routers.hl-vaultwarden.entrypoints=websecure"
+      - "traefik.http.routers.hl-vaultwarden.tls=true"
+      - "traefik.http.routers.hl-vaultwarden.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-vaultwarden.service=hl-vaultwarden"
       # Cloudflare real IP middleware
-      - "traefik.http.routers.vaultwarden.middlewares=vaultwarden-realip"
+      - "traefik.http.routers.hl-vaultwarden.middlewares=vaultwarden-realip"
       - "traefik.http.middlewares.vaultwarden-realip.headers.customrequestheaders.CF-Connecting-IP="

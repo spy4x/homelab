@@ -7,7 +7,7 @@ networks:
 
 services:
   open-webui:
-    container_name: open-webui
+    container_name: hl-open-webui
     image: ghcr.io/open-webui/open-webui:latest
     restart: unless-stopped
     environment:
@@ -78,8 +78,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.open-webui.loadbalancer.server.port=8080"
-      - "traefik.http.routers.open-webui.rule=Host(`ai.${DOMAIN}`)"
-      - "traefik.http.routers.open-webui.entrypoints=websecure"
-      - "traefik.http.routers.open-webui.tls=true"
-      - "traefik.http.routers.open-webui.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-open-webui.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-open-webui.rule=Host(`ai.${DOMAIN}`)"
+      - "traefik.http.routers.hl-open-webui.entrypoints=websecure"
+      - "traefik.http.routers.hl-open-webui.tls=true"
+      - "traefik.http.routers.hl-open-webui.tls.certresolver=myresolver"

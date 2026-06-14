@@ -7,7 +7,7 @@ networks:
 
 services:
   playwright:
-    container_name: playwright
+    container_name: hl-playwright
     image: mcr.microsoft.com/playwright:v1.58.0-noble
     restart: unless-stopped
     command: npx -y playwright@1.58.0 run-server --port 3000 --host 0.0.0.0
@@ -20,7 +20,7 @@ services:
       - proxy
 
   playwright-mcp:
-    container_name: playwright-mcp
+    container_name: hl-playwright-mcp
     build:
       context: .
       dockerfile: Dockerfile.mcp-proxy

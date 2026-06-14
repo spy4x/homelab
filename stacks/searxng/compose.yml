@@ -6,7 +6,7 @@ networks:
 
 services:
   searxng-redis:
-    container_name: searxng-redis
+    container_name: hl-searxng-redis
     image: redis:7-alpine
     restart: unless-stopped
     volumes:
@@ -21,7 +21,7 @@ services:
       - default
 
   searxng:
-    container_name: searxng
+    container_name: hl-searxng
     image: searxng/searxng:latest
     restart: unless-stopped
     volumes:
@@ -49,8 +49,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.searxng.loadbalancer.server.port=8080"
-      - "traefik.http.routers.searxng.rule=Host(`search.${DOMAIN}`)"
-      - "traefik.http.routers.searxng.entrypoints=websecure"
-      - "traefik.http.routers.searxng.tls=true"
-      - "traefik.http.routers.searxng.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-searxng.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-searxng.rule=Host(`search.${DOMAIN}`)"
+      - "traefik.http.routers.hl-searxng.entrypoints=websecure"
+      - "traefik.http.routers.hl-searxng.tls=true"
+      - "traefik.http.routers.hl-searxng.tls.certresolver=myresolver"

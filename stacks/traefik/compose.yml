@@ -14,7 +14,7 @@ services:
   # Ex: https://gitea.example.com -> gitea container:3000
   # It's configured to use Let's Encrypt to automatically generate SSL certificates and redirect all HTTP requests to HTTPS.
   traefik:
-    container_name: "traefik"
+    container_name: "hl-traefik"
     image: "traefik:3.6.6"
     restart: unless-stopped
     user: "${PUID:-1000}:${PGID:-1000}"
@@ -66,10 +66,10 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
-      - "traefik.http.routers.traefik.rule=Host(`${PROXY_SUBDOMAIN}.${DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=myresolver"
-      - "traefik.http.routers.traefik.middlewares=auth"
+      - "traefik.http.services.hl-traefik.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-traefik.rule=Host(`${PROXY_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-traefik.entrypoints=websecure"
+      - "traefik.http.routers.hl-traefik.tls=true"
+      - "traefik.http.routers.hl-traefik.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-traefik.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"

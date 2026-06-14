@@ -4,7 +4,7 @@ networks:
 
 services:
   gitea-db:
-    container_name: gitea-db
+    container_name: hl-gitea-db
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: gitea
@@ -27,7 +27,7 @@ services:
       - no-new-privileges:true
 
   gitea:
-    container_name: gitea
+    container_name: hl-gitea
     image: gitea/gitea:latest
     environment:
       - USER_UID=${PUID:-1000}
@@ -76,8 +76,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.routers.gitea.rule=Host(`git.${DOMAIN}`)"
-      - "traefik.http.routers.gitea.entrypoints=websecure"
-      - "traefik.http.routers.gitea.tls=true"
-      - "traefik.http.routers.gitea.tls.certresolver=myresolver"
-      - "traefik.http.services.gitea.loadbalancer.server.port=3000"
+      - "traefik.http.routers.hl-gitea.rule=Host(`git.${DOMAIN}`)"
+      - "traefik.http.routers.hl-gitea.entrypoints=websecure"
+      - "traefik.http.routers.hl-gitea.tls=true"
+      - "traefik.http.routers.hl-gitea.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-gitea.loadbalancer.server.port=3000"

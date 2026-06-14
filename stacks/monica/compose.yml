@@ -7,7 +7,7 @@ networks:
 services:
   # MariaDB database for Monica CRM
   monica-db:
-    container_name: monica-db
+    container_name: hl-monica-db
     image: mariadb:11
     restart: unless-stopped
     volumes:
@@ -33,7 +33,7 @@ services:
   # Monica CRM - Personal relationship manager
   # https://github.com/monicahq/monica
   monica:
-    container_name: monica
+    container_name: hl-monica
     image: monica:latest
     restart: unless-stopped
     depends_on:
@@ -78,9 +78,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.monica.loadbalancer.server.port=80"
-      - "traefik.http.routers.monica.rule=Host(`crm.${DOMAIN}`)"
-      - "traefik.http.routers.monica.entrypoints=websecure"
-      - "traefik.http.routers.monica.tls=true"
-      - "traefik.http.routers.monica.middlewares=auth"
-      - "traefik.http.routers.monica.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-monica.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-monica.rule=Host(`crm.${DOMAIN}`)"
+      - "traefik.http.routers.hl-monica.entrypoints=websecure"
+      - "traefik.http.routers.hl-monica.tls=true"
+      - "traefik.http.routers.hl-monica.middlewares=auth"
+      - "traefik.http.routers.hl-monica.tls.certresolver=myresolver"

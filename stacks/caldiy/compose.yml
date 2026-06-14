@@ -4,7 +4,7 @@ networks:
 
 services:
   caldiy-db:
-    container_name: caldiy-db
+    container_name: hl-caldiy-db
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: caldiy
@@ -27,7 +27,7 @@ services:
       retries: 5
 
   caldiy-redis:
-    container_name: caldiy-redis
+    container_name: hl-caldiy-redis
     image: redis:7-alpine
     volumes:
       - ${VOLUMES_PATH}/caldiy/redis:/data
@@ -41,7 +41,7 @@ services:
       - no-new-privileges:true
 
   caldiy:
-    container_name: caldiy
+    container_name: hl-caldiy
     image: calcom/cal.com:${CALDIY_VERSION:-latest}
     environment:
       - DATABASE_URL=postgresql://caldiy:${CALDIY_DB_PASSWORD}@caldiy-db:5432/caldiy
@@ -79,8 +79,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.caldiy.loadbalancer.server.port=3000"
-      - "traefik.http.routers.caldiy.rule=Host(`schedule.${DOMAIN}`)"
-      - "traefik.http.routers.caldiy.entrypoints=websecure"
-      - "traefik.http.routers.caldiy.tls=true"
-      - "traefik.http.routers.caldiy.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-caldiy.loadbalancer.server.port=3000"
+      - "traefik.http.routers.hl-caldiy.rule=Host(`schedule.${DOMAIN}`)"
+      - "traefik.http.routers.hl-caldiy.entrypoints=websecure"
+      - "traefik.http.routers.hl-caldiy.tls=true"
+      - "traefik.http.routers.hl-caldiy.tls.certresolver=myresolver"

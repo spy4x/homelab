@@ -62,6 +62,6 @@ echo "  Private key: $CERT_DIR/key.pem"
 
 # Restart mailserver to apply new certificates
 echo "Restarting mailserver..."
-docker restart mailserver
+docker restart hl-mailserver
 
 echo "Done! Mailserver is now using Let's Encrypt certificates."

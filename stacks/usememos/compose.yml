@@ -10,7 +10,7 @@ networks:
 services:
   # usememos - Lightweight note-taking app
   memos:
-    container_name: memos
+    container_name: hl-memos
     image: neosmemo/memos:stable
     volumes:
       - ${VOLUMES_PATH}/memos:/var/opt/memos:z
@@ -27,8 +27,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.memos.loadbalancer.server.port=5230"
-      - "traefik.http.routers.memos.rule=Host(`notes.${DOMAIN}`)"
-      - "traefik.http.routers.memos.entrypoints=websecure"
-      - "traefik.http.routers.memos.tls=true"
-      - "traefik.http.routers.memos.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-memos.loadbalancer.server.port=5230"
+      - "traefik.http.routers.hl-memos.rule=Host(`notes.${DOMAIN}`)"
+      - "traefik.http.routers.hl-memos.entrypoints=websecure"
+      - "traefik.http.routers.hl-memos.tls=true"
+      - "traefik.http.routers.hl-memos.tls.certresolver=myresolver"

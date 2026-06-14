@@ -11,7 +11,7 @@ services:
   # ntfy - Notification service for alerts
   # Can be used for mail server alerts and backup notifications
   ntfy:
-    container_name: ntfy
+    container_name: hl-ntfy
     image: binwiederhier/ntfy:latest
     command:
       - serve
@@ -43,8 +43,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.ntfy.loadbalancer.server.port=80"
-      - "traefik.http.routers.ntfy.rule=Host(`${NTFY_SUBDOMAIN}.${DOMAIN}`)"
-      - "traefik.http.routers.ntfy.entrypoints=websecure"
-      - "traefik.http.routers.ntfy.tls=true"
-      - "traefik.http.routers.ntfy.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-ntfy.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-ntfy.rule=Host(`${NTFY_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-ntfy.entrypoints=websecure"
+      - "traefik.http.routers.hl-ntfy.tls=true"
+      - "traefik.http.routers.hl-ntfy.tls.certresolver=myresolver"

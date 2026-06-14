@@ -7,18 +7,18 @@ services:
   # This allows Traefik to generate a certificate that mailserver can use
   mail-cert-helper:
     image: nginx:alpine
-    container_name: mail-cert-helper
+    container_name: hl-mail-cert-helper
     restart: unless-stopped
     networks:
       - proxy
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.mail-cert.loadbalancer.server.port=80"
-      - "traefik.http.routers.mail-cert.rule=Host(`mail.${DOMAIN}`)"
-      - "traefik.http.routers.mail-cert.entrypoints=websecure"
-      - "traefik.http.routers.mail-cert.tls=true"
-      - "traefik.http.routers.mail-cert.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-mail-cert.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-mail-cert.rule=Host(`mail.${DOMAIN}`)"
+      - "traefik.http.routers.hl-mail-cert.entrypoints=websecure"
+      - "traefik.http.routers.hl-mail-cert.tls=true"
+      - "traefik.http.routers.hl-mail-cert.tls.certresolver=myresolver"
     deploy:
       resources:
         limits:
@@ -30,7 +30,7 @@ services:
   # Documentation: https://docker-mailserver.github.io/docker-mailserver/latest/
   mailserver:
     image: ghcr.io/docker-mailserver/docker-mailserver:latest
-    container_name: mailserver
+    container_name: hl-mailserver
     hostname: mail
     domainname: ${DOMAIN}
     restart: unless-stopped
@@ -103,9 +103,9 @@ services:
       # Rspamd Web UI (spam filter management)
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.rspamd.loadbalancer.server.port=11334"
-      - "traefik.http.routers.rspamd.rule=Host(`rspamd.${DOMAIN}`)"
-      - "traefik.http.routers.rspamd.entrypoints=websecure"
-      - "traefik.http.routers.rspamd.tls=true"
-      - "traefik.http.routers.rspamd.tls.certresolver=myresolver"
-      - "traefik.http.routers.rspamd.middlewares=auth"
+      - "traefik.http.services.hl-rspamd.loadbalancer.server.port=11334"
+      - "traefik.http.routers.hl-rspamd.rule=Host(`rspamd.${DOMAIN}`)"
+      - "traefik.http.routers.hl-rspamd.entrypoints=websecure"
+      - "traefik.http.routers.hl-rspamd.tls=true"
+      - "traefik.http.routers.hl-rspamd.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-rspamd.middlewares=auth"

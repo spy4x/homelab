@@ -9,13 +9,13 @@ networks:
 
 services:
   stirling-pdf:
-    container_name: stirling-pdf
+    container_name: hl-stirling-pdf
     image: frooodle/s-pdf:latest
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 1G
+          memory: 2G
           cpus: "1"
     security_opt:
       - no-new-privileges:true
@@ -29,9 +29,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.stirling-pdf.loadbalancer.server.port=8080"
-      - "traefik.http.routers.stirling-pdf.rule=Host(`tools.${DOMAIN}`)"
-      - "traefik.http.routers.stirling-pdf.entrypoints=websecure"
-      - "traefik.http.routers.stirling-pdf.tls=true"
-      - "traefik.http.routers.stirling-pdf.middlewares=auth"
-      - "traefik.http.routers.stirling-pdf.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-stirling-pdf.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-stirling-pdf.rule=Host(`tools.${DOMAIN}`)"
+      - "traefik.http.routers.hl-stirling-pdf.entrypoints=websecure"
+      - "traefik.http.routers.hl-stirling-pdf.tls=true"
+      - "traefik.http.routers.hl-stirling-pdf.middlewares=auth"
+      - "traefik.http.routers.hl-stirling-pdf.tls.certresolver=myresolver"

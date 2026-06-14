@@ -12,7 +12,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: upwork-triage
+    container_name: hl-upwork-triage
     environment:
       - UPWORK_TRIAGE_DEEPSEEK_API_KEY=${UPWORK_TRIAGE_DEEPSEEK_API_KEY}
       - UPWORK_TRIAGE_TELEGRAM_BOT_TOKEN=${UPWORK_TRIAGE_TELEGRAM_BOT_TOKEN}
@@ -36,18 +36,18 @@ services:
       # ── Shared labels ──
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.upwork-triage.loadbalancer.server.port=8000"
+      - "traefik.http.services.hl-upwork-triage.loadbalancer.server.port=8000"
 
       # ── Router for webhook API (no basic auth, app handles auth) ──
-      - "traefik.http.routers.upwork-triage.rule=Host(`upwork-triage.${DOMAIN}`) && (PathPrefix(`/v1`) || PathPrefix(`/health`))"
-      - "traefik.http.routers.upwork-triage.entrypoints=websecure"
-      - "traefik.http.routers.upwork-triage.tls=true"
-      - "traefik.http.routers.upwork-triage.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-upwork-triage.rule=Host(`upwork-triage.${DOMAIN}`) && (PathPrefix(`/v1`) || PathPrefix(`/health`))"
+      - "traefik.http.routers.hl-upwork-triage.entrypoints=websecure"
+      - "traefik.http.routers.hl-upwork-triage.tls=true"
+      - "traefik.http.routers.hl-upwork-triage.tls.certresolver=myresolver"
 
       # ── Router for WebUI dashboard (with basic auth) ──
-      - "traefik.http.routers.upwork-triage-webui.rule=Host(`upwork-triage.${DOMAIN}`)"
-      - "traefik.http.routers.upwork-triage-webui.entrypoints=websecure"
-      - "traefik.http.routers.upwork-triage-webui.tls=true"
-      - "traefik.http.routers.upwork-triage-webui.tls.certresolver=myresolver"
-      - "traefik.http.routers.upwork-triage-webui.middlewares=upwork-triage-auth"
+      - "traefik.http.routers.hl-upwork-triage-webui.rule=Host(`upwork-triage.${DOMAIN}`)"
+      - "traefik.http.routers.hl-upwork-triage-webui.entrypoints=websecure"
+      - "traefik.http.routers.hl-upwork-triage-webui.tls=true"
+      - "traefik.http.routers.hl-upwork-triage-webui.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-upwork-triage-webui.middlewares=upwork-triage-auth"
       - "traefik.http.middlewares.upwork-triage-auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"

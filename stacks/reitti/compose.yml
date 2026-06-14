@@ -14,7 +14,7 @@ volumes:
 
 services:
   reitti:
-    container_name: reitti
+    container_name: hl-reitti
     image: dedicatedcode/reitti:latest
     restart: unless-stopped
     depends_on:
@@ -28,7 +28,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: ${REITTI_MEM_LIMIT:-256M}
+          memory: ${REITTI_MEM_LIMIT:-1024M}
           cpus: ${REITTI_CPU_LIMIT:-0.5}
     security_opt:
       - no-new-privileges:true
@@ -48,11 +48,20 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.reitti.loadbalancer.server.port=8080"
-      - "traefik.http.routers.reitti.rule=Host(`loc.${DOMAIN}`)"
-      - "traefik.http.routers.reitti.entrypoints=websecure"
-      - "traefik.http.routers.reitti.tls=true"
-      - "traefik.http.routers.reitti.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-reitti.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-reitti.rule=Host(`loc.${DOMAIN}`)"
+      - "traefik.http.routers.hl-reitti.entrypoints=websecure"
+      - "traefik.http.routers.hl-reitti.tls=true"
+      - "traefik.http.routers.hl-reitti.tls.certresolver=myresolver"
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "sh -c 'curl -f --max-time 5 \"http://localhost:8080/actuator/health\" || exit 1'",
+      ]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
 
   postgis:
     image: postgis/postgis:17-3.5-alpine

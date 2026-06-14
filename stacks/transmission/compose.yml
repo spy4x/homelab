@@ -10,7 +10,7 @@ services:
   # It is a lightweight, works on the server in background and has zero configuration.
   transmission:
     image: linuxserver/transmission
-    container_name: transmission
+    container_name: hl-transmission
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
@@ -38,9 +38,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
-      - "traefik.http.routers.transmission.rule=Host(`torrents.${DOMAIN}`)"
-      - "traefik.http.routers.transmission.entrypoints=websecure"
-      - "traefik.http.routers.transmission.tls=true"
-      - "traefik.http.routers.transmission.tls.certresolver=myresolver"
-      - "traefik.http.routers.transmission.middlewares=auth"
+      - "traefik.http.services.hl-transmission.loadbalancer.server.port=9091"
+      - "traefik.http.routers.hl-transmission.rule=Host(`torrents.${DOMAIN}`)"
+      - "traefik.http.routers.hl-transmission.entrypoints=websecure"
+      - "traefik.http.routers.hl-transmission.tls=true"
+      - "traefik.http.routers.hl-transmission.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-transmission.middlewares=auth"

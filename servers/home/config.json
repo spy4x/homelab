@@ -42,6 +42,8 @@
     { "name": "traggo" },
     { "name": "stalwart" },
     { "name": "monitoring" },
-    { "name": "stirling-pdf" }
+    { "name": "stirling-pdf" },
+    { "name": "docker-registry" },
+    { "name": "authentik" }
   ]
 }

@@ -11,7 +11,7 @@ services:
   # Syncthing is a continuous file synchronization program.
   # It synchronizes files between two or more computers in real time, safely protected from prying eyes.
   syncthing:
-    container_name: syncthing
+    container_name: hl-syncthing
     image: syncthing/syncthing:latest
     environment:
       - PUID=${PUID:-1000}
@@ -37,8 +37,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.syncthing.loadbalancer.server.port=8384"
-      - "traefik.http.routers.syncthing.rule=Host(`${SYNCTHING_SUBDOMAIN}.${DOMAIN}`)"
-      - "traefik.http.routers.syncthing.entrypoints=websecure"
-      - "traefik.http.routers.syncthing.tls=true"
-      - "traefik.http.routers.syncthing.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-syncthing.loadbalancer.server.port=8384"
+      - "traefik.http.routers.hl-syncthing.rule=Host(`${SYNCTHING_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-syncthing.entrypoints=websecure"
+      - "traefik.http.routers.hl-syncthing.tls=true"
+      - "traefik.http.routers.hl-syncthing.tls.certresolver=myresolver"

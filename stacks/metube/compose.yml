@@ -9,7 +9,7 @@ services:
   # MeTube is a web GUI for youtube-dl with playlist support.
   # It allows you to download videos from YouTube and other supported sites.
   metube:
-    container_name: metube
+    container_name: hl-metube
     image: ghcr.io/alexta69/metube
     environment:
       - PUID=${PUID:-1000}
@@ -35,9 +35,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.metube.loadbalancer.server.port=8081"
-      - "traefik.http.routers.metube.rule=Host(`metube.${DOMAIN}`)"
-      - "traefik.http.routers.metube.entrypoints=websecure"
-      - "traefik.http.routers.metube.tls=true"
-      - "traefik.http.routers.metube.tls.certresolver=myresolver"
-      - "traefik.http.routers.metube.middlewares=auth"
+      - "traefik.http.services.hl-metube.loadbalancer.server.port=8081"
+      - "traefik.http.routers.hl-metube.rule=Host(`metube.${DOMAIN}`)"
+      - "traefik.http.routers.hl-metube.entrypoints=websecure"
+      - "traefik.http.routers.hl-metube.tls=true"
+      - "traefik.http.routers.hl-metube.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-metube.middlewares=auth"

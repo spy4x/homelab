@@ -1,0 +1,108 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  authentik-db:
+    container_name: hl-authentik-db
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: authentik
+      POSTGRES_USER: authentik
+      POSTGRES_PASSWORD: ${AUTHENTIK_DB_PASSWORD}
+    volumes:
+      - ${VOLUMES_PATH}/authentik/db:/var/lib/postgresql/data:z
+    restart: unless-stopped
+    healthcheck:
+      test: pg_isready -U authentik -d authentik
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    networks:
+      - default
+
+  authentik-kv:
+    container_name: hl-authentik-kv
+    image: redis:7-alpine
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.2"
+    networks:
+      - default
+
+  authentik:
+    container_name: hl-authentik
+    image: ghcr.io/goauthentik/server:latest
+    command: server
+    environment:
+      - AUTHENTIK_REDIS__HOST=hl-authentik-kv
+      - AUTHENTIK_POSTGRESQL__HOST=hl-authentik-db
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD}
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_BOOT_PASSWORD=${AUTHENTIK_BOOT_PASSWORD}
+      - AUTHENTIK_BOOT_EMAIL=${AUTHENTIK_BOOT_EMAIL:-admin@${DOMAIN}}
+    volumes:
+      - ${VOLUMES_PATH}/authentik/media:/media:z
+      - ${VOLUMES_PATH}/authentik/custom-templates:/templates:z
+    networks:
+      - proxy
+      - default
+    depends_on:
+      - authentik-db
+      - authentik-kv
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1"
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.hl-authentik.loadbalancer.server.port=9000"
+      - "traefik.http.routers.hl-authentik.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.hl-authentik.entrypoints=websecure"
+      - "traefik.http.routers.hl-authentik.tls=true"
+      - "traefik.http.routers.hl-authentik.tls.certresolver=myresolver"
+
+  authentik-worker:
+    container_name: hl-authentik-worker
+    image: ghcr.io/goauthentik/server:latest
+    command: worker
+    environment:
+      - AUTHENTIK_REDIS__HOST=hl-authentik-kv
+      - AUTHENTIK_POSTGRESQL__HOST=hl-authentik-db
+      - AUTHENTIK_POSTGRESQL__USER=authentik
+      - AUTHENTIK_POSTGRESQL__NAME=authentik
+      - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_DB_PASSWORD}
+      - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+      - AUTHENTIK_BOOT_PASSWORD=${AUTHENTIK_BOOT_PASSWORD}
+      - AUTHENTIK_BOOT_EMAIL=${AUTHENTIK_BOOT_EMAIL:-admin@${DOMAIN}}
+    networks:
+      - default
+    depends_on:
+      - authentik-db
+      - authentik-kv
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1"

@@ -9,7 +9,7 @@ services:
   # Grafana - Metrics dashboard & observability
   # https://github.com/grafana/grafana
   grafana:
-    container_name: grafana
+    container_name: hl-grafana
     image: grafana/grafana:latest
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
@@ -34,9 +34,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.hgrafana.loadbalancer.server.port=3000"
-      - "traefik.http.routers.hgrafana.rule=Host(`metrics.${DOMAIN}`)"
-      - "traefik.http.routers.hgrafana.entrypoints=websecure"
-      - "traefik.http.routers.hgrafana.tls=true"
-      - "traefik.http.routers.hgrafana.middlewares=auth"
-      - "traefik.http.routers.hgrafana.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-grafana.loadbalancer.server.port=3000"
+      - "traefik.http.routers.hl-grafana.rule=Host(`metrics.${DOMAIN}`)"
+      - "traefik.http.routers.hl-grafana.entrypoints=websecure"
+      - "traefik.http.routers.hl-grafana.tls=true"
+      - "traefik.http.routers.hl-grafana.middlewares=auth"
+      - "traefik.http.routers.hl-grafana.tls.certresolver=myresolver"

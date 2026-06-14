@@ -83,6 +83,23 @@ import { getEnvVar } from "@std/dotenv"
 import { BackupConfig } from "@scripts/backup"
 ```
 
+### Naming Convention: `hl-` Prefix
+
+To avoid conflicts with other projects running on the same Docker host (e.g., `fn-*`, `th-*`), **all homelab containers and Traefik router/service names must use the `hl-` prefix**:
+
+```yaml
+# Good
+container_name: hl-monica
+traefik.http.routers.hl-monica.rule=Host(`crm.${DOMAIN}`)
+traefik.http.services.hl-monica.loadbalancer.server.port=80
+
+# Bad (risk of conflict with other projects)
+container_name: monica
+traefik.http.routers.monica.rule=Host(`crm.${DOMAIN}`)
+```
+
+This applies to ALL compose.yml files in `stacks/`. Middleware names (e.g., `auth`) do NOT get the prefix since they're shared definitions on the Traefik container.
+
 ### File Naming Conventions
 
 - **TypeScript files**: `kebab-case.ts` (e.g., `backup-config.ts`)

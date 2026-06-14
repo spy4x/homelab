@@ -12,7 +12,7 @@ services:
   # YAML-configured monitoring with ntfy alerting
   # https://github.com/TwiN/gatus
   gatus:
-    container_name: gatus
+    container_name: hl-gatus
     image: twinproduction/gatus:latest
     user: "${PUID:-1000}:${PGID:-1000}"
     environment:
@@ -37,8 +37,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.gatus.loadbalancer.server.port=8080"
-      - "traefik.http.routers.gatus.rule=Host(`${GATUS_SUBDOMAIN}.${DOMAIN}`)"
-      - "traefik.http.routers.gatus.entrypoints=websecure"
-      - "traefik.http.routers.gatus.tls=true"
-      - "traefik.http.routers.gatus.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-gatus.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-gatus.rule=Host(`${GATUS_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-gatus.entrypoints=websecure"
+      - "traefik.http.routers.hl-gatus.tls=true"
+      - "traefik.http.routers.hl-gatus.tls.certresolver=myresolver"

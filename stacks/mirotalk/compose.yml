@@ -9,7 +9,7 @@ networks:
 
 services:
   mirotalk:
-    container_name: mirotalk
+    container_name: hl-mirotalk
     image: mirotalk/p2p:latest
     environment:
       - TZ=${TIMEZONE:-UTC}
@@ -26,8 +26,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.mirotalk.loadbalancer.server.port=3000"
-      - "traefik.http.routers.mirotalk.rule=Host(`talk.${DOMAIN}`)"
-      - "traefik.http.routers.mirotalk.entrypoints=websecure"
-      - "traefik.http.routers.mirotalk.tls=true"
-      - "traefik.http.routers.mirotalk.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-mirotalk.loadbalancer.server.port=3000"
+      - "traefik.http.routers.hl-mirotalk.rule=Host(`talk.${DOMAIN}`)"
+      - "traefik.http.routers.hl-mirotalk.entrypoints=websecure"
+      - "traefik.http.routers.hl-mirotalk.tls=true"
+      - "traefik.http.routers.hl-mirotalk.tls.certresolver=myresolver"

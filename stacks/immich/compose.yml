@@ -14,7 +14,7 @@ name: immich
 
 services:
   server:
-    container_name: immich-server
+    container_name: hl-immich-server
     image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
     extends:
       file: hwaccel.transcoding.yml
@@ -48,14 +48,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.routers.immich.rule=Host(`photos.${DOMAIN}`)"
-      - "traefik.http.routers.immich.entrypoints=websecure"
-      - "traefik.http.routers.immich.tls=true"
-      - "traefik.http.routers.immich.tls.certresolver=myresolver"
-      - "traefik.http.services.immich.loadbalancer.server.port=2283"
+      - "traefik.http.routers.hl-immich.rule=Host(`photos.${DOMAIN}`)"
+      - "traefik.http.routers.hl-immich.entrypoints=websecure"
+      - "traefik.http.routers.hl-immich.tls=true"
+      - "traefik.http.routers.hl-immich.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-immich.loadbalancer.server.port=2283"
 
   machine-learning:
-    container_name: immich-machine-learning
+    container_name: hl-immich-machine-learning
     image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}-cuda
     extends:
       file: hwaccel.ml.yml
@@ -81,7 +81,7 @@ services:
       disable: false
 
   kv:
-    container_name: immich-kv
+    container_name: hl-immich-kv
     image: docker.io/valkey/valkey:8-bookworm@sha256:ff21bc0f8194dc9c105b769aeabf9585fea6a8ed649c0781caeac5cb3c247884
     healthcheck:
       test: redis-cli ping || exit 1
@@ -95,7 +95,7 @@ services:
       - no-new-privileges:true
 
   db:
-    container_name: immich-db
+    container_name: hl-immich-db
     image: ghcr.io/immich-app/postgres:14-vectorchord0.3.0-pgvectors0.2.0
     environment:
       POSTGRES_PASSWORD: ${IMMICH_DB_PASSWORD}
@@ -116,7 +116,7 @@ services:
   # --------- Immich Kiosk - a tool for displaying photos in a kiosk mode on a TV/tablet ---------
 
   kiosk:
-    container_name: immich-kiosk
+    container_name: hl-immich-kiosk
     image: ghcr.io/damongolding/immich-kiosk:latest
     environment:
       - KIOSK_IMMICH_URL=http://server:2283
@@ -159,8 +159,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.routers.immich-kiosk.rule=Host(`kiosk.${DOMAIN}`)"
-      - "traefik.http.routers.immich-kiosk.entrypoints=websecure"
-      - "traefik.http.routers.immich-kiosk.tls=true"
-      - "traefik.http.routers.immich-kiosk.tls.certresolver=myresolver"
-      - "traefik.http.services.immich-kiosk.loadbalancer.server.port=3000"
+      - "traefik.http.routers.hl-immich-kiosk.rule=Host(`kiosk.${DOMAIN}`)"
+      - "traefik.http.routers.hl-immich-kiosk.entrypoints=websecure"
+      - "traefik.http.routers.hl-immich-kiosk.tls=true"
+      - "traefik.http.routers.hl-immich-kiosk.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-immich-kiosk.loadbalancer.server.port=3000"

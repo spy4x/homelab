@@ -10,7 +10,7 @@ services:
   # It provides DNS-level ad blocking, tracker blocking, and parental control features.
   # Access the web interface to configure DNS settings, filters, and view statistics.
   adguard:
-    container_name: adguard
+    container_name: hl-adguard
     image: adguard/adguardhome:latest
     volumes:
       - ${VOLUMES_PATH}/adguard/work:/opt/adguardhome/work:z
@@ -33,8 +33,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.services.adguard.loadbalancer.server.port=80"
-      - "traefik.http.routers.adguard.rule=Host(`dns.${DOMAIN}`)"
-      - "traefik.http.routers.adguard.entrypoints=websecure"
-      - "traefik.http.routers.adguard.tls=true"
-      - "traefik.http.routers.adguard.tls.certresolver=myresolver"
+      - "traefik.http.services.hl-adguard.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-adguard.rule=Host(`dns.${DOMAIN}`)"
+      - "traefik.http.routers.hl-adguard.entrypoints=websecure"
+      - "traefik.http.routers.hl-adguard.tls=true"
+      - "traefik.http.routers.hl-adguard.tls.certresolver=myresolver"

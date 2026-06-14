@@ -1,7 +1,7 @@
 import { BackupConfig } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
-  name: "timetracker",
+  name: "docker-registry",
   sourcePaths: "default",
   containers: {
     stop: "default",
