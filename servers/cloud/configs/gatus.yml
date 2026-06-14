@@ -290,6 +290,8 @@ endpoints:
     group: home
     url: "https://time.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -335,6 +337,8 @@ endpoints:
     group: home
     url: "https://stalwart.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
