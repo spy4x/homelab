@@ -38,6 +38,7 @@ services:
     environment:
       - CLICKHOUSE_DB=plausible
       - CLICKHOUSE_PASSWORD=plausible
+      - CLICKHOUSE_MAX_SERVER_MEMORY_USAGE=400000000
     volumes:
       - ${VOLUMES_PATH}/plausible/clickhouse:/var/lib/clickhouse:z
     networks:
@@ -45,7 +46,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 768M
           cpus: "0.5"
 
   # Plausible Analytics - lightweight, privacy-friendly analytics
