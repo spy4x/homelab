@@ -340,6 +340,42 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: Authentik
+    group: home
+    url: "https://auth.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Paperless-ngx
+    group: home
+    url: "https://docs.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Docker Registry
+    group: home
+    url: "https://registry.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Schedule
+    group: home
+    url: "https://schedule.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   # External sites monitoring
   - name: Michael's website
     group: external

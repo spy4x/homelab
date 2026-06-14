@@ -443,6 +443,61 @@
               <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_mirotalk/health/badge.svg" alt="Home Talk Uptime Badge" />
             </a>
           </li>
+          <li class="service-item">
+            <a
+              href="https://auth.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🔐</div>
+              <div class="service-name">Auth</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_authentik/health/badge.svg" alt="Home Auth Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://docs.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📋</div>
+              <div class="service-name">Docs</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_paperless-ngx/health/badge.svg" alt="Home Docs Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://registry.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📦</div>
+              <div class="service-name">Registry</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_docker-registry/health/badge.svg" alt="Home Registry Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://stalwart.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">✉️</div>
+              <div class="service-name">Stalwart</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_stalwart/health/badge.svg" alt="Home Stalwart Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://schedule.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📅</div>
+              <div class="service-name">Schedule</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_caldiy/health/badge.svg" alt="Home Schedule Uptime Badge" />
+            </a>
+          </li>
         </ul>
       </div>
 
