@@ -1,0 +1,39 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # Umami - Privacy-first web analytics
+  # https://umami.is
+  umami:
+    container_name: hl-umami
+    image: ghcr.io/umami-software/umami:latest
+    environment:
+      - DATABASE_TYPE=sqlite
+      - DATABASE_URL=file:/data/umami.db
+      - APP_SECRET=${UMAMI_APP_SECRET}
+    volumes:
+      - ${VOLUMES_PATH}/umami:/data:z
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.2"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.hl-umami.loadbalancer.server.port=3000"
+      - "traefik.http.routers.hl-umami.rule=Host(`stats.${DOMAIN}`)"
+      - "traefik.http.routers.hl-umami.entrypoints=websecure"
+      - "traefik.http.routers.hl-umami.tls=true"
+      - "traefik.http.routers.hl-umami.tls.certresolver=myresolver"

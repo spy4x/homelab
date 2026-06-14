@@ -45,6 +45,8 @@
     { "name": "stirling-pdf" },
     { "name": "docker-registry" },
     { "name": "authentik" },
-    { "name": "paperless-ngx" }
+    { "name": "paperless-ngx" },
+    { "name": "plausible" },
+    { "name": "umami" }
   ]
 }
