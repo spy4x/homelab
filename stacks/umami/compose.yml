@@ -11,6 +11,7 @@ services:
   umami-db:
     container_name: hl-umami-db
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       - POSTGRES_DB=umami
       - POSTGRES_USER=umami
@@ -27,8 +28,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "0.3"
+          memory: 512M
+          cpus: "0.5"
 
   # Umami - Privacy-first web analytics
   # https://umami.is
@@ -43,6 +44,12 @@ services:
       umami-db:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3000/ > /dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     deploy:
       resources:
         limits:
