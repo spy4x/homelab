@@ -1,5 +1,4 @@
 name: ${PROJECT}
-
 networks:
   proxy:
     external: true
@@ -8,17 +7,41 @@ networks:
     name: proxy
 
 services:
+  # PostgreSQL for Umami
+  umami-db:
+    container_name: hl-umami-db
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=umami
+      - POSTGRES_USER=umami
+      - POSTGRES_PASSWORD=${UMAMI_DB_PASSWORD}
+    volumes:
+      - ${VOLUMES_PATH}/umami/db:/var/lib/postgresql/data:z
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.3"
+
   # Umami - Privacy-first web analytics
   # https://umami.is
   umami:
     container_name: hl-umami
     image: ghcr.io/umami-software/umami:latest
     environment:
-      - DATABASE_TYPE=sqlite
-      - DATABASE_URL=file:/data/umami.db
+      - DATABASE_TYPE=postgresql
+      - DATABASE_URL=postgresql://umami:${UMAMI_DB_PASSWORD}@umami-db:5432/umami
       - APP_SECRET=${UMAMI_APP_SECRET}
-    volumes:
-      - ${VOLUMES_PATH}/umami:/data:z
+    depends_on:
+      umami-db:
+        condition: service_healthy
     restart: unless-stopped
     deploy:
       resources:
@@ -29,6 +52,7 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
+      - default
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
