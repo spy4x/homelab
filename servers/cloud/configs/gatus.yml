@@ -282,7 +282,7 @@ endpoints:
     headers:
       Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
