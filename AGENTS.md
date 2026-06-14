@@ -270,7 +270,27 @@ export default backupConfig
 - Configuration notes
 - Troubleshooting tips
 
-### 4. Dashboard Entry (`servers/home/configs/homepage/index.html`)
+### 4. Authentication Protection
+
+**Every non-public service MUST be protected by auth.** Choose the right layer:
+
+- **Authentik SSO** (preferred): Use `middlewares=authentik@file` in Traefik labels. First configure the app in Authentik Admin → Applications → Create, then add the middleware:
+  ```yaml
+  - "traefik.http.routers.hl-SERVICENAME.middlewares=authentik@file"
+  ```
+  Authentik blueprints for batch setup are at `servers/home/configs/authentik/blueprints/`.
+
+- **Basic Auth** (fallback): Use `middlewares=auth` for services without their own login:
+  ```yaml
+  - "traefik.http.routers.hl-SERVICENAME.middlewares=auth"
+  ```
+  Basic auth credentials are shared from Traefik's `BASIC_AUTH_USER`/`BASIC_AUTH_PASSWORD`.
+
+- **Own auth**: Services with built-in login (Gitea, Vaultwarden, Paperless-ngx, Stirling-PDF) do NOT need additional middleware.
+
+**Rule of thumb:** If a service stores personal data or gives access to infrastructure, protect it. Public services (transit info, scheduling) must have NO auth middleware.
+
+### 5. Dashboard Entry (`servers/home/configs/homepage/index.html`)
 
 - Add to appropriate section (Primary/Secondary)
 - Use emoji icon and clear naming
