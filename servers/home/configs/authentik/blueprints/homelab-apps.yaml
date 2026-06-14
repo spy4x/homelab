@@ -1,0 +1,73 @@
+# Authentik Blueprint: Homelab Applications
+# Apply this in Authentik Admin → Blueprints → Import
+# After applying, create an Outpost in Admin → Outposts and link these applications
+version: 1
+entries:
+  # Proxy Provider for Sage
+  - model: authentik_providers_proxy.ProxyProvider
+    id: provider-sage
+    attrs:
+      name: Sage
+      external_host: https://sage.antonshubin.com
+      internal_host: http://sage:80
+      mode: forward_single
+      access_token_validity: hours=1
+      refresh_token_validity: days=30
+      authorization_flow: !!python/object:authentik.flows.models.Flow
+        slug: default-provider-authorization-implicit-consent
+      invalidation_flow: !!python/object:authentik.flows.models.Flow
+        slug: default-invalidation-flow
+
+  # Application: Sage
+  - model: authentik_core.Application
+    id: app-sage
+    attrs:
+      name: Sage
+      slug: sage
+      provider: !KeyOf provider-sage
+      meta_launch_url: https://sage.antonshubin.com
+      meta_icon: https://sage.antonshubin.com/favicon.ico
+
+  # Proxy Provider for Invoices (Akaunting)
+  - model: authentik_providers_proxy.ProxyProvider
+    id: provider-invoices
+    attrs:
+      name: Invoices
+      external_host: https://invoices.antonshubin.com
+      internal_host: http://hl-akaunting:80
+      mode: forward_single
+      access_token_validity: hours=1
+      refresh_token_validity: days=30
+      authorization_flow: !!python/object:authentik.flows.models.Flow
+        slug: default-provider-authorization-implicit-consent
+      invalidation_flow: !!python/object:authentik.flows.models.Flow
+        slug: default-invalidation-flow
+
+  # Application: Invoices
+  - model: authentik_core.Application
+    id: app-invoices
+    attrs:
+      name: Invoices
+      slug: invoices
+      provider: !KeyOf provider-invoices
+      meta_launch_url: https://invoices.antonshubin.com
+      meta_icon: https://invoices.antonshubin.com/favicon.ico
+
+  # Access policy: Allow all authenticated users to access these apps
+  - model: authentik_policies.PolicyBinding
+    attrs:
+      policy: !KeyOf policy-authenticated
+      target: !KeyOf app-sage
+      order: 0
+  - model: authentik_policies.PolicyBinding
+    attrs:
+      policy: !KeyOf policy-authenticated
+      target: !KeyOf app-invoices
+      order: 0
+
+  # Authenticated policy (built-in)
+  - model: authentik_policies_expression.ExpressionPolicy
+    id: policy-authenticated
+    attrs:
+      name: Authenticated
+      expression: return True

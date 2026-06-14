@@ -60,6 +60,7 @@ services:
     volumes:
       - ${VOLUMES_PATH}/authentik/media:/media:z
       - ${VOLUMES_PATH}/authentik/custom-templates:/templates:z
+      - ${PATH_APPS}/configs/authentik/blueprints:/blueprints:ro,z
     networks:
       - proxy
       - default
