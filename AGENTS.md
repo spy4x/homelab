@@ -192,6 +192,8 @@ export default backupConfig
 1. **`servers/{name}/.env`** - Actual values (encrypted to .env.age)
 2. **`servers/{name}/.env.example`** - Placeholders (committed)
 
+**ALWAYS encrypt .env files before committing.** The pre-commit hook auto-encrypts `.env` → `.env.age` and stages the `.env.age` file. Never commit plaintext `.env` files. If you manually edit `.env`, run `deno task env:encrypt` before committing to ensure the encrypted `.env.age` stays in sync.
+
 ### Core Operations
 
 ```bash
