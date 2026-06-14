@@ -495,7 +495,7 @@
             >
               <div class="service-icon">📅</div>
               <div class="service-name">Schedule</div>
-              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_Schedule/health/badge.svg" alt="Home Schedule Uptime Badge" />
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_schedule/health/badge.svg" alt="Home Schedule Uptime Badge" />
             </a>
           </li>
         </ul>

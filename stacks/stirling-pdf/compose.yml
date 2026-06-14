@@ -11,6 +11,8 @@ services:
   stirling-pdf:
     container_name: hl-stirling-pdf
     image: frooodle/s-pdf:latest
+    environment:
+      - DOCKER_ENABLE_SECURITY=false
     restart: unless-stopped
     deploy:
       resources:
@@ -31,5 +33,5 @@ services:
       - "traefik.http.routers.hl-stirling-pdf.rule=Host(`tools.${DOMAIN}`)"
       - "traefik.http.routers.hl-stirling-pdf.entrypoints=websecure"
       - "traefik.http.routers.hl-stirling-pdf.tls=true"
-      # No auth - Stirling-PDF has its own login
+      - "traefik.http.routers.hl-stirling-pdf.middlewares=auth"
       - "traefik.http.routers.hl-stirling-pdf.tls.certresolver=myresolver"
