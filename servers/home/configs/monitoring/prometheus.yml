@@ -5,13 +5,13 @@ global:
 scrape_configs:
   - job_name: "node"
     static_configs:
-      - targets: ["mon-node-exporter:9100"]
+      - targets: ["hl-mon-node-exporter:9100"]
         labels:
           server: "home"
 
   - job_name: "cadvisor"
     static_configs:
-      - targets: ["mon-cadvisor:8080"]
+      - targets: ["hl-mon-cadvisor:8080"]
         labels:
           server: "home"
 
