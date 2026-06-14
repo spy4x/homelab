@@ -1,141 +1,100 @@
-# Self-Hosted Infrastructure Framework
+# Homelab Infrastructure
 
-Infrastructure-as-code framework for managing multi-server Docker-based services with automated deployment, monitoring, and backups.
+Infrastructure-as-code for self-hosted services across 3 servers (home, cloud, offsite).
+
+**WARNING**: This repo is **public**. Never commit plaintext passwords, secrets, or .env files.
+The pre-commit hook auto-encrypts `.env` → `.env.age` using SOPS/age. Decryption key is local-only.
+
+## Architecture
+
+- **Stacks catalog** (`stacks/`): reusable Docker Compose definitions
+- **Server configs** (`servers/`): which stacks each server deploys + env vars
+- **Deno scripts** (`scripts/`): deploy, backup, SSH helpers
+- **Ansible** (`ansible/`): initial server setup, fail2ban, cron jobs
+- **All containers use `hl-` prefix** to avoid name conflicts with other projects
+
+## Servers
+
+| Server  | Role                                | Stacks                                                      |
+| ------- | ----------------------------------- | ----------------------------------------------------------- |
+| Home    | Main server (GPU, media, storage)   | 40 stacks: auth, media, AI, git, CRM, analytics, monitoring |
+| Cloud   | Public-facing (mail, edge services) | 10 stacks: mailserver, gatus, healthchecks, ntfy            |
+| Offsite | Backup/DR                           | Syncthing, Traefik                                          |
+
+## Key Services
+
+| Service        | URL                          | Auth                |
+| -------------- | ---------------------------- | ------------------- |
+| Dashboard      | dash.antonshubin.com         | None                |
+| Uptime (cloud) | uptime-cloud.antonshubin.com | None                |
+| Authentik SSO  | auth.antonshubin.com         | SSO provider        |
+| Grafana        | metrics.antonshubin.com      | Basic auth          |
+| Passwords      | passwords.antonshubin.com    | Vaultwarden account |
+| Email          | (IMAP/SMTP)                  | Mailserver account  |
+| AI Chat        | ai.antonshubin.com           | OpenWebUI account   |
+
+Full service list: see `docs/todos.md` (without passwords) or `servers/*/config.json`.
 
 ## Quick Start
 
 ```bash
-# Install Deno
+# Prerequisites
 curl -fsSL https://deno.land/install.sh | sh
+# Install Ansible (see docs)
 
-# Install Ansible
-# For Debian/Ubuntu
-sudo apt update && sudo apt install -y ansible
-# For Fedora/CentOS
-sudo dnf install -y ansible
+# Clone
+git clone https://github.com/spy4x/homelab.git && cd homelab
 
-# Clone and setup
-git clone https://github.com/spy4x/homelab.git ~/homelab && cd ~/homelab
-cp servers/home/.env.example servers/home/.env  # Copy example env
+# Setup env
+cp servers/home/.env.example servers/home/.env
+# Edit with your domain, SSH params, secrets
+nano servers/home/.env
 
-# Edit servers/home/.env with your ssh params, domain, email, etc.
-nano servers/home/.env # if using nano
-# OR 
-code servers/home/.env  # if using VSCode
-
-# Configure server with Ansible - Install
-deno task ansible ./ansible/playbooks/initial-setup/base.yml home 
-
-# Deploy to server
-deno task deploy home
+# Deploy
+deno task deploy home     # Deploy to home server
+deno task ansible ...     # Run Ansible playbooks
 ```
-
-## Documentation
-
-- **[Get Started](docs/get-started-5min.md)** - Initial setup & deployment
-- **[Architecture](docs/architecture.md)** - System design & data flow
-- **[Adding Services](docs/adding-services.md)** - Service integration guide
-- **[Troubleshooting](docs/troubleshooting.md)** - Debug common issues
-- **[Backup System](scripts/backup/README.md)** - Restic-based backup details
-
-## Example Servers
-
-This repo includes three real servers as reference implementations:
-
-- **home** - Primary services (media, automation, productivity)
-- **cloud** - Email & external monitoring (Hetzner VPS)
-- **offsite** - Backup replication (Raspberry Pi)
-
-## Repository Structure
-
-```
-stacks/{name}/          # ALL service stacks (catalog)
-  └── {service}/        # Traefik, Immich, etc.
-      ├── compose.yml
-      ├── backup.ts
-      └── README.md
-servers/{name}/         # Server-specific config
-  ├── config.json       # Which stacks to deploy
-  ├── .env             # Environment variables
-  └── configs/         # Server-specific overrides
-      └── backup/      # Non-service backups only
-scripts/                # Management tools (Deno)
-  ├── deploy/          # Deployment automation
-  ├── backup/          # Backup system
-  └── ansible/         # Ansible wrapper
-ansible/                # Server provisioning
-docs/                   # Framework documentation
-```
-
-## Available Services
-
-**Infrastructure:**
-
-- [Traefik](stacks/traefik/README.md) - Reverse proxy with automatic SSL
-- [Watchtower](stacks/watchtower/README.md) - Automatic container updates
-- [Gatus](stacks/gatus/README.md) - Health monitoring and status page
-- [WireGuard](stacks/wireguard/README.md) - VPN server
-
-**Communication & Notifications:**
-
-- [ntfy](stacks/ntfy/README.md) - Push notifications
-- [Mailserver](stacks/mailserver/README.md) - Self-hosted email server
-- [Roundcube](stacks/roundcube/README.md) - Webmail client
-
-**Media & Entertainment:**
-
-- [Immich](stacks/immich/README.md) - Photo and video management
-- [Jellyfin](stacks/jellyfin/README.md) - Media server
-- [Audiobookshelf](stacks/audiobookshelf/README.md) - Audiobook & podcast server
-- [Piped](stacks/piped/README.md) - YouTube alternative frontend
-- [MeTube](stacks/metube/README.md) - YouTube downloader
-- [Transmission](stacks/transmission/README.md) - Torrent client
-
-**Productivity & Tools:**
-
-- [Vaultwarden](stacks/vaultwarden/README.md) - Password manager (Bitwarden)
-- [Open WebUI](stacks/open-webui/README.md) - AI chat interface
-- [FreshRSS](stacks/freshrss/README.md) - RSS feed reader
-- [FileBrowser](stacks/filebrowser/README.md) - Web-based file manager
-- [Radicale](stacks/radicale/README.md) - CalDAV/CardDAV server
-- [Syncthing](stacks/syncthing/README.md) - File synchronization
-
-**Home Automation:**
-
-- [Home Assistant](stacks/home-assistant/README.md) - Home automation platform
-- [AdGuard](stacks/adguard/README.md) - Network-wide ad blocking
-
-**Development:**
-
-- [Woodpecker](stacks/woodpecker/README.md) - CI/CD server
-- [Healthchecks](stacks/healthchecks/README.md) - Cron monitoring
-
-**Web Server:**
-
-- [Nginx](stacks/nginx/README.md) - Web server and reverse proxy
-
-## Core Features
-
-**Deployment** - Automated rsync + Docker Compose deployment via `deno task deploy`\
-**Backups** - Restic-based with per-service configs, see [backup README](scripts/backup/README.md)\
-**Monitoring** - Cross-server health checks (Gatus) + notifications (ntfy)\
-**Provisioning** - Ansible playbooks for server hardening & maintenance\
-**Service Discovery** - Traefik reverse proxy with automatic SSL
 
 ## Common Tasks
 
 ```bash
-# Deploy server config
-deno task deploy <server>
-
-# SSH to server
-deno task ssh <server>
-
-# Run Ansible playbook
-deno task ansible <playbook> <server>
-
-# Manual backup
-cd servers/<server> && deno run --env-file=.env -A ../../scripts/backup/+main.ts
+deno task check           # Lint, format, type-check
+deno task deploy <server> # Deploy stacks to server
+deno task ssh <server>    # SSH into server
+deno task backup          # Run backup system
+deno task env:encrypt     # Encrypt .env files before commit
 ```
 
-See [server docs](servers/) for server-specific notes and [service docs](stacks/) for available services.
+## Secrets Management
+
+- `.env` files are **gitignored** — never committed
+- Pre-commit hook auto-encrypts `.env` → `.env.age` via SOPS/age
+- Post-checkout hook auto-decrypts `.env.age` → `.env`
+- **CREDENTIALS IN THIS README OR DOCS**: Always use "see .env" instead of writing passwords
+- If you expose a password: rotate it immediately (update .env + DB + deploy)
+
+## Stack Patterns
+
+Every stack includes:
+
+1. `stacks/{name}/compose.yml` — container with `hl-` prefix, Traefik labels, resource limits
+2. `stacks/{name}/backup.ts` — backup config (skip for stateless)
+3. Gatus monitoring (cross-server: cloud watches home, home watches cloud)
+4. Dashboard entry with health badge
+
+Auth decision:
+
+- **Public**: Reitti, SearXNG, Schedule — no auth middleware
+- **Own auth**: Gitea, Vaultwarden, Paperless-ngx, Stirling-PDF — no Traefik auth
+- **Basic auth**: Everything else with `middlewares=auth`
+- **SSO**: `middlewares=authentik@file` once Authentik outpost is configured
+
+## Status
+
+✅ 50+ services across 3 servers\
+✅ Daily automated backups with Restic\
+✅ Cross-server health monitoring (Gatus + ntfy alerts)\
+✅ GPU passthrough for local LLMs (Ollama + OpenWebUI)\
+✅ SSO provider deployed (Authentik — UI setup pending)
+
+See `docs/todos.md` for detailed status and roadmap.

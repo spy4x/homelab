@@ -60,7 +60,7 @@
 - [ ] Switch sage + invoices from basic auth to authentik forward-auth
 - [ ] Protect other services (transmission, metube, monica, akaunting, etc.)
 - Steps:
-  1. Visit https://auth.antonshubin.com as akadmin / AdminPass2026!
+  1. Visit https://auth.antonshubin.com (see .env for password)
   2. Admin -> Outposts -> Create proxy type
   3. Admin -> Applications -> Create for Sage, Invoices
   4. Import blueprint at servers/home/configs/authentik/blueprints/homelab-apps.yaml

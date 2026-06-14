@@ -25,16 +25,16 @@ All on antonshubin.com. Default auth: `middlewares=auth` (Traefik basic auth) un
 | Stirling PDF | tools. | **Basic auth** (internal security disabled) |
 | Usememos | notes. | Own auth (register on first visit) |
 | Ollama | ollama. | GPU passthrough, gemma4:e4b loaded |
-| Grafana | metrics. | `admin` / `ItalqgWP1EH2hQ6zDuaHMvElBuCY1Mgd` |
+| Grafana | metrics. | see .env |
 | Akaunting | invoices. | Basic auth |
 | Gitea | git. | Own auth, registration OFF, captcha ON |
 | Traggo | time. | Basic auth, `admin`/`admin` default |
 | Stalwart | stalwart. | Bootstrap mode, `admin` / password in .env, UI at `/admin` |
 | Paperless-ngx | docs. | Own auth |
 | Docker Registry | registry. | Basic auth, web UI via joxit/docker-registry-ui |
-| Authentik | auth. | SSO provider, `akadmin` / `AdminPass2026!` |
+| Authentik | auth. | SSO provider, see .env |
 | Plausible | analytics. | Community fav analytics, ~1GB (ClickHouse) |
-| Umami | stats. | Lightweight analytics, PostgreSQL, `admin`/`umami123!` |
+| Umami | stats. | Lightweight analytics, PostgreSQL, see .env |
 | Monitoring | internal | Loki + Promtail + Prometheus + Node Exporter + cAdvisor |
 | Cal.diy | schedule. | **Public** (no auth) — second router for schedule. domain |
 
@@ -108,7 +108,7 @@ cd ~/ssd-2tb/apps/anton/home && docker compose -f stacks/vaultwarden/compose.yml
 ### Analytics
 - Add tracking snippet to antonshubin.com website
 - Plausible: admin already registered (anton@antonshubin.com), needs site creation
-- Umami: `admin`/`umami123!`, needs first website tracked
+- Umami: see .env, needs first website tracked
 
 ### Monitoring Improvements
 - Add Prometheus alerting rules
@@ -129,11 +129,11 @@ cd ~/ssd-2tb/apps/anton/home && docker compose -f stacks/vaultwarden/compose.yml
 
 | Service | URL | Login |
 |---------|-----|-------|
-| Authentik | auth.antonshubin.com | `akadmin` / `AdminPass2026!` |
-| Grafana | metrics.antonshubin.com | `admin` / `ItalqgWP1EH2hQ6zDuaHMvElBuCY1Mgd` |
+| Authentik | auth.antonshubin.com | see .env |
+| Grafana | metrics.antonshubin.com | see .env |
 | Umami | stats.antonshubin.com | `admin` / `umami123!` |
 | Stalwart | stalwart.antonshubin.com | `admin` / (in .env) — bootstrap mode |
-| Traggo | time.antonshubin.com | `admin` / `admin` (first visit creates) |
+| Traggo | time.antonshubin.com | see .env |
 | Plausible | analytics.antonshubin.com | Created by user |
 | Basic Auth | all services | `spy4x` / htpasswd from Traefik config |
 
