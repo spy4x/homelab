@@ -69,7 +69,7 @@ MATRIX_SERVER: https://matrix-client.matrix.org
 #GEO_RESTRICTION_CHECKER_URL: INSERT_HERE
 
 # BG Helper URL for supplying PoTokens
-BG_HELPER_URL: http://piped-bg-helper:3000
+BG_HELPER_URL: http://hl-piped-bg-helper:3000
 
 # S3 Configuration Data (compatible with any provider that offers an S3 compatible API)
 #S3_ENDPOINT: INSERT_HERE
@@ -78,7 +78,7 @@ BG_HELPER_URL: http://piped-bg-helper:3000
 #S3_BUCKET: INSERT_HERE
 
 # Hibernate properties
-hibernate.connection.url: jdbc:postgresql://piped-db:5432/${PIPED_DB_NAME}
+hibernate.connection.url: jdbc:postgresql://hl-piped-db:5432/${PIPED_DB_NAME}
 hibernate.connection.driver_class: org.postgresql.Driver
 hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
 hibernate.connection.username: ${PIPED_DB_USER}

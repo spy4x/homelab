@@ -20,7 +20,7 @@
 
     // #region Backup
     "backup": {
-      "command": "deno run --env-file=.env -A ./scripts/backup/+main.ts",
+      "command": "deno run --env-file=.env.root --env-file=servers/home/.env -A ./scripts/backup/+main.ts",
       "description": "💾 Run backup for all services using Restic"
     },
     "backup:restore": {

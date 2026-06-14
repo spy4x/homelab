@@ -87,9 +87,10 @@ services:
       - default
 
   # cAdvisor - Container-level metrics (resource usage per container)
+  # NOTE: requires seccomp=unconfined for syscalls needed to read container stats
   cadvisor:
     container_name: hl-cadvisor
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor:v0.49.2
     volumes:
       - /:/rootfs:ro,z
       - /var/run:/var/run:ro,z
@@ -104,6 +105,7 @@ services:
     group_add:
       - "${DOCKER_GROUP_ID:-990}"
     security_opt:
+      - seccomp=unconfined
       - label=type:container_runtime_t
     networks:
       - default

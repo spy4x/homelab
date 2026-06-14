@@ -41,8 +41,10 @@ services:
     volumes:
       - ./config.properties:/app/config.properties:ro,z
     depends_on:
-      - db
-      - bg-helper
+      db:
+        condition: service_healthy
+      bg-helper:
+        condition: service_started
     networks:
       - proxy
       - default
@@ -111,6 +113,11 @@ services:
       - POSTGRES_PASSWORD=${PIPED_DB_PASSWORD}
     networks:
       - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PIPED_DB_USER} -d ${PIPED_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     deploy:
       resources:
         limits:
