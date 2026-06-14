@@ -1,8 +1,8 @@
-import { BackupConfig } from "@scripts/backup"
+import { BackupConfig, VOLUMES_PATH } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
   name: "usememos",
-  sourcePaths: "default",
+  sourcePaths: [`${VOLUMES_PATH}/memos`],
   containers: {
     stop: "default",
   },

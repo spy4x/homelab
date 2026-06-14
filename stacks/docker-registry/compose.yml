@@ -20,12 +20,30 @@ services:
       - no-new-privileges:true
     networks:
       - proxy
+
+  registry-ui:
+    container_name: hl-registry-ui
+    image: joxit/docker-registry-ui:latest
+    environment:
+      - REGISTRY_TITLE=Homelab Registry
+      - REGISTRY_URL=https://registry.${DOMAIN}
+      - NGINX_PROXY_PASS_URL=http://hl-docker-registry:5000
+      - SINGLE_REGISTRY=true
+    depends_on:
+      - docker-registry
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.1"
+    networks:
+      - proxy
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
-      - "traefik.http.routers.hl-docker-registry.rule=Host(`registry.${DOMAIN}`)"
-      - "traefik.http.routers.hl-docker-registry.entrypoints=websecure"
-      - "traefik.http.routers.hl-docker-registry.tls=true"
-      - "traefik.http.routers.hl-docker-registry.tls.certresolver=myresolver"
-      - "traefik.http.services.hl-docker-registry.loadbalancer.server.port=5000"
-      - "traefik.http.routers.hl-docker-registry.middlewares=auth"
+      - "traefik.http.services.hl-registry-ui.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-registry-ui.rule=Host(`registry.${DOMAIN}`)"
+      - "traefik.http.routers.hl-registry-ui.entrypoints=websecure"
+      - "traefik.http.routers.hl-registry-ui.tls=true"
+      - "traefik.http.routers.hl-registry-ui.tls.certresolver=myresolver"

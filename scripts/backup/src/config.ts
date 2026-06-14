@@ -37,7 +37,7 @@ export class BackupConfigProcessor {
 
     // Normalize containers
     if (config.containers?.stop === "default") {
-      config.containers.stop = [config.name]
+      config.containers.stop = ["__compose__"]
     }
 
     return true

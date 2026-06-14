@@ -4,9 +4,11 @@ import { BackupConfigState, BackupStatus, ResticCommandOptions } from "./types.t
 
 export class BackupOperations {
   private backupsPassword: string
+  private stacksPath: string
 
-  constructor(backupsPassword: string) {
+  constructor(backupsPassword: string, stacksPath: string) {
     this.backupsPassword = backupsPassword
+    this.stacksPath = stacksPath
   }
 
   /**
@@ -17,6 +19,18 @@ export class BackupOperations {
     action: "start" | "stop",
   ): Promise<void> {
     if (!config.containers?.stop || config.containers.stop.length === 0) {
+      return
+    }
+
+    // Check if using compose mode (resolved from "stop: default")
+    if (config.containers.stop.length === 1 && config.containers.stop[0] === "__compose__") {
+      const composePath = this.getComposePath(config)
+      if (composePath) {
+        await this.manageComposeStack(composePath, config, action)
+        return
+      }
+      // Fall through to individual container handling if no compose file
+      log(`No compose file found for ${config.name}, skipping container management`)
       return
     }
 
@@ -39,6 +53,43 @@ export class BackupOperations {
         return
       }
     }
+  }
+
+  /**
+   * Manages a Docker Compose stack (stop/start all services)
+   */
+  private async manageComposeStack(
+    composePath: string,
+    config: BackupConfigState,
+    action: "start" | "stop",
+  ): Promise<void> {
+    log(`${action}ing compose stack at ${composePath}`)
+
+    const cmd = new Deno.Command("docker", {
+      args: ["compose", "-f", composePath, action],
+      stdout: "piped",
+      stderr: "piped",
+    })
+
+    const { code, stderr } = await cmd.output()
+
+    if (code !== 0) {
+      const errorMsg = `Error ${action}ing compose stack:\n${new TextDecoder().decode(stderr)}`
+      this.markBackupFailed(config, errorMsg, `compose_${action}`)
+    }
+  }
+
+  /**
+   * Derives compose.yml path from backup config file name
+   */
+  private getComposePath(config: BackupConfigState): string | null {
+    // fileName format for stacks: "dirname/backup.ts"
+    // For non-stack configs, there's no compose file
+    const match = config.fileName?.match(/^(.+)\/backup\.ts$/)
+    if (!match) return null
+
+    const stackDir = match[1]
+    return `${this.stacksPath}/${stackDir}/compose.yml`
   }
 
   /**
