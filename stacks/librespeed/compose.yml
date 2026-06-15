@@ -1,0 +1,40 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # LibreSpeed - Self-hosted speed test tool
+  # No persistent data, no installation required client-side
+  # https://github.com/librespeed/speedtest
+  librespeed:
+    container_name: hl-librespeed
+    image: linuxserver/librespeed:latest
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TIMEZONE:-UTC}
+      - MODE=standalone
+      - PASSWORD=${LIBRESPEED_PASSWORD:-speedtest}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${LIBRESPEED_CPU_LIMIT:-0.5}
+          memory: ${LIBRESPEED_MEM_LIMIT:-256M}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.hl-librespeed.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-librespeed.rule=Host(`${LIBRESPEED_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-librespeed.entrypoints=websecure"
+      - "traefik.http.routers.hl-librespeed.tls=true"
+      - "traefik.http.routers.hl-librespeed.tls.certresolver=myresolver"

@@ -2,6 +2,7 @@
   "stacks": [
     { "name": "traefik" },
     { "name": "watchtower" },
-    { "name": "syncthing" }
+    { "name": "syncthing" },
+    { "name": "librespeed" }
   ]
 }

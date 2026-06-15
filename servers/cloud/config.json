@@ -5,6 +5,7 @@
     { "name": "syncthing" },
     { "name": "gatus", "watchFilesAndRestartIfChanged": ["configs/gatus.yml"] },
     { "name": "ntfy" },
+    { "name": "librespeed" },
     { "name": "mailserver" },
     { "name": "healthchecks" },
     { "name": "mail-ai" },

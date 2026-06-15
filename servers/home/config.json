@@ -48,6 +48,7 @@
     { "name": "paperless-ngx" },
     { "name": "plausible" },
     { "name": "umami" },
+    { "name": "librespeed" },
     { "name": "docker-sock-proxy" },
     { "name": "openhands" }
   ]
