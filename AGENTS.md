@@ -307,6 +307,33 @@ export default backupConfig
 - [ ] Set appropriate conditions: usually `"[STATUS] == 200"`
 - [ ] Add ntfy alert (copy from existing entries)
 
+### 7. DNS Records (Cloudflare)
+
+If the service uses a **new subdomain** (not yet in DNS), add A records via Cloudflare API:
+
+```bash
+# Get zone ID
+ZONE_ID=$(curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=antonshubin.com" \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['result'][0]['id'])")
+
+# Add A record (proxied=false for direct, true for CDN)
+curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records" \
+  -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"type":"A","name":"SUBDOMAIN","content":"IP_ADDRESS","ttl":1,"proxied":false}'
+```
+
+**When to add DNS**: Only for services that get a **new subdomain** (e.g. `speed-home`, `speed-cloud`). If the subdomain already exists (e.g. existing service on same server), skip.
+
+**Where to find IPs**:
+
+- Cloud: check Hetzner console or `ssh cloudlab "curl -s ifconfig.me"`
+- Offsite: check server provider's control panel or `ssh offsite "curl -s ifconfig.me"`
+- Home: uses cloud tunnel or dynamic DNS — check existing Cloudflare records
+
+**Token**: stored in `.env.root` as `CLOUDFLARE_API_TOKEN` (encrypted in `.env.root.age`). Read-only + DNS edit scope.
+
 ## 📁 Project Structure
 
 ```
