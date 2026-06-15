@@ -246,6 +246,17 @@
           </li>
           <li class="service-item">
             <a
+              href="https://code.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">💻</div>
+              <div class="service-name">OpenHands</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_openhands/health/badge.svg" alt="Home OpenHands Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
               href="https://search.${DOMAIN}"
               target="_blank"
               class="service-link"

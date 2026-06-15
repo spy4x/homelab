@@ -290,11 +290,21 @@ export default backupConfig
 
 **Rule of thumb:** If a service stores personal data or gives access to infrastructure, protect it. Public services (transit info, scheduling) must have NO auth middleware.
 
-### 5. Dashboard Entry (`servers/home/configs/homepage/index.html`)
+### 5. Dashboard Entry (`servers/home/configs/dash/index.html.template`)
 
-- Add to appropriate section (Primary/Secondary)
+- Add to appropriate section (Home/Cloud/Offsite)
 - Use emoji icon and clear naming
 - Pattern: subdomain, icon, name
+- Add uptime badge from the monitoring server (e.g. `https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_SERVICENAME/health/badge.svg`)
+
+### 6. Monitoring / Gatus
+
+- Add endpoint to the **opposite server's** gatus config for cross-server monitoring:
+  - Home service → add to `servers/cloud/configs/gatus.yml` (group: home)
+  - Cloud service → add to `servers/home/configs/gatus.yml` (group: cloud)
+- [ ] If the service has auth, add the appropriate `Authorization: Basic ${BASIC_AUTH_BASE64}` header
+- [ ] Set appropriate conditions: usually `"[STATUS] == 200"`
+- [ ] Add ntfy alert (copy from existing entries)
 
 ## 📁 Project Structure
 

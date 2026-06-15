@@ -86,6 +86,17 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: OpenHands
+    group: home
+    url: "https://code.${DOMAIN}"
+    interval: 1m
+    headers:
+      Authorization: Basic ${BASIC_AUTH_BASE64}
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   - name: Audiobookshelf
     group: home
     url: "https://books.${DOMAIN}"
