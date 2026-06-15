@@ -1,0 +1,57 @@
+networks:
+  proxy:
+    external: true
+
+services:
+  docker-sock-proxy:
+    container_name: hl-docker-sock-proxy
+    image: tecnativa/docker-socket-proxy:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      # Security: explicitly deny dangerous endpoints
+      - AUTH=0
+      - SECRETS=0
+      - BUILD=0
+      - COMMIT=0
+      - SWARM=0
+      - NODES=0
+      - TASKS=0
+      - SERVICES=0
+      - CONFIGS=0
+      - PLUGINS=0
+      - PRUNE=0
+      - GRPC=0
+      - SESSION=0
+      - DISTRIBUTION=0
+      - SYSTEM=0
+      # Grant only what OpenHands/agent-server needs
+      - CONTAINERS=1
+      - ALLOW_START=1
+      - ALLOW_STOP=1
+      - ALLOW_RESTART=1
+      - ALLOW_CREATE=1
+      - ALLOW_REMOVE=1
+      - ALLOW_INSPECT=1
+      - ALLOW_ATTACH=1
+      - ALLOW_EXEC=1
+      - ALLOW_LOGS=1
+      - ALLOW_KILL=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - INFO=1
+      - VERSION=1
+      - EVENTS=1
+      # Allow POST/PUT/DELETE for granted endpoints
+      - POST=1
+    networks:
+      - proxy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 64M
+    security_opt:
+      - no-new-privileges:true

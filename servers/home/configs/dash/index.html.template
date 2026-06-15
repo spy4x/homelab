@@ -379,6 +379,28 @@
           </li>
           <li class="service-item">
             <a
+              href="https://analytics.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📈</div>
+              <div class="service-name">Analytics</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_plausible/health/badge.svg" alt="Home Analytics Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://stats.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">📊</div>
+              <div class="service-name">Stats</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_umami/health/badge.svg" alt="Home Stats Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
               href="https://notes.${DOMAIN}"
               target="_blank"
               class="service-link"

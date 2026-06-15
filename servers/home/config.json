@@ -47,6 +47,8 @@
     { "name": "authentik" },
     { "name": "paperless-ngx" },
     { "name": "plausible" },
-    { "name": "umami" }
+    { "name": "umami" },
+    { "name": "docker-sock-proxy" },
+    { "name": "openhands" }
   ]
 }
