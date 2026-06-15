@@ -1,6 +1,7 @@
 // Deploy script that copies server files and stacks, then spins up docker compose
-// Usage: deno run -A scripts/deploy/+main.ts <target>
+// Usage: deno run -A scripts/deploy/+main.ts <target> [stack]
 // Example: deno run -A scripts/deploy/+main.ts offsite
+// Example: deno run -A scripts/deploy/+main.ts home plausible
 
 import { error, log, runCommand, success } from "../+lib.ts"
 import { load } from "@std/dotenv"
@@ -22,12 +23,14 @@ interface DeployResult {
 // Parse command line arguments
 const args = Deno.args
 if (args.length < 1) {
-  error("Usage: deno run -A scripts/deploy/+main.ts <target>")
+  error("Usage: deno run -A scripts/deploy/+main.ts <target> [stack]")
   error("Example: deno run -A scripts/deploy/+main.ts offsite")
+  error("Example: deno run -A scripts/deploy/+main.ts home plausible")
   Deno.exit(1)
 }
 
 const target = args[0]
+const stackFilter = args[1] // optional: deploy only this stack
 
 const targetPath = `./servers/${target}`
 
@@ -59,7 +62,19 @@ try {
   }
 }
 
-const stacks = config.stacks || []
+let stacks = config.stacks || []
+
+// If a specific stack is requested, filter to only that stack
+if (stackFilter) {
+  const filtered = stacks.filter((s) => s.name === stackFilter)
+  if (filtered.length === 0) {
+    error(`Stack '${stackFilter}' not found in server '${target}' config.json`)
+    error(`Available stacks: ${stacks.map((s) => s.name).join(", ")}`)
+    Deno.exit(1)
+  }
+  log(`Deploying single stack: ${stackFilter}`)
+  stacks = filtered
+}
 
 // Create temporary directory for deployment files
 const tempDir = await Deno.makeTempDir({ prefix: "deploy_" })

@@ -53,7 +53,8 @@ deno test --watch path/to/test.ts       # Watch mode
 ### Infrastructure Commands
 
 ```bash
-deno task deploy <server>     # Deploy services to server
+deno task deploy <server>     # Deploy all services to server
+deno task deploy <server> <stack>  # Deploy single stack (e.g. `deno task deploy home plausible`)
 deno task ansible <playbook>  # Run Ansible playbooks
 deno task backup              # Run backup system
 deno task ssh <server>        # SSH into server
@@ -396,12 +397,13 @@ Before any manual container manipulation: check if the change can be codified in
 
 ## 📋 Quick Reference
 
-| Task        | Command                          | Description                      |
-| ----------- | -------------------------------- | -------------------------------- |
-| All checks  | `deno task check`                | Run lint, fmt, type-check, tests |
-| Fix all     | `deno task fix`                  | Auto-fix linting and formatting  |
-| Deploy      | `deno task deploy <server>`      | Deploy services                  |
-| Backup      | `deno task backup`               | Run backup system                |
-| SSH         | `deno task ssh <server>`         | SSH into server                  |
-| Ansible     | `deno task ansible <playbook>`   | Run Ansible playbooks            |
-| Test single | `deno test path/to/file.test.ts` | Run specific test                |
+| Task        | Command                             | Description                      |
+| ----------- | ----------------------------------- | -------------------------------- |
+| All checks  | `deno task check`                   | Run lint, fmt, type-check, tests |
+| Fix all     | `deno task fix`                     | Auto-fix linting and formatting  |
+| Deploy      | `deno task deploy <server>`         | Deploy all services              |
+| Deploy one  | `deno task deploy <server> <stack>` | Deploy single stack              |
+| Backup      | `deno task backup`                  | Run backup system                |
+| SSH         | `deno task ssh <server>`            | SSH into server                  |
+| Ansible     | `deno task ansible <playbook>`      | Run Ansible playbooks            |
+| Test single | `deno test path/to/file.test.ts`    | Run specific test                |

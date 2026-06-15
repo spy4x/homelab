@@ -382,6 +382,24 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: Plausible
+    group: home
+    url: "https://analytics.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Umami
+    group: home
+    url: "https://stats.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   - name: Schedule
     group: home
     url: "https://schedule.${DOMAIN}"
