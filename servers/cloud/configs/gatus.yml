@@ -106,6 +106,15 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: LibreSpeed
+    group: home
+    url: "https://speed-home.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   - name: MeTube
     group: home
     url: "https://metube.${DOMAIN}"
@@ -220,6 +229,15 @@ endpoints:
     alerts:
       - type: ntfy
         failure-threshold: 9
+
+  - name: LibreSpeed
+    group: offsite
+    url: "https://speed-offsite.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
 
   - name: Syncthing
     group: offsite

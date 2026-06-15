@@ -511,6 +511,17 @@
           </li>
           <li class="service-item">
             <a
+              href="https://speed-home.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🚀</div>
+              <div class="service-name">Speed</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_librespeed/health/badge.svg" alt="Home Speed Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
               href="https://stalwart.${DOMAIN}"
               target="_blank"
               class="service-link"
@@ -603,6 +614,17 @@
               <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_syncthing/health/badge.svg" alt="Cloud Sync Uptime Badge" />
             </a>
           </li>
+          <li class="service-item">
+            <a
+              href="https://speed-cloud.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🚀</div>
+              <div class="service-name">Speed</div>
+              <img src="https://uptime-home.${DOMAIN}/api/v1/endpoints/cloud_librespeed/health/badge.svg" alt="Cloud Speed Uptime Badge" />
+            </a>
+          </li>
         </ul>
       </div>
 
@@ -629,6 +651,17 @@
               <div class="service-icon">🚦</div>
               <div class="service-name">Proxy</div>
               <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/offsite_proxy/health/badge.svg" alt="Offsite Proxy Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
+              href="https://speed-offsite.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🚀</div>
+              <div class="service-name">Speed</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/offsite_librespeed/health/badge.svg" alt="Offsite Speed Uptime Badge" />
             </a>
           </li>
         </ul>

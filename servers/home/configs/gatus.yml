@@ -77,6 +77,15 @@ endpoints:
     alerts:
       - type: ntfy
 
+  - name: LibreSpeed
+    group: cloud
+    url: "https://speed-cloud.${DOMAIN}"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
   - name: Proxy
     group: cloud
     url: "https://proxy-cloud.${DOMAIN}/dashboard"
