@@ -7,7 +7,7 @@ const backupConfig: BackupConfig = {
     `${VOLUMES_PATH}/caldiy/redis`,
   ],
   containers: {
-    stop: ["caldiy", "caldiy-db", "caldiy-redis"],
+    stop: ["hl-caldiy", "hl-caldiy-db", "hl-caldiy-redis"],
   },
 }
 

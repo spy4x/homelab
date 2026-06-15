@@ -4,7 +4,7 @@ const backupConfig: BackupConfig = {
   name: "piped",
   sourcePaths: "default",
   containers: {
-    stop: ["piped-backend", "piped-db"],
+    stop: ["hl-piped-backend", "hl-piped-db"],
   },
 }
 

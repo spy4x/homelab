@@ -8,7 +8,7 @@ const backupConfig: BackupConfig = {
   ],
   pathsToChangeOwnership: [`${VOLUMES_PATH}/immich`],
   containers: {
-    stop: ["immich-server", "immich-machine-learning", "immich-db", "immich-kv"],
+    stop: ["hl-immich-server", "hl-immich-machine-learning", "hl-immich-db", "hl-immich-kv"],
   },
 }
 

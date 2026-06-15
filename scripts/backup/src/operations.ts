@@ -65,8 +65,13 @@ export class BackupOperations {
   ): Promise<void> {
     log(`${action}ing compose stack at ${composePath}`)
 
+    // Docker compose uses -p/--project-name to identify containers.
+    // Deploy script uses `docker compose -p ${stackName} ... up -d`,
+    // so we must match the same project name to find existing containers.
+    const projectName = this.getProjectName(composePath)
+
     const cmd = new Deno.Command("docker", {
-      args: ["compose", "-f", composePath, action],
+      args: ["compose", "-p", projectName, "-f", composePath, action],
       stdout: "piped",
       stderr: "piped",
     })
@@ -77,6 +82,16 @@ export class BackupOperations {
       const errorMsg = `Error ${action}ing compose stack:\n${new TextDecoder().decode(stderr)}`
       this.markBackupFailed(config, errorMsg, `compose_${action}`)
     }
+  }
+
+  /**
+   * Derives docker compose project name from compose file path.
+   * Deploy uses the stack directory name as project name (-p flag).
+   */
+  private getProjectName(composePath: string): string {
+    // /path/to/stacks/gatus/compose.yml → gatus
+    const match = composePath.match(/\/stacks\/([^/]+)\/compose\.yml$/)
+    return match ? match[1] : ""
   }
 
   /**
