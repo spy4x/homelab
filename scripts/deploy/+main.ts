@@ -263,6 +263,41 @@ try {
   }
   success("Synced completed successfully")
 
+  // Clean up stale backup configs for stacks that no longer exist
+  // rsync without --delete leaves old files on the server, so we remove
+  // orphaned backup.ts files that would cause backup failures (stateless
+  // services that were removed, renamed stacks, etc.)
+  log("Cleaning up stale backup configs on remote server...")
+  const cleanupBackupConfigs = [
+    // Stateless services removed from backup rotation:
+    "mirotalk/backup.ts",
+    "it-tools/backup.ts",
+    // Renamed stacks (old name → new name):
+    // "timetracker" was renamed to "traggo"
+  ]
+  for (const backupFile of cleanupBackupConfigs) {
+    const remoteFile = `${PATH_APPS}/stacks/${backupFile}`
+    const cleanupCmd =
+      `test -f "${remoteFile}" && rm -f "${remoteFile}" && echo "  ✓ removed ${backupFile}" || true`
+    const result = await runCommand(["ssh", SSH_ADDRESS, cleanupCmd])
+    if (result.success && result.output.trim()) {
+      log(result.output.trim())
+    }
+  }
+
+  // Handle rename: timetracker → traggo
+  // If old 'timetracker' docker compose project exists, remove it to avoid
+  // "service 'timetracker' has no container to start" error during backups
+  log("Checking for legacy docker compose project 'timetracker'...")
+  const oldProjectCleanup =
+    `docker compose -p timetracker ps -q 2>/dev/null | grep -q . && docker compose -p timetracker down --remove-orphans 2>/dev/null && echo "  ✓ cleaned up legacy 'timetracker' compose project" || echo "  no legacy timetracker project found"`
+  const legacyResult = await runCommand(["ssh", SSH_ADDRESS, oldProjectCleanup])
+  if (legacyResult.success && legacyResult.output.trim().includes("✓")) {
+    success(legacyResult.output.trim())
+  } else {
+    log(legacyResult.output.trim())
+  }
+
   // Snapshot checksums after rsync and detect changes
   const restartStacks = new Set<string>()
   if (stacksWithConfigFiles.length > 0) {
