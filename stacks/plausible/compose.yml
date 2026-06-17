@@ -31,22 +31,26 @@ services:
           cpus: "0.3"
 
   # ClickHouse columnar analytics DB for Plausible event storage
-  # Heavy: ~512MB RAM minimum, required for Plausible to function
+  # Heavy: ~512MB RAM minimum. Was hitting MEMORY_LIMIT_EXCEEDED at 768M
+  # Bumped to 1.5G to handle query concurrency.
+  # Pinned to 24.12 LTS — latest (26.x) deprecated neighbor() used by Plausible.
+  # Config override enables it anyway if version is bumped.
   plausible-events:
     container_name: hl-plausible-events
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:24.12
     environment:
       - CLICKHOUSE_DB=plausible
       - CLICKHOUSE_PASSWORD=plausible
-      - CLICKHOUSE_MAX_SERVER_MEMORY_USAGE=400000000
+      - CLICKHOUSE_MAX_SERVER_MEMORY_USAGE=1200000000
     volumes:
       - ${VOLUMES_PATH}/plausible/clickhouse:/var/lib/clickhouse:z
+      - ./clickhouse-config-override.xml:/etc/clickhouse-server/config.d/override.xml:ro
     networks:
       - default
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1.5G
           cpus: "0.5"
 
   # Plausible Analytics - lightweight, privacy-friendly analytics

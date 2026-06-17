@@ -1,0 +1,5 @@
+<clickhouse>
+  <!-- Plausible uses neighbor() which is deprecated in ClickHouse 25+ -->
+  <!-- https://github.com/plausible/analytics/issues/4699 -->
+  <allow_deprecated_error_prone_window_functions>1</allow_deprecated_error_prone_window_functions>
+</clickhouse>
