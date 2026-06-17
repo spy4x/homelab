@@ -43,7 +43,7 @@ services:
       - CLICKHOUSE_MAX_SERVER_MEMORY_USAGE=1200000000
     volumes:
       - ${VOLUMES_PATH}/plausible/clickhouse:/var/lib/clickhouse:z
-      - ./clickhouse-config-override.xml:/etc/clickhouse-server/config.d/override.xml:ro
+      - ./clickhouse-config-override.xml:/etc/clickhouse-server/users.d/override.xml:ro
     networks:
       - default
     deploy:
