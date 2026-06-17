@@ -64,7 +64,7 @@ services:
       - SECRET_KEY_BASE=${PLAUSIBLE_SECRET_KEY}
       - SIGNING_SALT=${PLAUSIBLE_SIGNING_SALT}
       - DATABASE_URL=postgres://plausible:${PLAUSIBLE_DB_PASSWORD}@plausible-db:5432/plausible
-      - CLICKHOUSE_DATABASE_URL=http://default:plausible@plausible-events:8123/plausible
+      - CLICKHOUSE_DATABASE_URL=http://default:plausible@plausible-events:8123?database=plausible
       - DISABLE_REGISTRATION=true
       - ADMIN_USER_EMAIL=${PLAUSIBLE_ADMIN_EMAIL:-admin@${DOMAIN}}
       - ADMIN_USER_NAME=admin
