@@ -24,8 +24,28 @@ services:
       - WEB_SEARCH_RESULT_COUNT=${WEB_SEARCH_RESULT_COUNT:-3}
       - BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL=${BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL:-true}
 
-      # --- MCP Tool Servers ---
-      - TOOL_SERVER_CONNECTIONS=[{"url":"http://playwright-mcp:8099","path":"/mcp","type":"mcp","headers":{"Accept":"application/json, text/event-stream","Content-Type":"application/json"}}]
+      # --- Native Mode (Agentic Mode) for all models ---
+      # Unlocks built-in system tools: time, calendar, memory, fetch, web search, etc.
+      - "DEFAULT_MODEL_PARAMS={\"function_calling\":\"native\"}"
+
+      # --- Feature Toggles ---
+      # Calendar: AI can create/search events, requires WEBUI_URL
+      - WEBUI_URL=https://ai.${DOMAIN}
+      - ENABLE_CALENDAR=true
+      - ENABLE_MEMORIES=true
+      - ENABLE_NOTES=true
+
+      # --- Image Generation (OpenAI gpt-image-2) ---
+      - ENABLE_IMAGE_GENERATION=true
+      - IMAGE_GENERATION_ENGINE=openai
+      - IMAGE_GENERATION_MODEL=gpt-image-2
+      - IMAGE_SIZE=1024x1024
+      - "IMAGES_OPENAI_API_PARAMS={\"quality\":\"low\"}"
+
+      # --- MCP + OpenAPI Tool Servers ---
+      # playwright-mcp provides browser automation (screenshots, web scraping)
+      # mcpo proxies stdio MCP servers → OpenAPI. Each tool gets its own route + OpenAPI spec
+      - TOOL_SERVER_CONNECTIONS=[{"url":"http://playwright-mcp:8099","path":"/mcp","type":"mcp","headers":{"Accept":"application/json, text/event-stream","Content-Type":"application/json"}},{"url":"http://mcpo:8000/youtube-transcript","path":"openapi.json","type":"openapi","spec_type":"url","auth_type":"bearer","key":"mcpo-local","config":{"enable":true},"info":{"name":"YouTube Transcript","description":"Fetch YouTube video transcripts"}},{"url":"http://mcpo:8000/fetch","path":"openapi.json","type":"openapi","spec_type":"url","auth_type":"bearer","key":"mcpo-local","config":{"enable":true},"info":{"name":"Web Fetch","description":"Fetch any URL as HTML, Markdown, or plain text"}}]
       - USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS=true
 
       # --- HuggingFace ---
@@ -34,7 +54,9 @@ services:
       # --- LLM Providers (OpenAI-compatible) ---
       - OPENAI_API_KEYS=${OPENAI_API_KEYS}
       - OPENAI_API_BASE_URLS=${OPENAI_API_BASE_URLS}
-      - OPENAI_API_CONFIGS=${OPENAI_API_CONFIGS}
+      # Whitelist models per provider to keep the selector clean
+      # Index 0 = DeepSeek, Index 1 = OpenAI (matches order in OPENAI_API_BASE_URLS)
+      - "OPENAI_API_CONFIGS={\"0\":{\"model_ids\":[\"deepseek-v4-flash\",\"deepseek-v4-pro\"]},\"1\":{\"model_ids\":[\"gpt-5.4-mini\"]}}"
 
       # --- Ollama Local LLM ---
       - ENABLE_OLLAMA_API=${ENABLE_OLLAMA_API:-true}
@@ -42,7 +64,8 @@ services:
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://ollama:11434}
 
       # --- Default Model Settings ---
-      - DEFAULT_MODELS=${DEFAULT_MODELS}
+      - DEFAULT_MODELS=deepseek-v4-flash,deepseek-v4-pro,gemma4:e4b,gpt-5.4-mini
+      - "DEFAULT_MODEL_METADATA={\"capabilities\":{\"vision\":true,\"file_upload\":true,\"file_context\":true,\"web_search\":true,\"image_generation\":true,\"code_interpreter\":true},\"defaultFeatureIds\":[\"image_generation\"]}"
       - DEFAULT_USER_ROLE=${DEFAULT_USER_ROLE:-user}
       - ENABLE_SIGNUP=${ENABLE_SIGNUP:-false}
       - ENABLE_LOGIN_FORM=${ENABLE_LOGIN_FORM:-true}
@@ -56,6 +79,10 @@ services:
 
       # --- User Permissions ---
       - USER_PERMISSIONS_FEATURES_WEB_SEARCH=true
+      - USER_PERMISSIONS_FEATURES_CALENDAR=true
+      - USER_PERMISSIONS_FEATURES_MEMORIES=true
+      - USER_PERMISSIONS_FEATURES_NOTES=true
+      - USER_PERMISSIONS_FEATURES_IMAGE_GENERATION=true
       - USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS=true
       - USER_PERMISSIONS_WORKSPACE_KNOWLEDGE_ACCESS=true
 
@@ -83,3 +110,16 @@ services:
       - "traefik.http.routers.hl-open-webui.entrypoints=websecure"
       - "traefik.http.routers.hl-open-webui.tls=true"
       - "traefik.http.routers.hl-open-webui.tls.certresolver=myresolver"
+
+  # --- MCP Proxy (bridges stdio MCP servers to OpenAPI HTTP for Open WebUI) ---
+  # mcpo Docker image includes Node.js (npx) and Python (uvx) for running MCP servers
+  # Config file defines which MCP servers to spawn (YouTube Transcript, Fetch, etc.)
+  mcpo:
+    container_name: hl-mcpo
+    image: ghcr.io/open-webui/mcpo:main
+    restart: unless-stopped
+    command: ["--config", "/config/mcp-servers.json", "--api-key", "mcpo-local"]
+    volumes:
+      - ./mcpo-config.json:/config/mcp-servers.json:ro
+    networks:
+      - proxy

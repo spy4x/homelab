@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/open-webui/mcpo/main/config-schema.json",
+  "mcpServers": {
+    "youtube-transcript": {
+      "command": "npx",
+      "args": ["-y", "@sinco-lab/mcp-youtube-transcript"]
+    },
+    "fetch": {
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    }
+  }
+}

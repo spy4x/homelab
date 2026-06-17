@@ -37,52 +37,15 @@ ui:
   search_on_category_select: true
 
 engines:
-  # Basic text search engines
+  # Fast engines (no API keys needed)
   - name: duckduckgo
     engine: duckduckgo
     shortcut: ddg
     disabled: false
 
-  - name: google
-    engine: google
-    shortcut: g
-    disabled: false
-
   - name: wikipedia
     engine: wikipedia
     shortcut: wp
-    disabled: false
-
-  - name: stackoverflow
-    engine: stackoverflow
-    shortcut: so
-    disabled: false
-
-  - name: github
-    engine: github
-    shortcut: gh
-    disabled: false
-
-  - name: reddit
-    engine: reddit
-    shortcut: reddit
-    disabled: false
-
-  - name: bing
-    engine: bing
-    shortcut: bi
-    disabled: false
-
-  # Image search
-  - name: google images
-    engine: google_images
-    shortcut: gi
-    disabled: false
-
-  # News
-  - name: google news
-    engine: google_news
-    shortcut: gn
     disabled: false
 
 outgoing:
