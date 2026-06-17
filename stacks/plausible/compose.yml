@@ -33,11 +33,10 @@ services:
   # ClickHouse columnar analytics DB for Plausible event storage
   # Heavy: ~512MB RAM minimum. Was hitting MEMORY_LIMIT_EXCEEDED at 768M
   # Bumped to 1.5G to handle query concurrency.
-  # Pinned to 24.12 LTS — latest (26.x) deprecated neighbor() used by Plausible.
-  # Config override enables it anyway if version is bumped.
+  # Config override enables neighbor() deprecated in 26.x.
   plausible-events:
     container_name: hl-plausible-events
-    image: clickhouse/clickhouse-server:24.12
+    image: clickhouse/clickhouse-server:latest
     environment:
       - CLICKHOUSE_DB=plausible
       - CLICKHOUSE_PASSWORD=plausible
