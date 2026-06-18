@@ -57,8 +57,11 @@ export async function runCommand(
   options?: { sudo?: boolean; cwd?: string },
 ): Promise<{ success: boolean; output: string; error: string }> {
   const command = options?.sudo ? ["sudo", ...cmd] : cmd
+  // Inherit stdin for sudo so user can enter password on TTY.
+  // piped stdin causes sudo to timeout waiting for password silently.
   const proc = new Deno.Command(command[0], {
     args: command.slice(1),
+    stdin: options?.sudo ? "inherit" : "piped",
     stdout: "piped",
     stderr: "piped",
     cwd: options?.cwd,

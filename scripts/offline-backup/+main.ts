@@ -597,6 +597,13 @@ async function verifyBackups(
   return results
 }
 
+/// Keep sudo credential alive — must be called before any `sudo: true` command
+/// and periodically during long operations (refresh interval < sudo timestamp_timeout).
+async function refreshSudo(): Promise<boolean> {
+  const result = await runCommand(["-v"], { sudo: true })
+  return result.success
+}
+
 async function runSmartCheck(
   device: string,
   checkType: "short" | "long",
@@ -615,7 +622,13 @@ async function runSmartCheck(
   const estimatedMinutes = checkType === "short" ? 2 : 390
   console.log(`   Estimated duration: ~${estimatedMinutes} minutes`)
 
-  // Start the test
+  // Start the test — refresh sudo first so TTY is accessible for password prompt
+  if (!(await refreshSudo())) {
+    console.log("\n⚠️  Warning: Could not start SMART test — sudo authentication failed")
+    console.log("   Check manually with: sudo smartctl -t " + checkType + " " + device)
+    return ""
+  }
+
   const testType = checkType === "short" ? "short" : "long"
   const startResult = await runCommand(
     ["smartctl", "-t", testType, device],
@@ -641,7 +654,8 @@ async function runSmartCheck(
     initialStatus.output.split("\n").filter((line) => line.match(/^\s*#\s*\d+/)).length
 
   // Wait for test to complete with progress updates
-  const checkIntervalMs = 5 * 60 * 1000 // Check every 5 minutes
+  // Use 4min interval so sudo credential (default 5min timeout) stays alive.
+  const checkIntervalMs = 4 * 60 * 1000 // Check every 4 minutes
   const totalWaitMs = estimatedMinutes * 60 * 1000
   const testStartTime = Date.now()
 
@@ -650,6 +664,15 @@ async function runSmartCheck(
   while (true) {
     const elapsed = Date.now() - testStartTime
     const elapsedMinutes = Math.floor(elapsed / 60000)
+
+    // Refresh sudo credential before every check to prevent expiry mid-poll.
+    if (!(await refreshSudo())) {
+      console.log(
+        "\n⚠️  Sudo authentication failed — cannot continue SMART monitoring.",
+      )
+      console.log("   Resume manually with: sudo smartctl -a " + device)
+      break
+    }
 
     // Check test status
     const statusResult = await runCommand(["smartctl", "-a", device], { sudo: true })
@@ -1049,7 +1072,12 @@ async function create(envVars: Record<string, string>): Promise<void> {
     if (smartTestRun) {
       console.log(`\n🔍 SMART Health Check:`)
       console.log(`   Test Type: ${smartTestType}`)
-      console.log(`   Status: Completed (see detailed results above)`)
+      if (smartTestResults) {
+        console.log(`   Status: Completed (see detailed results above)`)
+      } else {
+        console.log(`   Status: FAILED — could not start test (check sudo)`)
+        console.log(`   Run manually: sudo smartctl -t ${smartTestType} ${device}`)
+      }
     } else {
       console.log(`\n⏭️  SMART Health Check: Skipped`)
     }
