@@ -12,17 +12,19 @@ services:
     container_name: hl-caldav-mcp
     image: ghcr.io/open-webui/mcpo:main
     restart: unless-stopped
+    entrypoint: ["/entrypoint.sh"]
     command: ["--config", "/config/mcp-servers.json", "--api-key", "mcpo-local"]
     environment:
-      - CALDAV_URL=${CALDAV_URL}
+      - CALDAV_SERVER_URL=${CALDAV_SERVER_URL}
       - CALDAV_USERNAME=${CALDAV_USERNAME}
       - CALDAV_PASSWORD=${CALDAV_PASSWORD}
     volumes:
       - ./mcpo-config.json:/config/mcp-servers.json:ro
+      - ./entrypoint.sh:/entrypoint.sh:ro
     deploy:
       resources:
         limits:
-          memory: 128M
-          cpus: "0.25"
+          memory: 1G
+          cpus: "1.0"
     networks:
       - proxy
