@@ -1,0 +1,28 @@
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # caldav-mcp exposes CalDAV calendar operations as MCP tools for Open WebUI
+  # Uses mcpo (MCP Proxy) to wrap stdio-based mcp-caldav into an HTTP endpoint
+  caldav-mcp:
+    container_name: hl-caldav-mcp
+    image: ghcr.io/open-webui/mcpo:main
+    restart: unless-stopped
+    command: ["--config", "/config/mcp-servers.json", "--api-key", "mcpo-local"]
+    environment:
+      - CALDAV_URL=${CALDAV_URL}
+      - CALDAV_USERNAME=${CALDAV_USERNAME}
+      - CALDAV_PASSWORD=${CALDAV_PASSWORD}
+    volumes:
+      - ./mcpo-config.json:/config/mcp-servers.json:ro
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.25"
+    networks:
+      - proxy

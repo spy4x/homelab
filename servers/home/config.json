@@ -50,6 +50,7 @@
     { "name": "umami" },
     { "name": "librespeed" },
     { "name": "docker-sock-proxy" },
-    { "name": "openhands" }
+    { "name": "openhands" },
+    { "name": "caldav-mcp" }
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/open-webui/mcpo/main/config-schema.json",
+  "mcpServers": {
+    "caldav-mcp": {
+      "command": "uvx",
+      "args": ["mcp-caldav"]
+    }
+  }
+}
