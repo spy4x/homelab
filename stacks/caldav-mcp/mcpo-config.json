@@ -3,7 +3,7 @@
   "mcpServers": {
     "caldav-mcp": {
       "command": "uvx",
-      "args": ["mcp-caldav"]
+      "args": ["--from", "git+https://github.com/madbonez/caldav-mcp", "mcp-caldav"]
     }
   }
 }
