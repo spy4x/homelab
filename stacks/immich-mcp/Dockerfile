@@ -7,7 +7,7 @@ WORKDIR /src
 
 RUN apt-get update -qq && apt-get install -y -qq git && rm -rf /var/lib/apt/lists/*
 
-ARG BRANCH=feat/update-mcp-sdk-streamable-http
+ARG BRANCH=feat/rename-tools-underscores
 RUN git clone --depth 1 --branch $BRANCH https://github.com/spy4x/ImmichMCP.git .
 
 RUN dotnet restore ImmichMCP/ImmichMCP.csproj
