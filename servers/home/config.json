@@ -51,6 +51,8 @@
     { "name": "librespeed" },
     { "name": "docker-sock-proxy" },
     { "name": "openhands" },
-    { "name": "caldav-mcp" }
+    { "name": "caldav-mcp" },
+    { "name": "caldav-mcp-ng" },
+    { "name": "immich-mcp" }
   ]
 }
