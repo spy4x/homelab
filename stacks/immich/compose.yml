@@ -53,6 +53,15 @@ services:
       - "traefik.http.routers.hl-immich.tls=true"
       - "traefik.http.routers.hl-immich.tls.certresolver=myresolver"
       - "traefik.http.services.hl-immich.loadbalancer.server.port=2283"
+      # Thumbnail-only proxy: adds API key so browsers can load inline images
+      - "traefik.http.routers.hl-immich-thumb.rule=Host(`photos.${DOMAIN}`) && PathRegexp(`/api/assets/[^/]+/thumbnail`)"
+      - "traefik.http.routers.hl-immich-thumb.priority=100"
+      - "traefik.http.routers.hl-immich-thumb.entrypoints=websecure"
+      - "traefik.http.routers.hl-immich-thumb.tls=true"
+      - "traefik.http.routers.hl-immich-thumb.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-immich-thumb.service=hl-immich"
+      - "traefik.http.routers.hl-immich-thumb.middlewares=immich-api-key"
+      - "traefik.http.middlewares.immich-api-key.headers.customrequestheaders.x-api-key=${IMMICH_MCP_API_KEY}"
 
   machine-learning:
     container_name: hl-immich-machine-learning

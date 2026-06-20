@@ -11,7 +11,7 @@ services:
     image: ghcr.io/barryw/immichmcp:latest
     restart: unless-stopped
     environment:
-      - IMMICH_BASE_URL=http://hl-immich-server:2283
+      - IMMICH_BASE_URL=https://photos.${DOMAIN}
       - IMMICH_API_KEY=${IMMICH_MCP_API_KEY}
       - MCP_LOG_LEVEL=Warning
       - DOWNLOAD_MODE=url
