@@ -39,7 +39,7 @@ services:
     image: clickhouse/clickhouse-server:latest
     environment:
       - CLICKHOUSE_DB=plausible
-      - CLICKHOUSE_PASSWORD=plausible
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
       - CLICKHOUSE_MAX_SERVER_MEMORY_USAGE=1200000000
     volumes:
       - ${VOLUMES_PATH}/plausible/clickhouse:/var/lib/clickhouse:z
@@ -64,7 +64,7 @@ services:
       - SECRET_KEY_BASE=${PLAUSIBLE_SECRET_KEY}
       - SIGNING_SALT=${PLAUSIBLE_SIGNING_SALT}
       - DATABASE_URL=postgres://plausible:${PLAUSIBLE_DB_PASSWORD}@plausible-db:5432/plausible
-      - CLICKHOUSE_DATABASE_URL=http://default:plausible@plausible-events:8123/plausible
+      - CLICKHOUSE_DATABASE_URL=http://default:${CLICKHOUSE_PASSWORD}@plausible-events:8123/plausible
       - DISABLE_REGISTRATION=true
       - ADMIN_USER_EMAIL=${PLAUSIBLE_ADMIN_EMAIL:-admin@${DOMAIN}}
       - ADMIN_USER_NAME=admin
