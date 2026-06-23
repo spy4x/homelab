@@ -17,7 +17,7 @@ services:
   # Listens on 8428 (Prometheus remote write) and 8429 (Prometheus scrape).
   victoria-metrics:
     container_name: hl-victoria-metrics
-    image: victoriametrics/victoria-metrics:v1.107.0
+    image: victoriametrics/victoria-metrics:v1.146.0
     command:
       - "--storageDataPath=/storage"
       - "--retentionPeriod=14"
@@ -46,9 +46,9 @@ services:
   # (VictoriaMetrics can self-scrape, but vmagent is the canonical option.)
   vmagent:
     container_name: hl-vmagent
-    image: victoriametrics/vmagent:v1.107.0
+    image: victoriametrics/vmagent:v1.146.0
     command:
-      - "-prometheus.config=/etc/vmagent/prometheus.yml"
+      - "-promscrape.config=/etc/vmagent/prometheus.yml"
       - "-remoteWrite.url=http://hl-victoria-metrics:8428/api/v1/write"
       - "-remoteWrite.maxDiskUsagePerURL=100MB"
     volumes:
@@ -69,7 +69,7 @@ services:
   # Listens on 9428 for ingestion.
   victoria-logs:
     container_name: hl-victoria-logs
-    image: victoriametrics/victoria-logs:v1.5.0
+    image: victoriametrics/victoria-logs:v1.51.0
     command:
       - "--storageDataPath=/storage"
       - "--retentionPeriod=14"
@@ -115,7 +115,7 @@ services:
   grafana-vm:
     container_name: hl-grafana-vm
     image: grafana/grafana:11.3.0
-    user: "${PUID:-1000}:${PGID:-1000}"
+    user: "0:0"
     environment:
       - GF_SERVER_ROOT_URL=https://metrics-vm.${DOMAIN}
       - GF_SECURITY_ADMIN_USER=admin

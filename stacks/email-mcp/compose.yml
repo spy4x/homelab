@@ -65,7 +65,7 @@ services:
         "CMD",
         "python",
         "-c",
-        "import urllib.request; urllib.request.urlopen('http://localhost:9557/health', timeout=5)",
+        "import urllib.request; urllib.request.urlopen('http://localhost:9557/mcp', timeout=5)",
       ]
       interval: 30s
       timeout: 5s

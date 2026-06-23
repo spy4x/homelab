@@ -3,6 +3,13 @@
 # After applying, create an Outpost in Admin → Outposts and link these applications
 version: 1
 entries:
+  # Access policy (built-in)
+  - model: authentik_policies_expression.ExpressionPolicy
+    id: policy-authenticated
+    attrs:
+      name: Authenticated
+      expression: return True
+
   # Proxy Provider for Sage
   - model: authentik_providers_proxy.ProxyProvider
     id: provider-sage
@@ -13,10 +20,12 @@ entries:
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !!python/object:authentik.flows.models.Flow
-        slug: default-provider-authorization-implicit-consent
-      invalidation_flow: !!python/object:authentik.flows.models.Flow
-        slug: default-invalidation-flow
+      authorization_flow: !PythonObject [authentik.flows.models.Flow, slug, default-provider-authorization-implicit-consent]
+      invalidation_flow: !PythonObject [authentik.flows.models.Flow, slug, default-invalidation-flow]
+      authorization_flow: !PythonObject [authentik.flows.models.Flow, slug, default-provider-authorization-implicit-consent]
+      invalidation_flow: !PythonObject [authentik.flows.models.Flow, slug, default-invalidation-flow]
+      authorization_flow: !PythonObject [authentik.flows.models.Flow, slug, default-provider-authorization-implicit-consent]
+      invalidation_flow: !PythonObject [authentik.flows.models.Flow, slug, default-invalidation-flow]
 
   # Application: Sage
   - model: authentik_core.Application
@@ -38,10 +47,8 @@ entries:
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !!python/object:authentik.flows.models.Flow
-        slug: default-provider-authorization-implicit-consent
-      invalidation_flow: !!python/object:authentik.flows.models.Flow
-        slug: default-invalidation-flow
+      authorization_flow: !KeyOf default-provider-authorization-implicit-consent
+      invalidation_flow: !KeyOf default-invalidation-flow
 
   # Application: Invoices
   - model: authentik_core.Application
@@ -62,15 +69,13 @@ entries:
     id: provider-transmission
     attrs:
       name: Transmission
-      external_host: https://torrents.${DOMAIN}
+      external_host: https://torrents.antonshubin.com
       internal_host: http://hl-transmission:9091
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !!python/object:authentik.flows.models.Flow
-        slug: default-provider-authorization-implicit-consent
-      invalidation_flow: !!python/object:authentik.flows.models.Flow
-        slug: default-invalidation-flow
+      authorization_flow: !KeyOf default-provider-authorization-implicit-consent
+      invalidation_flow: !KeyOf default-invalidation-flow
 
   # Application: Transmission
   - model: authentik_core.Application
@@ -79,8 +84,8 @@ entries:
       name: Transmission
       slug: transmission
       provider: !KeyOf provider-transmission
-      meta_launch_url: https://torrents.${DOMAIN}
-      meta_icon: https://torrents.${DOMAIN}/favicon.ico
+      meta_launch_url: https://torrents.antonshubin.com
+      meta_icon: https://torrents.antonshubin.com/favicon.ico
 
   # Access policy: Allow all authenticated users to access these apps
   - model: authentik_policies.PolicyBinding
@@ -99,9 +104,4 @@ entries:
       target: !KeyOf app-transmission
       order: 0
 
-  # Authenticated policy (built-in)
-  - model: authentik_policies_expression.ExpressionPolicy
-    id: policy-authenticated
-    attrs:
-      name: Authenticated
-      expression: return True
+
