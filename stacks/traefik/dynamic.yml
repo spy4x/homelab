@@ -34,3 +34,18 @@ http:
           Cross-Origin-Opener-Policy: same-origin
           Cross-Origin-Resource-Policy: same-site
           Cross-Origin-Embedder-Policy: require-corp
+          # Block indexing of all self-hosted services by default.
+          # X-Robots-Tag is honored by Google, Bing, DuckDuckGo, and most AI
+          # crawlers (GPTBot, ClaudeBot, CCBot, anthropic-ai, perplexity, etc.).
+          # It is more reliable than robots.txt because it travels with every
+          # response and cannot be ignored by simply not fetching /robots.txt.
+          # Public-facing sites (antonshubin.com) override this via a dedicated
+          # middleware in their own compose.yml to stay indexable for SEO.
+          X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet"
+    # Override middleware for public-facing sites. Adds an empty X-Robots-Tag
+    # header to suppress the default deny from security-headers. Use this on
+    # antonshubin.com (personal site, wants SEO) and similar public sites.
+    allow-index:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: ""
