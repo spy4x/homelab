@@ -40,4 +40,4 @@ services:
       - "traefik.http.routers.hl-metube.entrypoints=websecure"
       - "traefik.http.routers.hl-metube.tls=true"
       - "traefik.http.routers.hl-metube.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-metube.middlewares=auth"
+      - "traefik.http.routers.hl-metube.middlewares=auth,robots-deny@file"

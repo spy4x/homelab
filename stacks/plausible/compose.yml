@@ -98,6 +98,7 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.hl-plausible.loadbalancer.server.port=8000"
       - "traefik.http.routers.hl-plausible.rule=Host(`analytics.${DOMAIN}`)"
+      - "traefik.http.routers.hl-plausible.middlewares=robots-deny@file"
       - "traefik.http.routers.hl-plausible.entrypoints=websecure"
       - "traefik.http.routers.hl-plausible.tls=true"
       - "traefik.http.routers.hl-plausible.tls.certresolver=myresolver"

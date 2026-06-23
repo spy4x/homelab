@@ -51,6 +51,7 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.hl-searxng.loadbalancer.server.port=8080"
       - "traefik.http.routers.hl-searxng.rule=Host(`search.${DOMAIN}`)"
+      - "traefik.http.routers.hl-searxng.middlewares=robots-deny@file"
       - "traefik.http.routers.hl-searxng.entrypoints=websecure"
       - "traefik.http.routers.hl-searxng.tls=true"
       - "traefik.http.routers.hl-searxng.tls.certresolver=myresolver"

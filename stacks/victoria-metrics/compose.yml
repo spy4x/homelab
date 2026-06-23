@@ -143,4 +143,4 @@ services:
       - "traefik.http.routers.hl-grafana-vm.entrypoints=websecure"
       - "traefik.http.routers.hl-grafana-vm.tls=true"
       - "traefik.http.routers.hl-grafana-vm.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-grafana-vm.middlewares=auth"
+      - "traefik.http.routers.hl-grafana-vm.middlewares=auth,robots-deny@file"

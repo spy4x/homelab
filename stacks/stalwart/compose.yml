@@ -44,4 +44,4 @@ services:
       - "traefik.http.middlewares.hl-stalwart-redirect.redirectregex.regex=^(https?://[^/]+)/?$$"
       - "traefik.http.middlewares.hl-stalwart-redirect.redirectregex.replacement=$${1}/admin"
       - "traefik.http.middlewares.hl-stalwart-redirect.redirectregex.permanent=true"
-      - "traefik.http.routers.hl-stalwart.middlewares=hl-stalwart-redirect"
+      - "traefik.http.routers.hl-stalwart.middlewares=hl-stalwart-redirect,robots-deny@file"

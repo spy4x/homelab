@@ -65,6 +65,7 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.hl-umami.loadbalancer.server.port=3000"
       - "traefik.http.routers.hl-umami.rule=Host(`stats.${DOMAIN}`)"
+      - "traefik.http.routers.hl-umami.middlewares=robots-deny@file"
       - "traefik.http.routers.hl-umami.entrypoints=websecure"
       - "traefik.http.routers.hl-umami.tls=true"
       - "traefik.http.routers.hl-umami.tls.certresolver=myresolver"

@@ -38,5 +38,5 @@ services:
       - "traefik.http.routers.hl-grafana.rule=Host(`metrics.${DOMAIN}`)"
       - "traefik.http.routers.hl-grafana.entrypoints=websecure"
       - "traefik.http.routers.hl-grafana.tls=true"
-      - "traefik.http.routers.hl-grafana.middlewares=auth"
+      - "traefik.http.routers.hl-grafana.middlewares=auth,robots-deny@file"
       - "traefik.http.routers.hl-grafana.tls.certresolver=myresolver"

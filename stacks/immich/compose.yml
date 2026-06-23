@@ -60,7 +60,7 @@ services:
       - "traefik.http.routers.hl-immich-thumb.tls=true"
       - "traefik.http.routers.hl-immich-thumb.tls.certresolver=myresolver"
       - "traefik.http.routers.hl-immich-thumb.service=hl-immich"
-      - "traefik.http.routers.hl-immich-thumb.middlewares=immich-api-key"
+      - "traefik.http.routers.hl-immich-thumb.middlewares=immich-api-key,robots-deny@file"
       - "traefik.http.middlewares.immich-api-key.headers.customrequestheaders.x-api-key=${IMMICH_MCP_API_KEY}"
 
   machine-learning:

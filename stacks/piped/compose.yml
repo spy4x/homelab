@@ -27,6 +27,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "traefik.http.routers.hl-piped.rule=Host(`piped.${DOMAIN}`)"
+      - "traefik.http.routers.hl-piped.middlewares=robots-deny@file"
       - "traefik.http.routers.hl-piped.entrypoints=websecure"
       - "traefik.http.routers.hl-piped.tls=true"
       - "traefik.http.routers.hl-piped.tls.certresolver=myresolver"

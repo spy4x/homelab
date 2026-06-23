@@ -49,5 +49,5 @@ services:
       - "traefik.http.routers.hl-upwork-triage-webui.entrypoints=websecure"
       - "traefik.http.routers.hl-upwork-triage-webui.tls=true"
       - "traefik.http.routers.hl-upwork-triage-webui.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-upwork-triage-webui.middlewares=upwork-triage-auth"
+      - "traefik.http.routers.hl-upwork-triage-webui.middlewares=upwork-triage-auth,robots-deny@file"
       - "traefik.http.middlewares.upwork-triage-auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"

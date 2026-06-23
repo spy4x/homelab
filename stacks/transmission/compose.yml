@@ -47,4 +47,4 @@ services:
       # See stacks/traefik/dynamic.yml for the middleware definition and
       # servers/home/configs/authentik/blueprints/homelab-apps.yaml for the
       # Proxy Provider + Application entry.
-      - "traefik.http.routers.hl-transmission.middlewares=authentik"
+      - "traefik.http.routers.hl-transmission.middlewares=authentik,robots-deny@file"

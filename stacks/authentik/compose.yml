@@ -80,6 +80,7 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.hl-authentik.loadbalancer.server.port=9000"
       - "traefik.http.routers.hl-authentik.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.hl-authentik.middlewares=robots-deny@file"
       - "traefik.http.routers.hl-authentik.entrypoints=websecure"
       - "traefik.http.routers.hl-authentik.tls=true"
       - "traefik.http.routers.hl-authentik.tls.certresolver=myresolver"

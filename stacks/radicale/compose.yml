@@ -32,6 +32,7 @@ services:
       - "traefik.docker.network=proxy"
       - "traefik.http.services.hl-radicale.loadbalancer.server.port=5232"
       - "traefik.http.routers.hl-radicale.rule=Host(`cal.${DOMAIN}`)"
+      - "traefik.http.routers.hl-radicale.middlewares=robots-deny@file"
       - "traefik.http.routers.hl-radicale.entrypoints=websecure"
       - "traefik.http.routers.hl-radicale.tls=true"
       - "traefik.http.routers.hl-radicale.tls.certresolver=myresolver"

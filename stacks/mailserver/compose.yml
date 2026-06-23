@@ -108,4 +108,4 @@ services:
       - "traefik.http.routers.hl-rspamd.entrypoints=websecure"
       - "traefik.http.routers.hl-rspamd.tls=true"
       - "traefik.http.routers.hl-rspamd.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-rspamd.middlewares=auth"
+      - "traefik.http.routers.hl-rspamd.middlewares=auth,robots-deny@file"
