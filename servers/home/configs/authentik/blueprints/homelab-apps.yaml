@@ -53,6 +53,35 @@ entries:
       meta_launch_url: https://invoices.antonshubin.com
       meta_icon: https://invoices.antonshubin.com/favicon.ico
 
+  # Proxy Provider for Transmission (BitTorrent web UI)
+  # Traefik sends unauthenticated requests to Authentik's embedded outpost
+  # (configured in stacks/traefik/dynamic.yml). After login, the request flows
+  # through to Transmission with auth headers. Transmission's own basic auth
+  # stays as a defense-in-depth fallback for direct IP access.
+  - model: authentik_providers_proxy.ProxyProvider
+    id: provider-transmission
+    attrs:
+      name: Transmission
+      external_host: https://torrents.${DOMAIN}
+      internal_host: http://hl-transmission:9091
+      mode: forward_single
+      access_token_validity: hours=1
+      refresh_token_validity: days=30
+      authorization_flow: !!python/object:authentik.flows.models.Flow
+        slug: default-provider-authorization-implicit-consent
+      invalidation_flow: !!python/object:authentik.flows.models.Flow
+        slug: default-invalidation-flow
+
+  # Application: Transmission
+  - model: authentik_core.Application
+    id: app-transmission
+    attrs:
+      name: Transmission
+      slug: transmission
+      provider: !KeyOf provider-transmission
+      meta_launch_url: https://torrents.${DOMAIN}
+      meta_icon: https://torrents.${DOMAIN}/favicon.ico
+
   # Access policy: Allow all authenticated users to access these apps
   - model: authentik_policies.PolicyBinding
     attrs:
@@ -63,6 +92,11 @@ entries:
     attrs:
       policy: !KeyOf policy-authenticated
       target: !KeyOf app-invoices
+      order: 0
+  - model: authentik_policies.PolicyBinding
+    attrs:
+      policy: !KeyOf policy-authenticated
+      target: !KeyOf app-transmission
       order: 0
 
   # Authenticated policy (built-in)

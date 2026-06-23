@@ -37,6 +37,7 @@
     { "name": "usememos" },
     { "name": "ollama" },
     { "name": "grafana" },
+    { "name": "victoria-metrics" },
     { "name": "akaunting" },
     { "name": "gitea" },
     { "name": "traggo" },
@@ -52,7 +53,8 @@
     { "name": "docker-sock-proxy" },
     { "name": "openhands" },
     { "name": "caldav-mcp" },
-    { "name": "caldav-mcp-ng" },
-    { "name": "immich-mcp" }
+    { "name": "immich-mcp" },
+    { "name": "email-mcp" },
+    { "name": "google-maps-mcp" }
   ]
 }

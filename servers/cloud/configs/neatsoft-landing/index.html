@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeatSoft - Web App Development | Singapore-Based Agency</title>
+    <title>NeatSoft — Fractional CTO &amp; Lead Architect | Singapore</title>
     <meta
       name="description"
-      content="Singapore-based web app development agency. Virtual CTO consulting, MVP development, and scalable backend architecture. 100% Job Success on Upwork, Expert-Vetted, 7,400+ hours delivered."
+      content="Principal-led engineering squad for non-technical founders. Fixed-price, milestone-based SaaS MVPs, AI pipelines, backend APIs, and code audits. Singapore-based, globally delivered. 14-day alignment guarantee."
     >
     <meta name="theme-color" content="#4f46e5">
 
@@ -362,6 +362,65 @@ this.rel = "stylesheet"'
 
       .service-card p {
         color: var(--text-light);
+      }
+
+      .service-price {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 6px 14px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        color: white;
+        border-radius: 100px;
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      /* Engage Section */
+      .engage {
+        padding: 100px 0;
+        background: var(--bg-alt);
+      }
+
+      .engage-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+      }
+
+      .engage-card {
+        padding: 36px;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
+      }
+
+      .engage-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-3px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      }
+
+      .engage-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        margin-bottom: 20px;
+      }
+
+      .engage-card h3 {
+        font-size: 1.25rem;
+        margin-bottom: 12px;
+      }
+
+      .engage-card p {
+        color: var(--text-light);
+        font-size: 0.95rem;
       }
 
       /* Process Section */
@@ -1152,12 +1211,11 @@ this.rel = "stylesheet"'
           <span></span>
         </button>
         <ul class="nav-links">
-          <li><a href="#services">Services</a></li>
+          <li><a href="#offerings">Offerings</a></li>
+          <li><a href="#engage">How We Engage</a></li>
           <li><a href="#process">Process</a></li>
-          <li><a href="#tech">Technology</a></li>
           <li><a href="#portfolio">Portfolio</a></li>
-          <li><a href="#testimonials">Reviews</a></li>
-          <li><a href="#about">About</a></li>
+          <li><a href="#about">Team</a></li>
           <li><a href="#contact">Contact</a></li>
         </ul>
       </div>
@@ -1167,28 +1225,29 @@ this.rel = "stylesheet"'
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <h1>We Build Web Apps That Generate Revenue</h1>
+          <h1>Your Fractional CTO &amp; Lead Architect — On Demand</h1>
           <p>
-            Singapore-based agency combining proven development expertise with strategic fundraising
-            insights. We specialize in Virtual CTO consulting, MVP development, and scalable
-            architecture — helping startups build products that investors and customers love.
+            Singapore-based principal-led engineering squad. We deliver fixed-price, milestone-based
+            outcomes for non-technical founders and C-suite executives who need a senior technical
+            partner — not a freelancer, not a code monkey. Architecture is dictated by us; execution
+            is owned end-to-end.
           </p>
           <div>
-            <a href="#contact" class="btn">Book a Consultation</a>
-            <a href="#process" class="btn btn-secondary">Our Process</a>
+            <a href="#contact" class="btn">Book a Free Architecture Audit</a>
+            <a href="#offerings" class="btn btn-secondary">See What We Deliver</a>
           </div>
           <div class="hero-stats">
             <div class="stat">
-              <div class="stat-value">7,400+</div>
-              <div class="stat-label">Hours Delivered</div>
+              <div class="stat-value">$3K–$25K+</div>
+              <div class="stat-label">Fixed-Price Engagements</div>
             </div>
             <div class="stat">
-              <div class="stat-value">100%</div>
-              <div class="stat-label">Job Success Rate</div>
+              <div class="stat-value">200K+</div>
+              <div class="stat-label">Users on Past Builds</div>
             </div>
             <div class="stat">
-              <div class="stat-value">2018</div>
-              <div class="stat-label">Singapore Founded</div>
+              <div class="stat-value">14-Day</div>
+              <div class="stat-label">Alignment Guarantee</div>
             </div>
           </div>
         </div>
@@ -1227,62 +1286,115 @@ this.rel = "stylesheet"'
     </section>
 
     <!-- Services Section -->
-    <section class="services" id="services">
+    <section class="services" id="offerings">
       <div class="container">
         <div class="section-header">
-          <h2>What We Build</h2>
+          <h2>What We Deliver</h2>
           <p>
-            Full-stack web application development focused on delivering real business value for
-            startups and growing companies
+            Four outcome-priced offerings. Pick the one that maps to the gap in your business. Every
+            engagement is fixed-price and milestone-based. No hourly billing. No timesheets. No
+            scope creep.
           </p>
         </div>
         <div class="services-grid">
           <div class="service-card">
-            <div class="service-icon">👔</div>
-            <h3>Virtual CTO Consulting</h3>
+            <div class="service-icon">🚀</div>
+            <h3>Zero-to-Production SaaS MVP</h3>
             <p>
-              Strategic technology leadership for startups. Architecture decisions, tech stack
-              selection, team mentoring, and roadmap planning without the full-time cost.
+              From idea to live deployment in 21 days. Auth, payments, REST API, admin panel, and
+              production deployment on your infrastructure. You own 100% of the IP, source, and root
+              keys from Day One — no vendor lock-in.
             </p>
+            <p class="service-price">From $15,000</p>
           </div>
           <div class="service-card">
-            <div class="service-icon">💡</div>
-            <h3>MVP Development</h3>
+            <div class="service-icon">🤖</div>
+            <h3>Deterministic AI &amp; LLM Pipelines</h3>
             <p>
-              Turn your idea into a working product quickly. We focus on core features that validate
-              your concept and attract early users.
+              Production-grade LLM integrations, RAG systems, autonomous subagents. Built to
+              eliminate hallucination risk and integrate cleanly with your existing backend.
+              Includes monitoring, caching, and rate limiting as standard.
             </p>
+            <p class="service-price">From $8,000</p>
           </div>
           <div class="service-card">
-            <div class="service-icon">📱</div>
-            <h3>SaaS Applications</h3>
+            <div class="service-icon">🛡️</div>
+            <h3>Bulletproof Backend API &amp; Infrastructure</h3>
             <p>
-              Scalable SaaS platforms built for growth. User management, subscriptions, billing,
-              analytics—everything you need to monetize.
+              REST or GraphQL API engineered to scale to 10K+ users from Day One. Self-hosted or
+              cloud, with CI/CD, automated backups, monitoring, and a 30-day code warranty. We hand
+              off the keys — you own the infrastructure.
             </p>
+            <p class="service-price">From $6,000</p>
           </div>
           <div class="service-card">
-            <div class="service-icon">⚡</div>
-            <h3>Web Applications</h3>
+            <div class="service-icon">🔍</div>
+            <h3>Surgical Codebase Health Audit</h3>
             <p>
-              Fast, responsive single-page applications. From internal tools to customer-facing
-              platforms with excellent user experience.
+              48-hour deep audit of your existing codebase. You get a prioritized refactoring
+              roadmap, security gaps, performance bottlenecks, and architectural recommendations.
+              Pre-acquisition due diligence or pre-scale code review.
+            </p>
+            <p class="service-price">From $3,000</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How We Engage Section -->
+    <section class="engage" id="engage">
+      <div class="container">
+        <div class="section-header">
+          <h2>How We Engage</h2>
+          <p>
+            Every engagement runs on the same five policies. They are not negotiable. They exist so
+            the work ships on time, the budget holds, and the IP is yours from Day One.
+          </p>
+        </div>
+        <div class="engage-grid">
+          <div class="engage-card">
+            <div class="engage-icon">🛡️</div>
+            <h3>14-Day Mutual Alignment Guarantee</h3>
+            <p>
+              If within 14 days the engagement is not the right fit — communication style, technical
+              direction, or pace — you get 100% back, no questions asked. We absorb the onboarding
+              cost. The first two weeks are paid only if both sides commit to the full project.
             </p>
           </div>
-          <div class="service-card">
-            <div class="service-icon">🔧</div>
-            <h3>Scalable Backend Architecture</h3>
+          <div class="engage-card">
+            <div class="engage-icon">⏱️</div>
+            <h3>Async-First Execution</h3>
             <p>
-              Secure backends capable of scaling to millions of daily sessions. RESTful APIs,
-              real-time WebSockets, clean documentation.
+              Maximum one weekly sync call. Everything else happens via text, recorded Loom videos,
+              and pull requests. You do not need to clear your calendar. You do not need to attend
+              standups. Decisions are documented, not lost in meetings.
             </p>
           </div>
-          <div class="service-card">
-            <div class="service-icon">☁️</div>
-            <h3>Cloud Infrastructure</h3>
+          <div class="engage-card">
+            <div class="engage-icon">🔑</div>
+            <h3>Clean Handoff &amp; Full IP Ownership</h3>
             <p>
-              Containerized deployments, CI/CD pipelines, monitoring. Your app runs reliably in
-              production on AWS, GCP, or Hetzner.
+              From Day One you own 100% of the source code, infrastructure keys, and documentation.
+              No vendor lock-in. No proprietary frameworks. No hostage situations. If we disappear
+              tomorrow, you keep everything and run it yourself.
+            </p>
+          </div>
+          <div class="engage-card">
+            <div class="engage-icon">🎯</div>
+            <h3>Fixed-Price Milestone-Based Billing</h3>
+            <p>
+              The total project price is set on Day One. Payment is tied to milestone delivery, not
+              hours logged. We absorb scope creep. We refund milestones that miss. The budget you
+              approved is the budget you spend.
+            </p>
+          </div>
+          <div class="engage-card">
+            <div class="engage-icon">🔧</div>
+            <h3>30-Day Code Warranty</h3>
+            <p>
+              After deployment, any bug traced to our code is fixed free of charge for 30 days. The
+              warranty is explicit, written into the contract, and honoured without invoicing
+              theatre. Past that, we offer monthly support retainers from $400.
             </p>
           </div>
         </div>
@@ -1669,8 +1781,7 @@ this.rel = "stylesheet"'
                   </div>
                 </div>
               </div>
-              <a href="https://ctrk.net" target="_blank" class="portfolio-link"
-              >Visit Project →</a>
+              <a href="https://ctrk.net" target="_blank" class="portfolio-link">Visit Project →</a>
             </div>
           </div>
         </div>
@@ -1782,13 +1893,14 @@ this.rel = "stylesheet"'
     <!-- About Section -->
     <section class="about" id="about">
       <div class="container">
-        <div class="about-intro">
-          <h2>Meet the Team</h2>
+        <div class="section-header">
+          <h2>Principal-Led Engineering Squad</h2>
           <p>
-            We're a two-person Singapore-based agency combining deep technical expertise with
-            strategic business thinking. Anton brings proven full-stack development skills with
-            5,900+ hours of successful client work, while Michael adds fundraising experience, VC
-            insights, and strategic perspective from building and scaling multiple startups.
+            A lean, principal-led Singapore team. Anton dictates every architecture decision
+            end-to-end. Michael handles business, legal, and tax infrastructure so engineering stays
+            focused. Senior full-stack engineers are added to projects as needed. You hire a squad —
+            you get a squad. There is exactly one decision-maker on the technical side, and that
+            decision-maker is accountable.
           </p>
         </div>
         <div class="founders-grid">
@@ -1803,32 +1915,31 @@ this.rel = "stylesheet"'
               decoding="async"
             >
             <h3>Anton Shubin</h3>
-            <div class="founder-role">CEO & Technical Lead</div>
+            <div class="founder-role">Founder &amp; Principal Engineer</div>
             <div class="founder-bio">
-              Full-stack developer with 5,900+ hours on Upwork and 100% Job Success rate.
-              Expert-vetted freelancer specializing in building SaaS applications from idea to
-              revenue. Passionate about modern web technologies, developer tooling, and creating
-              scalable architectures. Also runs a YouTube channel sharing live-coding and startup
-              experience.
+              Fractional CTO and Lead Architect. Operates as the sovereign technical partner for
+              non-technical founders and C-suite executives. Strictly refuses hourly billing,
+              timesheets, and staff-augmentation. Sells guaranteed business outcomes through
+              fixed-price milestone-based engagements. Past builds have scaled to 200K+ users and
+              been acquired. Also runs a YouTube channel and the open-source
+              <a href="https://github.com/spy4x" target="_blank">spy4x</a> GitHub org.
             </div>
             <div class="founder-skills">
+              <span class="founder-skill">Fractional CTO</span>
+              <span class="founder-skill">Lead Architecture</span>
               <span class="founder-skill">TypeScript</span>
-              <span class="founder-skill">Hono.js</span>
-              <span class="founder-skill">Nest.js</span>
-              <span class="founder-skill">Preact/React</span>
-              <span class="founder-skill">Angular</span>
-              <span class="founder-skill">Deno/Node.js/Bun</span>
+              <span class="founder-skill">Deno / Hono</span>
+              <span class="founder-skill">Preact / Fresh</span>
               <span class="founder-skill">PostgreSQL</span>
-              <span class="founder-skill">GCP/AWS/Firebase</span>
-              <span class="founder-skill">DevOps</span>
-              <span class="founder-skill">Architecture</span>
+              <span class="founder-skill">LLM Pipelines</span>
+              <span class="founder-skill">Self-hosted Infra</span>
             </div>
             <div class="founder-links">
               <a
                 href="https://antonshubin.com/"
                 target="_blank"
                 class="founder-link"
-                title="Website"
+                title="Personal site"
               >🌐</a>
               <a
                 href="https://www.linkedin.com/in/anton-shubin/"
@@ -1838,12 +1949,6 @@ this.rel = "stylesheet"'
               >in</a>
               <a href="https://github.com/spy4x" target="_blank" class="founder-link" title="GitHub"
               >💻</a>
-              <a
-                href="https://www.youtube.com/@anton-shubin"
-                target="_blank"
-                class="founder-link"
-                title="YouTube"
-              >▶️</a>
             </div>
           </div>
           <div class="founder-card">
@@ -1857,20 +1962,21 @@ this.rel = "stylesheet"'
               decoding="async"
             >
             <h3>Michael Distel</h3>
-            <div class="founder-role">Director & Business Strategy</div>
+            <div class="founder-role">Co-founder &amp; Business Mentor</div>
             <div class="founder-bio">
-              Experienced entrepreneur and former VC with deep expertise in early-stage fundraising,
-              Web3 infrastructure, and industrial automation. Former CTO at FoodRazor (acquired
-              2023), Investment Associate at Cocoon Capital, and co-founder of Feel Beautiful.
-              Brings strategic thinking and investor perspective to technology decisions.
+              Not a developer. Experienced entrepreneur and former VC with deep expertise in
+              early-stage fundraising, Web3 infrastructure, and industrial automation. Former CTO at
+              FoodRazor (acquired 2023), Investment Associate at Cocoon Capital, and co-founder of
+              Feel Beautiful. Owns NeatSoft PTE LTD's business, legal, and tax infrastructure.
+              Reference for any non-technical question.
             </div>
             <div class="founder-skills">
               <span class="founder-skill">Fundraising</span>
+              <span class="founder-skill">Singapore Legal / Tax</span>
+              <span class="founder-skill">VC Relations</span>
               <span class="founder-skill">Strategy</span>
               <span class="founder-skill">Web3</span>
-              <span class="founder-skill">VC Relations</span>
               <span class="founder-skill">Operations</span>
-              <span class="founder-skill">CTO Advisory</span>
             </div>
             <div class="founder-links">
               <a
@@ -1891,12 +1997,31 @@ this.rel = "stylesheet"'
         <div class="client-focus">
           <h3>Who We Work With</h3>
           <p>
-            We're a lean two-person team that punches above our weight. We work with underdogs,
-            micro-startups, and medium businesses who value quality over quantity. With Anton's
-            technical excellence and Michael's fundraising and VC experience, we provide both
-            exceptional code and strategic guidance. If you need partners who understand technology,
-            business, and what it takes to scale, we're the right fit.
+            Non-technical founders and C-suite executives who have already validated the business
+            and need a senior technical partner to take an idea, a codebase, or an infrastructure
+            from where it is to where it needs to be. We are not a fit for hourly staff
+            augmentation, code-monkey work, or micromanaged engagements. We are a fit when you want
+            a CTO-grade decision-maker in the room, on a fixed budget, on a fixed timeline.
           </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="contact">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Ready for a CTO-Grade Technical Partner?</h2>
+          <p>
+            Send us your stack, your idea, or your codebase. We will send back 3 concrete
+            architectural improvements within 48 hours — free, no commitment.
+          </p>
+          <a href="mailto:anton@neatsoft.dev" class="btn">Book a Free Architecture Audit</a>
+          <a
+            href="https://cal.com/spy4x/30min"
+            target="_blank"
+            class="btn btn-secondary"
+          >Or Book a 30-min Intro Call</a>
         </div>
       </div>
     </section>

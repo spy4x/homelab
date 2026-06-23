@@ -14,6 +14,11 @@ BitTorrent client for downloading torrents.
 
 Web UI: `https://torrents.${DOMAIN}`
 
+**Auth**: Authentik SSO (forward auth via Traefik). Login at
+[auth.${DOMAIN}](https://auth.${DOMAIN}) grants access. See
+[`docs/authentik-transmission.md`](../../docs/authentik-transmission.md)
+for the full setup.
+
 ## Mobile Apps
 
 - [Transmission Remote GUI](https://github.com/transmission-remote-gui/transgui)
