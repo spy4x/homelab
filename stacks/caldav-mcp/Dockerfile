@@ -1,29 +1,19 @@
-FROM ghcr.io/open-webui/mcpo:main
+# ── Multistage: clone → compile → distroless runtime ──
+# Source: https://github.com/spy4x/caldav-mcp (single source of truth)
 
-# Pre-install dav-mcp so mcpo doesn't have to wait for npx
-RUN npx -y dav-mcp --help > /dev/null 2>&1 || true
+FROM denoland/deno:alpine AS builder
 
-# Patch the broken VTODO methods in dav-mcp (npm publish has bug:
-# create-todo.js calls client.createTodo() but tsdav only has createCalendarObject)
-RUN find /root/.npm/_npx -path "*/dav-mcp/src/tools/todos/*.js" -exec sh -c '
-  for f; do
-    case "$(basename "$f")" in
-      create-todo.js)
-        sed -i "s/client\.createTodo(/client.createCalendarObject(/g" "$f"
-        echo "Patched $f: createTodo -> createCalendarObject"
-        ;;
-      list-todos.js)
-        sed -i "s/client\.fetchTodos(/client.fetchCalendarObjects(/g" "$f"
-        echo "Patched $f: fetchTodos -> fetchCalendarObjects"
-        ;;
-      todo-query.js)
-        sed -i "s/client\.fetchTodos(/client.fetchCalendarObjects(/g" "$f"
-        echo "Patched $f: fetchTodos -> fetchCalendarObjects (query)"
-        ;;
-      todo-multi-get.js)
-        sed -i "s/client\.fetchTodos(/client.fetchCalendarObjects(/g" "$f"
-        echo "Patched $f: fetchTodos -> fetchCalendarObjects (multi-get)"
-        ;;
-    esac
-  done
-' {} +
+RUN apk add --no-cache git
+RUN git clone --depth 1 https://github.com/spy4x/caldav-mcp.git /app
+WORKDIR /app
+RUN deno compile -A --output /tmp/caldav-mcp main.ts
+
+# ── Runtime: distroless ──
+FROM gcr.io/distroless/cc-debian12
+
+COPY --from=builder /tmp/caldav-mcp /usr/local/bin/caldav-mcp
+
+EXPOSE 3000
+
+ENTRYPOINT ["caldav-mcp"]
+CMD ["--http"]

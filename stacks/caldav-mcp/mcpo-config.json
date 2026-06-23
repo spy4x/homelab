@@ -1,9 +1,0 @@
-{
-  "$schema": "https://raw.githubusercontent.com/open-webui/mcpo/main/config-schema.json",
-  "mcpServers": {
-    "dav-mcp": {
-      "command": "npx",
-      "args": ["-y", "dav-mcp"]
-    }
-  }
-}

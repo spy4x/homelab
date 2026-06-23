@@ -6,25 +6,25 @@ networks:
     name: proxy
 
 services:
-  # caldav-mcp exposes CalDAV calendar operations as MCP tools for Open WebUI
-  # Uses mcpo (MCP Proxy) to wrap stdio-based mcp-caldav into an HTTP endpoint
+  # caldav-mcp — lightweight CalDAV MCP server
+  # Native Deno, zero npm deps, direct CalDAV protocol, proper VTODO/VEVENT support.
   caldav-mcp:
     container_name: hl-caldav-mcp
-    image: ghcr.io/open-webui/mcpo:main
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
-    entrypoint: ["/entrypoint.sh"]
-    command: ["--config", "/config/mcp-servers.json", "--api-key", "mcpo-local"]
     environment:
-      - CALDAV_SERVER_URL=${CALDAV_SERVER_URL}
+      - CALDAV_URL=${CALDAV_SERVER_URL}
       - CALDAV_USERNAME=${CALDAV_USERNAME}
       - CALDAV_PASSWORD=${CALDAV_PASSWORD}
-    volumes:
-      - ./mcpo-config.json:/config/mcp-servers.json:ro
-      - ./entrypoint.sh:/entrypoint.sh:ro
+      - MCP_BEARER_TOKEN=mcpo-local
+      - PORT=3000
+      - LOG_LEVEL=info
     deploy:
       resources:
         limits:
-          memory: 512M
-          cpus: "0.5"
+          memory: 64M
+          cpus: "0.1"
     networks:
       - proxy

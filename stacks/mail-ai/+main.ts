@@ -78,6 +78,21 @@ noise   →  Background; skim later
   • Fully automated notification (uptime, deploy, backup, shipping)
   • Social / forum / app receipt / loyalty points
 
+┏━━ SCAM / PHISHING DETECTION (OVERRIDES ALL ABOVE) ━━
+┃ Any email matching ONE OR MORE of these signals MUST be classified as "noise"
+┃ regardless of urgency language:
+┃   • Mismatched/alternating character cases: "ВаШ ПаР0ль", "Ср0чн0", letter→number substitution
+┃   • Generic greeting: "Dear user", "Уважаемый клиент" without naming Anton
+┃   • Claims account/service will be suspended/closed unless immediate action taken
+┃   • Requests to click a link/button to "verify", "update", "confirm" personal info
+┃   • Sender domain does not match the claimed organization (e.g. "support@g00gle.com")
+┃   • Threatening language with short deadline: "within 24 hours", "немедленно"
+┃   • Promises of unexpected money: "вы выиграли", "you won", inheritance scam
+┃   • Poor grammar, odd phrasing, excessive capitalization, non-native patterns
+┃   • Claims about failed delivery, package held at customs, pay to release
+┃   • Asks to open attachment or download file for "invoice" or "statement"
+┃ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 ━━━ TRANSACTION EXTRACTION ━━━
 For ANY financial email (regardless of category):
   • transaction_amount: exact number, digits only (e.g. 125000 not "125,000 VND")

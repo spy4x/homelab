@@ -31,9 +31,9 @@ Requires a dedicated Immich API key. Create one:
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `IMMICH_MCP_API_KEY` | Yes | Immich API key (dedicated) |
+| Variable             | Required | Description                |
+| -------------------- | -------- | -------------------------- |
+| `IMMICH_MCP_API_KEY` | Yes      | Immich API key (dedicated) |
 
 ## Tools Exposed via MCP
 
