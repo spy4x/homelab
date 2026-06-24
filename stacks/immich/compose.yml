@@ -69,6 +69,7 @@ services:
     extends:
       file: hwaccel.ml.yml
       service: cuda
+    runtime: nvidia
     volumes:
       - ${VOLUMES_PATH}/immich/model-cache:/cache
     environment:

@@ -15,6 +15,33 @@ import { MonicaClient } from "./dist/client/MonicaClient.js"
 import { registerTools } from "./dist/tools/registerTools.js"
 import { registerResources } from "./dist/resources/registerResources.js"
 
+/**
+ * Patch server.tool() to embed structuredContent into content[0].text.
+ * The upstream monica-mcp adds structuredContent (non-standard) to results,
+ * which MCP clients (OpenWebUI) silently drop. We inline it as JSON so
+ * the AI can actually use the data.
+ */
+function patchToolHandler(server) {
+  const origTool = server.tool.bind(server)
+  server.tool = (...args) => {
+    // Find the handler — it's the last arg if it's a function
+    const handlerIdx = args.length - 1
+    if (typeof args[handlerIdx] !== "function") return origTool(...args)
+    const origHandler = args[handlerIdx]
+    args[handlerIdx] = async (...handlerArgs) => {
+      const result = await origHandler(...handlerArgs)
+      if (result && result.structuredContent) {
+        const text = result.content?.[0]?.text ?? ""
+        const data = JSON.stringify(result.structuredContent, null, 2)
+        result.content = [{ type: "text", text: text + "\n\n" + data }]
+        delete result.structuredContent
+      }
+      return result
+    }
+    return origTool(...args)
+  }
+}
+
 const PORT = parseInt(process.env.MCP_PORT || "3000", 10)
 
 function createServer() {
@@ -30,6 +57,9 @@ function createServer() {
     userToken: process.env.MONICA_USER_TOKEN || undefined,
     logger: console,
   })
+
+  // Patch BEFORE registering tools so structuredContent gets inlined
+  patchToolHandler(server)
 
   registerTools({ server, client: monicaClient, logger: console })
   registerResources({ server, client: monicaClient, logger: console })
