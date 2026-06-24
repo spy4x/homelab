@@ -27,19 +27,19 @@ services:
       - MCP_EMAIL_SERVER_EMAIL_ADDRESS=${EMAIL_MCP_PRIMARY_USER}
       - MCP_EMAIL_SERVER_PASSWORD=${EMAIL_MCP_PRIMARY_PASSWORD}
 
-      # --- IMAP: mailserver on cloud, IMAPS (993) ---
-      - MCP_EMAIL_SERVER_IMAP_HOST=${SMTP_HOST}
-      - MCP_EMAIL_SERVER_IMAP_PORT=993
+      # --- IMAP via SSH tunnel (cloud-tunnel) ---
+      - MCP_EMAIL_SERVER_IMAP_HOST=host.docker.internal
+      - MCP_EMAIL_SERVER_IMAP_PORT=1993
       - MCP_EMAIL_SERVER_IMAP_SSL=true
       - MCP_EMAIL_SERVER_IMAP_START_SSL=false
-      - MCP_EMAIL_SERVER_IMAP_VERIFY_SSL=true
+      - MCP_EMAIL_SERVER_IMAP_VERIFY_SSL=false
 
-      # --- SMTP: mailserver on cloud, submission STARTTLS (587) ---
-      - MCP_EMAIL_SERVER_SMTP_HOST=${SMTP_HOST}
-      - MCP_EMAIL_SERVER_SMTP_PORT=587
+      # --- SMTP via SSH tunnel (cloud-tunnel) ---
+      - MCP_EMAIL_SERVER_SMTP_HOST=host.docker.internal
+      - MCP_EMAIL_SERVER_SMTP_PORT=1587
       - MCP_EMAIL_SERVER_SMTP_SSL=false
       - MCP_EMAIL_SERVER_SMTP_START_SSL=true
-      - MCP_EMAIL_SERVER_SMTP_VERIFY_SSL=true
+      - MCP_EMAIL_SERVER_SMTP_VERIFY_SSL=false
 
       # --- Behaviour ---
       # Docker Mailserver uses "Sent" (not INBOX.Sent). Auto-detect usually works,
@@ -55,6 +55,8 @@ services:
           cpus: "0.3"
     security_opt:
       - no-new-privileges:true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - proxy
     labels:

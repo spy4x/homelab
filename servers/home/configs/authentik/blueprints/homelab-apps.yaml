@@ -20,12 +20,36 @@ entries:
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !PythonObject [authentik.flows.models.Flow, slug, default-provider-authorization-implicit-consent]
-      invalidation_flow: !PythonObject [authentik.flows.models.Flow, slug, default-invalidation-flow]
-      authorization_flow: !PythonObject [authentik.flows.models.Flow, slug, default-provider-authorization-implicit-consent]
-      invalidation_flow: !PythonObject [authentik.flows.models.Flow, slug, default-invalidation-flow]
-      authorization_flow: !PythonObject [authentik.flows.models.Flow, slug, default-provider-authorization-implicit-consent]
-      invalidation_flow: !PythonObject [authentik.flows.models.Flow, slug, default-invalidation-flow]
+      authorization_flow: !PythonObject [
+        authentik.flows.models.Flow,
+        slug,
+        default-provider-authorization-implicit-consent,
+      ]
+      invalidation_flow: !PythonObject [
+        authentik.flows.models.Flow,
+        slug,
+        default-invalidation-flow,
+      ]
+      authorization_flow: !PythonObject [
+        authentik.flows.models.Flow,
+        slug,
+        default-provider-authorization-implicit-consent,
+      ]
+      invalidation_flow: !PythonObject [
+        authentik.flows.models.Flow,
+        slug,
+        default-invalidation-flow,
+      ]
+      authorization_flow: !PythonObject [
+        authentik.flows.models.Flow,
+        slug,
+        default-provider-authorization-implicit-consent,
+      ]
+      invalidation_flow: !PythonObject [
+        authentik.flows.models.Flow,
+        slug,
+        default-invalidation-flow,
+      ]
 
   # Application: Sage
   - model: authentik_core.Application
@@ -103,5 +127,3 @@ entries:
       policy: !KeyOf policy-authenticated
       target: !KeyOf app-transmission
       order: 0
-
-

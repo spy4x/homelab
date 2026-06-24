@@ -1,0 +1,76 @@
+---
+# cloud-tunnel — SSH tunnel homelab→cloudlab for mail ports.
+# Workaround for Hetzner firewall bug: homelab IP (165.173.1.38) cannot
+# reach cloudlab's mail ports (993/587) despite firewall rules allowing them.
+#
+# Variables (set in group_vars/ or --extra-vars):
+#   cloud_tunnel_ssh_host: 23.88.101.28
+#   cloud_tunnel_ssh_port: 26845
+#   cloud_tunnel_ssh_user: spy4x
+#   cloud_tunnel_target_ip: 172.25.0.2
+#   cloud_tunnel_ssh_key_file: /home/spy4x/.ssh/id_ed25519
+
+- name: cloud-tunnel — SSH tunnel for mail ports
+  hosts: homelab_servers
+  become: yes
+  vars:
+    cloud_tunnel_ssh_host: "23.88.101.28"
+    cloud_tunnel_ssh_port: 26845
+    cloud_tunnel_ssh_user: "spy4x"
+    cloud_tunnel_target_ip: "172.25.0.2"
+
+  tasks:
+    - name: Deploy systemd unit
+      ansible.builtin.template:
+        src: ../../templates/cloud-tunnel.service.j2
+        dest: /etc/systemd/system/cloud-tunnel.service
+        mode: "0644"
+      notify: restart cloud-tunnel
+
+    - name: Deploy SELinux policy source
+      ansible.builtin.template:
+        src: ../../templates/cloud-tunnel.te.j2
+        dest: /tmp/cloud-tunnel.te
+        mode: "0644"
+
+    - name: Build and load SELinux policy
+      block:
+        - name: Compile SELinux module
+          ansible.builtin.command:
+            cmd: checkmodule -M -m /tmp/cloud-tunnel.te -o /tmp/cloud-tunnel.mod
+          register: checkmodule_result
+          changed_when: false
+          failed_when: false
+
+        - name: Package SELinux module
+          ansible.builtin.command:
+            cmd: semodule_package -m /tmp/cloud-tunnel.mod -o /tmp/cloud-tunnel.pp
+          when: checkmodule_result.rc == 0
+
+        - name: Load SELinux module
+          ansible.builtin.command:
+            cmd: semodule -i /tmp/cloud-tunnel.pp
+          when: checkmodule_result.rc == 0
+          notify: restart cloud-tunnel
+
+        - name: Clean up temp files
+          ansible.builtin.file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - /tmp/cloud-tunnel.te
+            - /tmp/cloud-tunnel.mod
+            - /tmp/cloud-tunnel.pp
+
+    - name: Enable and start cloud-tunnel
+      ansible.builtin.systemd:
+        name: cloud-tunnel
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+  handlers:
+    - name: restart cloud-tunnel
+      ansible.builtin.systemd:
+        name: cloud-tunnel
+        state: restarted
