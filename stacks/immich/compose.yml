@@ -70,7 +70,10 @@ services:
       file: hwaccel.ml.yml
       service: cuda
     runtime: nvidia
+    # Mount /sys:ro so ONNX can discover GPU via /sys/class/drm
+    # Without this, nvidia-smi works but ONNX Runtime can't find the GPU
     volumes:
+      - /sys:/sys:ro
       - ${VOLUMES_PATH}/immich/model-cache:/cache
     environment:
       - IMMICH_VERSION=${IMMICH_VERSION:-release}
