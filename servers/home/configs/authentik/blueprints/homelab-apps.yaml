@@ -20,16 +20,11 @@ entries:
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !PythonObject [
+      authorization_flow: !Find [
         authentik.flows.models.Flow,
-        slug,
-        default-provider-authorization-implicit-consent,
+        [slug, default-provider-authorization-implicit-consent],
       ]
-      invalidation_flow: !PythonObject [
-        authentik.flows.models.Flow,
-        slug,
-        default-invalidation-flow,
-      ]
+      invalidation_flow: !Find [authentik.flows.models.Flow, [slug, default-invalidation-flow]]
 
   # Application: Sage
   - model: authentik_core.Application
@@ -51,16 +46,11 @@ entries:
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !PythonObject [
+      authorization_flow: !Find [
         authentik.flows.models.Flow,
-        slug,
-        default-provider-authorization-implicit-consent,
+        [slug, default-provider-authorization-implicit-consent],
       ]
-      invalidation_flow: !PythonObject [
-        authentik.flows.models.Flow,
-        slug,
-        default-invalidation-flow,
-      ]
+      invalidation_flow: !Find [authentik.flows.models.Flow, [slug, default-invalidation-flow]]
 
   # Application: Invoices
   - model: authentik_core.Application
@@ -86,16 +76,11 @@ entries:
       mode: forward_single
       access_token_validity: hours=1
       refresh_token_validity: days=30
-      authorization_flow: !PythonObject [
+      authorization_flow: !Find [
         authentik.flows.models.Flow,
-        slug,
-        default-provider-authorization-implicit-consent,
+        [slug, default-provider-authorization-implicit-consent],
       ]
-      invalidation_flow: !PythonObject [
-        authentik.flows.models.Flow,
-        slug,
-        default-invalidation-flow,
-      ]
+      invalidation_flow: !Find [authentik.flows.models.Flow, [slug, default-invalidation-flow]]
 
   # Application: Transmission
   - model: authentik_core.Application
