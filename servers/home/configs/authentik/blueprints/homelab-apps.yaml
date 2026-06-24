@@ -107,6 +107,20 @@ entries:
       meta_launch_url: https://torrents.antonshubin.com
       meta_icon: https://torrents.antonshubin.com/favicon.ico
 
+  # Embedded outpost — no service_connection means it runs inside Authentik server.
+  # Links all proxy providers so Traefik forward-auth can find them.
+  - model: authentik_outposts.Outpost
+    id: outpost-embedded
+    attrs:
+      name: homelab-embedded
+      type: proxy
+      service_connection: null
+      _config: {}
+      providers:
+        - !KeyOf provider-sage
+        - !KeyOf provider-invoices
+        - !KeyOf provider-transmission
+
   # Access policy: Allow all authenticated users to access these apps
   - model: authentik_policies.PolicyBinding
     attrs:
