@@ -1,14 +1,28 @@
 ---
 # cloud-tunnel — SSH tunnel homelab→cloudlab for mail ports.
-# Workaround for Hetzner firewall bug: homelab IP (165.173.1.38) cannot
-# reach cloudlab's mail ports (993/587) despite firewall rules allowing them.
 #
-# Variables (set in group_vars/ or --extra-vars):
+# WHY THIS EXISTS:
+# Hetzner firewall incorrectly blocks the homelab IP (165.173.1.38) on mail ports
+# (993/587/465/25) despite rules allowing them from Any IPv4. Other IPs work fine.
+# The tunnel forwards local ports → cloudlab's mailserver container via SSH,
+# bypassing the firewall bug.
+#
+# REMOVAL (after Hetzner fixes the bug):
+# 1. Delete this file
+# 2. Restore stacks/email-mcp/compose.yml: change IMAP_HOST/SMTP_HOST back to
+#    ${SMTP_HOST}, ports 993/587, VERIFY_SSL=true, remove extra_hosts
+# 3. On homelab: sudo systemctl disable --now cloud-tunnel
+#    sudo rm /etc/systemd/system/cloud-tunnel.service
+#    sudo semodule -r cloud-tunnel
+#    sudo rm /etc/sysctl.d/99-inotify.conf
+# 4. Remove the import from ansible/playbooks/after-deploy.yml
+# 5. Run: deno task deploy home && deno task ansible after-deploy home
+#
+# Variables:
 #   cloud_tunnel_ssh_host: 23.88.101.28
 #   cloud_tunnel_ssh_port: 26845
 #   cloud_tunnel_ssh_user: spy4x
 #   cloud_tunnel_target_ip: 172.25.0.2
-#   cloud_tunnel_ssh_key_file: /home/spy4x/.ssh/id_ed25519
 
 - name: cloud-tunnel — SSH tunnel for mail ports
   hosts: homelab_servers
