@@ -68,6 +68,25 @@ access_control:
     - domain: "sage.antonshubin.com"
       policy: bypass
 
+    # Monitor user — one_factor (basic auth). Must precede two_factor rules.
+    - domain:
+        - "torrents.antonshubin.com"
+        - "invoices.antonshubin.com"
+        - "crm.antonshubin.com"
+        - "metube.antonshubin.com"
+        - "it-tools.antonshubin.com"
+        - "ollama.antonshubin.com"
+        - "time.antonshubin.com"
+        - "tools.antonshubin.com"
+        - "rspamd.antonshubin.com"
+        - "code.antonshubin.com"
+        - "metrics.antonshubin.com"
+        - "metrics-vm.antonshubin.com"
+        - "proxy-home.antonshubin.com"
+      policy: one_factor
+      subject:
+        - ["user:monitor"]
+
     # Everything else — 2FA required
     - domain: "torrents.antonshubin.com"
       policy: two_factor

@@ -70,8 +70,10 @@ endpoints:
     group: home
     url: "https://torrents.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200 || [STATUS] == 301"
     alerts:
       - type: ntfy
 
@@ -88,8 +90,10 @@ endpoints:
     group: home
     url: "https://code.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -115,8 +119,10 @@ endpoints:
     group: home
     url: "https://metube.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -194,12 +200,12 @@ endpoints:
 
   - name: Proxy
     group: home
-    url: "https://proxy-home.${DOMAIN}/dashboard"
+    url: "https://proxy-home.${DOMAIN}/dashboard/"
     interval: 1m
     headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -247,8 +253,10 @@ endpoints:
     group: home
     url: "https://crm.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -256,6 +264,8 @@ endpoints:
     group: home
     url: "https://invoices.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
@@ -265,6 +275,8 @@ endpoints:
     group: home
     url: "https://metrics.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
@@ -274,8 +286,10 @@ endpoints:
     group: home
     url: "https://ollama.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -283,8 +297,10 @@ endpoints:
     group: home
     url: "https://it-tools.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -292,8 +308,11 @@ endpoints:
     group: home
     url: "https://tools.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] != 502"
+      - "[STATUS] != 503"
     alerts:
       - type: ntfy
 
@@ -301,8 +320,10 @@ endpoints:
     group: home
     url: "https://time.${DOMAIN}"
     interval: 1m
+    headers:
+      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
