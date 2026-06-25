@@ -85,17 +85,16 @@ webauthn:
 # High max_retries due to external bots hitting the forward-auth
 regulation:
   max_retries: 15
-  find_time: 5m
-  ban_time: 2m
+  find_time: 2m
+  ban_time: 5m
 
 # Notifications — SMTP via cloud mailserver
 notifier:
   smtp:
-    host: ${SMTP_HOST}
-    port: ${SMTP_PORT}
+    address: smtp://${SMTP_HOST}:${SMTP_PORT}
     username: ${SMTP_USERNAME}
     password: ${SMTP_PASSWORD}
-    sender: ${SMTP_FROM}
+    sender: Authelia <${SMTP_FROM}>
 
 # Theme
 theme: dark
