@@ -57,14 +57,14 @@
 ### Authentik SSO integration
 
 - [ ] **Complete Authentik setup in Admin UI**: Create outpost, link applications, get token
-- [ ] Switch sage + invoices from basic auth to authentik forward-auth
+- [x] Switch sage + invoices from basic auth to authentik forward-auth (→ authelia)
 - [ ] Protect other services (transmission, metube, monica, akaunting, etc.)
 - Steps:
   1. Visit https://auth.antonshubin.com (see .env for password)
   2. Admin -> Outposts -> Create proxy type
   3. Admin -> Applications -> Create for Sage, Invoices
-  4. Import blueprint at servers/home/configs/authentik/blueprints/homelab-apps.yaml
-  5. Add `middlewares=authentik@file` to sage + akaunting compose labels
+  4. (DEPRECATED) Authentik replaced by Authelia — see auth.md for migration
+  5. Add `middlewares=authelia@file` to akaunting compose labels
 
 ### Minor follow-ups
 

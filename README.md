@@ -87,7 +87,7 @@ Auth decision:
 - **Public**: Reitti, SearXNG, Schedule — no auth middleware
 - **Own auth**: Gitea, Vaultwarden, Paperless-ngx, Stirling-PDF — no Traefik auth
 - **Basic auth**: Everything else with `middlewares=auth`
-- **SSO**: `middlewares=authentik@file` once Authentik outpost is configured
+- **SSO**: `middlewares=authelia@file` — config-driven, no DB needed
 
 ## Status
 

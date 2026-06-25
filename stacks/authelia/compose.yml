@@ -1,0 +1,37 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  authelia:
+    container_name: hl-authelia
+    image: authelia/authelia:latest
+    volumes:
+      - ${VOLUMES_PATH}/authelia/config:/config
+    environment:
+      - TZ=${TIMEZONE}
+    restart: unless-stopped
+    networks:
+      - proxy
+      - default
+    labels:
+      - "traefik.enable=false"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.3"
+
+  authelia-redis:
+    container_name: hl-authelia-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - default
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.1"

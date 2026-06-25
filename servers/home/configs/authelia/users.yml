@@ -1,0 +1,8 @@
+users:
+  spy4x:
+    displayname: "Anton Shubin"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$6UO1992zmZviyJNRYZd+ww$Havk8Y4NuYql/fOBGGGVf7DB+zIufGF6fU4ZrJKVl5s"
+    email: anton@antonshubin.com
+    groups:
+      - admins
+      - users

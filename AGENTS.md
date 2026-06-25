@@ -275,11 +275,10 @@ export default backupConfig
 
 **Every non-public service MUST be protected by auth.** Choose the right layer:
 
-- **Authentik SSO** (preferred): Use `middlewares=authentik@file` in Traefik labels. First configure the app in Authentik Admin → Applications → Create, then add the middleware:
+- **Authelia SSO** (preferred): Use `middlewares=authelia@file` in Traefik labels. Add user in `servers/home/configs/authelia/users.yml` and add domain rule in `servers/home/configs/authelia/configuration.yml`:
   ```yaml
-  - "traefik.http.routers.hl-SERVICENAME.middlewares=authentik@file"
+  - "traefik.http.routers.hl-SERVICENAME.middlewares=authelia@file"
   ```
-  Authentik blueprints for batch setup are at `servers/home/configs/authentik/blueprints/`.
 
 - **Basic Auth** (fallback): Use `middlewares=auth` for services without their own login:
   ```yaml

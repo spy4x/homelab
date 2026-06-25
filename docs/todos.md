@@ -40,8 +40,8 @@ All on antonshubin.com. Default auth: `middlewares=auth` (Traefik basic auth) un
 
 ### Auth Layer (Authentik)
 - Deployed at `auth.antonshubin.com` (working ✅)
-- Traefik forward-auth middleware `authentik@file` added to `stacks/traefik/dynamic.yml`
-- Blueprint created at `servers/home/configs/authentik/blueprints/homelab-apps.yaml`
+- Traefik forward-auth middleware `authelia@file` added to `stacks/traefik/dynamic.yml`
+- Authelia config at `servers/home/configs/authelia/configuration.yml`
 - **NOT YET INTEGRATED** with any service — needs admin UI setup first
 
 ### Monitoring & Dashboard
@@ -69,11 +69,10 @@ The forward-auth middleware and blueprints are ready. To activate:
 # 1. Visit https://auth.antonshubin.com — login as akadmin / AdminPass2026!
 # 2. Admin → Outposts → Create → type "Proxy" → select the apps
 # 3. Admin → Blueprints → Import → paste blueprint from:
-#    servers/home/configs/authentik/blueprints/homelab-apps.yaml
-# 4. Get the outpost token
-# 5. Switch services from basic auth to authentik:
-#    - Change stacks/sage (external) labels to use middlewares=authentik@file
-#    - Change stacks/akaunting/compose.yml: middlewares=auth → middlewares=authentik@file
+#    servers/home/configs/authelia/configuration.yml
+
+# 5. Switch services to authelia:
+#    - Change stacks/akaunting/compose.yml: middlewares=auth → middlewares=authelia@file
 #    - Repeat for transmission, metube, monica, ollama, it-tools, grafana, traggo
 ```
 
@@ -148,11 +147,11 @@ cd ~/ssd-2tb/apps/anton/home && docker compose -f stacks/vaultwarden/compose.yml
 4. `servers/{server}/.env` + `.env.example` — add env vars
 5. `servers/cloud/configs/gatus.yml` — add monitoring endpoint (home→cloud)
 6. `servers/home/configs/dash/index.html.template` — add badge with health URL
-7. **Auth**: `middlewares=auth` for basic auth, `middlewares=authentik@file` for SSO
+7. **Auth**: `middlewares=auth` for basic auth, `middlewares=authelia@file` for SSO
 8. Deploy: `deno task deploy <server>`
 
 ### Auth Decision
-- **authentik@file** (SSO, preferred): Use after Authentik outpost is configured
+- **authelia@file** (SSO, preferred): Config-driven SSO
 - **auth** (basic auth): Fallback for services without own login
 - **No middleware**: Services with own auth (Gitea, Vaultwarden, Paperless, Stirling-PDF) or public services (Reitti, Schedule, SearXNG)
 

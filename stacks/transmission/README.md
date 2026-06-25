@@ -16,7 +16,7 @@ Web UI: `https://torrents.${DOMAIN}`
 
 **Auth**: Authentik SSO (forward auth via Traefik). Login at
 [auth.${DOMAIN}](https://auth.${DOMAIN}) grants access. See
-[`docs/authentik-transmission.md`](../../docs/authentik-transmission.md)
+Authelia forward-auth middleware (`authelia@file`) in `stacks/traefik/dynamic.yml`
 for the full setup.
 
 ## Mobile Apps

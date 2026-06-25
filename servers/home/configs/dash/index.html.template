@@ -484,7 +484,7 @@
             >
               <div class="service-icon">🔐</div>
               <div class="service-name">Auth</div>
-              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_authentik/health/badge.svg" alt="Home Auth Uptime Badge" />
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_authelia/health/badge.svg" alt="Home Auth Uptime Badge" />
             </a>
           </li>
           <li class="service-item">

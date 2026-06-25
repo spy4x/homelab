@@ -43,8 +43,6 @@ services:
       - "traefik.http.routers.hl-transmission.entrypoints=websecure"
       - "traefik.http.routers.hl-transmission.tls=true"
       - "traefik.http.routers.hl-transmission.tls.certresolver=myresolver"
-      # SSO via Authentik (forward auth). Replaces previous basic auth.
-      # See stacks/traefik/dynamic.yml for the middleware definition and
-      # servers/home/configs/authentik/blueprints/homelab-apps.yaml for the
-      # Proxy Provider + Application entry.
-      - "traefik.http.routers.hl-transmission.middlewares=authentik@file,robots-deny@file"
+      # SSO via Authelia (forward auth).
+      # See stacks/traefik/dynamic.yml for the middleware definition.
+      - "traefik.http.routers.hl-transmission.middlewares=authelia@file,robots-deny@file"

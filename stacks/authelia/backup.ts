@@ -1,7 +1,7 @@
 import { BackupConfig } from "@scripts/backup"
 
 const backupConfig: BackupConfig = {
-  name: "authentik",
+  name: "authelia",
   sourcePaths: "default",
   containers: {
     stop: "default",

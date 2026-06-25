@@ -45,7 +45,7 @@
     { "name": "monitoring" },
     { "name": "stirling-pdf" },
     { "name": "docker-registry" },
-    { "name": "authentik" },
+    { "name": "authelia" },
     { "name": "paperless-ngx" },
     { "name": "plausible" },
     { "name": "umami" },

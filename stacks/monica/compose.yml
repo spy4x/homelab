@@ -82,5 +82,5 @@ services:
       - "traefik.http.routers.hl-monica.rule=Host(`crm.${DOMAIN}`)"
       - "traefik.http.routers.hl-monica.entrypoints=websecure"
       - "traefik.http.routers.hl-monica.tls=true"
-      - "traefik.http.routers.hl-monica.middlewares=robots-deny@file"
+      - "traefik.http.routers.hl-monica.middlewares=authelia@file,robots-deny@file"
       - "traefik.http.routers.hl-monica.tls.certresolver=myresolver"
