@@ -72,7 +72,7 @@ storage:
 totp:
   issuer: antonshubin.com
   period: 30
-  skew: 1
+  skew: 3
 
 webauthn:
   disable: false
