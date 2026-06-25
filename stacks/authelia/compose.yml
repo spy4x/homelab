@@ -9,7 +9,9 @@ services:
     container_name: hl-authelia
     image: authelia/authelia:latest
     volumes:
-      - ${VOLUMES_PATH}/authelia/config:/config
+      - ${PATH_APPS}/configs/authelia/configuration.yml:/config/configuration.yml:ro
+      - ${PATH_APPS}/configs/authelia/users.yml:/config/users.yml:ro
+      - ${VOLUMES_PATH}/authelia/data:/data
     environment:
       - TZ=${TIMEZONE}
       - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}

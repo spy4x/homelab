@@ -8,10 +8,15 @@ log_level: info
 # Session — stored in Redis (survives restarts)
 session:
   name: authelia_session
+  domain: antonshubin.com
   secret: ${AUTHELIA_SESSION_SECRET}
   expiration: 1h
   inactivity: 5m
   remember_me: 1d
+  cookies:
+    - domain: antonshubin.com
+      authelia_url: https://auth.antonshubin.com
+      default_redirection_url: https://dash.antonshubin.com
   redis:
     host: authelia-redis
     port: 6379
@@ -53,6 +58,12 @@ access_control:
     - domain: "portainer.antonshubin.com"
       policy: two_factor
 
+# Storage — SQLite
+storage:
+  encryption_key: ${AUTHELIA_SESSION_SECRET}
+  local:
+    path: /data/db.sqlite
+
 # Two-factor authentication
 totp:
   issuer: antonshubin.com
@@ -77,7 +88,10 @@ default_redirection_url: https://dash.antonshubin.com
 # Notifications — file-based (can add SMTP later)
 notifier:
   filesystem:
-    filename: /config/notifications.yml
+    filename: /data/notifications.yml
 
 # Theme
 theme: dark
+
+# Identity validation — required for password reset flow
+# (disabled for now, uses file-based notifications)
