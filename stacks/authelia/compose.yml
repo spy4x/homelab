@@ -12,6 +12,7 @@ services:
       - ${VOLUMES_PATH}/authelia/config:/config
     environment:
       - TZ=${TIMEZONE}
+      - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
     restart: unless-stopped
     networks:
       - proxy

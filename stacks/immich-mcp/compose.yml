@@ -8,7 +8,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/barryw/immichmcp:latest
+    image: hl-immich-mcp:latest
     restart: unless-stopped
     environment:
       - IMMICH_BASE_URL=https://photos.${DOMAIN}
