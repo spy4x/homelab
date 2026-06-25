@@ -277,24 +277,6 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: it-tools
-    group: home
-    url: "https://probe-home.${DOMAIN}/health/it-tools"
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
-  - name: Stirling PDF
-    group: home
-    url: "https://probe-home.${DOMAIN}/health/stirling-pdf"
-    interval: 1m
-    conditions:
-      - "[STATUS] == 200"
-    alerts:
-      - type: ntfy
-
   - name: Traggo
     group: home
     url: "https://probe-home.${DOMAIN}/health/traggo"

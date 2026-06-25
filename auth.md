@@ -48,10 +48,8 @@ Change `middlewares=auth,...` → `middlewares=authelia@file,...`
 | Stack            | Domain               | Notes                                      |
 | ---------------- | -------------------- | ------------------------------------------ |
 | metube           | metube.${DOMAIN}     | No own auth                                |
-| it-tools         | it-tools.${DOMAIN}   | No own auth                                |
 | ollama           | ollama.${DOMAIN}     | No own auth                                |
 | traggo           | time.${DOMAIN}       | Has own auth (weak)                        |
-| stirling-pdf     | tools.${DOMAIN}      | Has own auth                               |
 | grafana          | metrics.${DOMAIN}    | Has own auth, can trust Remote-User header |
 | victoria-metrics | metrics-vm.${DOMAIN} | Same as grafana                            |
 | mailserver       | rspamd.${DOMAIN}     | No own web auth                            |
@@ -179,13 +177,11 @@ access_control:
       policy: two_factor
     - domain: "metube.antonshubin.com"
       policy: two_factor
-    - domain: "it-tools.antonshubin.com"
       policy: two_factor
     - domain: "ollama.antonshubin.com"
       policy: two_factor
     - domain: "time.antonshubin.com"
       policy: two_factor
-    - domain: "tools.antonshubin.com"
       policy: two_factor
     - domain: "rspamd.antonshubin.com"
       policy: two_factor
@@ -207,10 +203,8 @@ deno task deploy home authelia
 
 # 2. Switch stacks one by one, deploy after each
 deno task deploy home metube
-deno task deploy home it-tools
 deno task deploy home ollama
 deno task deploy home traggo
-deno task deploy home stirling-pdf
 deno task deploy home grafana
 deno task deploy home victoria-metrics
 deno task deploy home mailserver   # rspamd
@@ -335,26 +329,3 @@ environment:
 ```
 
 ---
-
-## Order of Execution
-
-```
-1.  Update configuration.yml (all two_factor)
-2.  Deploy authelia (config reload)
-3.  Switch metube → deploy → verify
-4.  Switch it-tools → deploy → verify
-5.  Switch ollama → deploy → verify
-6.  Switch traggo → deploy → verify
-7.  Switch stirling-pdf → deploy → verify
-8.  Switch grafana → deploy → verify (+ proxy auth headers)
-9.  Switch victoria-metrics → deploy → verify
-10. Switch mailserver/rspamd → deploy → verify
-11. Switch openhands → deploy → verify
-12. Switch traefik → deploy → verify
-13. Bump transmission/akaunting/monica to two_factor
-14. Update gatus configs
-15. SMTP notifier (optional, makes codes easier)
-```
-
-Each step is reversible: switch middleware back to `auth`, redeploy.
-Basic auth still works as long as `BASIC_AUTH_*` env vars exist.

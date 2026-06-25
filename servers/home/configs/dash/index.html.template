@@ -445,13 +445,11 @@
           </li>
           <li class="service-item">
             <a
-              href="https://it-tools.${DOMAIN}"
               target="_blank"
               class="service-link"
             >
               <div class="service-icon">🔧</div>
               <div class="service-name">IT-Tools</div>
-              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_it-tools/health/badge.svg" alt="Home IT-Tools Uptime Badge" />
             </a>
           </li>
           <li class="service-item">
@@ -462,7 +460,6 @@
             >
               <div class="service-icon">📄</div>
               <div class="service-name">PDF Tools</div>
-              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_stirling-pdf/health/badge.svg" alt="Home PDF Tools Uptime Badge" />
             </a>
           </li>
           <li class="service-item">

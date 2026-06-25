@@ -5,10 +5,10 @@ server:
 positions:
   filename: /tmp/positions.yaml
 
-# Push to VictoriaLogs instead of Loki.
-# VictoriaLogs accepts Loki-compatible push on the same path.
+# Push to VictoriaLogs (/loki/api/v1/push is Loki path).
+# VictoriaLogs uses /insert/loki/api/v1/push for ingestion.
 clients:
-  - url: http://hl-victoria-logs:9428/loki/api/v1/push
+  - url: http://hl-victoria-logs:9428/insert/loki/api/v1/push
 
 scrape_configs:
   - job_name: docker
