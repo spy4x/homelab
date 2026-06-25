@@ -1,17 +1,17 @@
 http:
   middlewares:
     # Authelia forward auth - SSO with 2FA
-    # Config-driven, no DB needed. Users defined in users.yml.
-    # Login page appears on the target domain (e.g., torrents.${DOMAIN}/authelia)
+    # Uses new /api/authz/forward-auth endpoint (v4.39+)
+    # Old /api/verify?auth=send is deprecated, returns 401 without redirect
     authelia:
       forwardAuth:
-        address: http://hl-authelia:9091/api/verify?auth=send
+        address: http://hl-authelia:9091/api/authz/forward-auth
         trustForwardHeader: true
         authResponseHeaders:
-          Remote-User: Remote-User
-          Remote-Groups: Remote-Groups
-          Remote-Email: Remote-Email
-          Remote-Name: Remote-Name
+          - Remote-User
+          - Remote-Groups
+          - Remote-Email
+          - Remote-Name
     compression:
       compress:
         excludedContentTypes:
