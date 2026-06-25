@@ -88,13 +88,10 @@ regulation:
   find_time: 2m
   ban_time: 5m
 
-# Notifications — SMTP via cloud mailserver
+# Notifications — file-based (codes written to /data/notifications.yml)
 notifier:
-  smtp:
-    address: smtp://${SMTP_HOST}:${SMTP_PORT}
-    username: ${SMTP_USERNAME}
-    password: ${SMTP_PASSWORD}
-    sender: Authelia <${SMTP_FROM}>
+  filesystem:
+    filename: /data/notifications.yml
 
 # Theme
 theme: dark
