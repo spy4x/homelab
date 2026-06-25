@@ -1,0 +1,34 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+
+services:
+  # Zond — Internal health probe bridge
+  # Probes Docker containers on the proxy network and returns 200/503 only.
+  # No auth needed — no sensitive data exposed.
+  zond:
+    container_name: hl-zond
+    image: ghcr.io/spy4x/zond:latest
+    restart: unless-stopped
+    volumes:
+      - ./zond.yaml:/app/zond.yaml:ro
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+          cpus: "0.1"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.hl-zond.loadbalancer.server.port=8080"
+      - "traefik.http.routers.hl-zond.rule=Host(`probe-${SERVER_NAME}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-zond.entrypoints=websecure"
+      - "traefik.http.routers.hl-zond.tls=true"
+      - "traefik.http.routers.hl-zond.tls.certresolver=myresolver"
+      # No middlewares — intentionally public. Only returns 200/503.

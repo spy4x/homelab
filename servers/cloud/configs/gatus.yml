@@ -68,12 +68,10 @@ endpoints:
 
   - name: Transmission
     group: home
-    url: "https://torrents.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/transmission"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 301"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -88,10 +86,8 @@ endpoints:
 
   - name: OpenHands
     group: home
-    url: "https://code.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/openhands"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -117,10 +113,8 @@ endpoints:
 
   - name: MeTube
     group: home
-    url: "https://metube.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/metube"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -198,14 +192,12 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: Proxy
+  - name: Traefik
     group: home
-    url: "https://proxy-home.${DOMAIN}/dashboard/"
+    url: "https://probe-home.${DOMAIN}/health/traefik"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
@@ -251,10 +243,8 @@ endpoints:
 
   - name: Monica
     group: home
-    url: "https://crm.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/monica"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -262,32 +252,26 @@ endpoints:
 
   - name: Akaunting
     group: home
-    url: "https://invoices.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/akaunting"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
   - name: Grafana
     group: home
-    url: "https://metrics.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/grafana"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] == 200 || [STATUS] == 302"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
   - name: Ollama
     group: home
-    url: "https://ollama.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/ollama"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -295,10 +279,8 @@ endpoints:
 
   - name: it-tools
     group: home
-    url: "https://it-tools.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/it-tools"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:
@@ -306,22 +288,17 @@ endpoints:
 
   - name: Stirling PDF
     group: home
-    url: "https://tools.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/stirling-pdf"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
-      - "[STATUS] != 502"
-      - "[STATUS] != 503"
+      - "[STATUS] == 200"
     alerts:
       - type: ntfy
 
   - name: Traggo
     group: home
-    url: "https://time.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/traggo"
     interval: 1m
-    headers:
-      Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
     conditions:
       - "[STATUS] == 200"
     alerts:

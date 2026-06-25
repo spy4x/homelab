@@ -20,7 +20,6 @@ services:
       - NTFY_TOPIC=${NTFY_TOPIC_UPTIME}
       - NTFY_TOKEN=${NTFY_TOKEN_UPTIME}
       - BASIC_AUTH_BASE64=${BASIC_AUTH_BASE64}
-      - AUTHELIA_MONITOR_BASE64=${AUTHELIA_MONITOR_BASE64}
       - DOMAIN=${DOMAIN}
     volumes:
       - ${GATUS_CONFIG_PATH}:/config/config.yaml:ro,z

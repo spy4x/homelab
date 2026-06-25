@@ -1,0 +1,28 @@
+# Zond targets — home server internal services
+port: 8080
+
+targets:
+  - name: metube
+    url: http://hl-metube:8081/
+  - name: it-tools
+    url: http://hl-it-tools:80/
+  - name: ollama
+    url: http://hl-ollama:11434/api/tags
+  - name: traggo
+    url: http://hl-traggo:3030/
+  - name: monica
+    url: http://hl-monica:80/
+  - name: openhands
+    url: http://hl-openhands:8000/
+  - name: transmission
+    url: http://hl-transmission:9091/
+  - name: akaunting
+    url: http://hl-akaunting:80/
+  - name: grafana
+    url: http://hl-grafana:3000/
+  - name: grafana-vm
+    url: http://hl-grafana-vm:3000/
+  - name: stirling-pdf
+    url: http://hl-stirling-pdf:8080/login
+  - name: traefik
+    url: http://hl-traefik:8080/dashboard/
