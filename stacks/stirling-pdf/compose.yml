@@ -33,5 +33,5 @@ services:
       - "traefik.http.routers.hl-stirling-pdf.rule=Host(`tools.${DOMAIN}`)"
       - "traefik.http.routers.hl-stirling-pdf.entrypoints=websecure"
       - "traefik.http.routers.hl-stirling-pdf.tls=true"
-      - "traefik.http.routers.hl-stirling-pdf.middlewares=auth,robots-deny@file"
+      - "traefik.http.routers.hl-stirling-pdf.middlewares=authelia@file,robots-deny@file"
       - "traefik.http.routers.hl-stirling-pdf.tls.certresolver=myresolver"

@@ -32,6 +32,6 @@ services:
       - "traefik.http.routers.hl-openhands.entrypoints=websecure"
       - "traefik.http.routers.hl-openhands.tls=true"
       - "traefik.http.routers.hl-openhands.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-openhands.middlewares=auth,openhands-session-key,robots-deny@file"
+      - "traefik.http.routers.hl-openhands.middlewares=authelia@file,openhands-session-key,robots-deny@file"
       - "traefik.http.middlewares.openhands-session-key.headers.customrequestheaders.X-Session-API-Key=${OPENHANDS_API_KEY}"
       - "traefik.http.services.hl-openhands.loadbalancer.server.port=8000"

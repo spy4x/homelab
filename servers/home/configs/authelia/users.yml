@@ -6,3 +6,9 @@ users:
     groups:
       - admins
       - users
+  monitor:
+    displayname: "Gatus Health Monitor"
+    password: "$argon2id$v=19$m=65536,t=3,p=4$33DvKUg9j6OUXkcN7t61lQ$V2FRu3j51696mvI4P+n0v4nYyTSWWqIz0cIeUu3yrmc"
+    email: monitor@antonshubin.com
+    groups:
+      - users

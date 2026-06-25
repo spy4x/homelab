@@ -71,5 +71,4 @@ services:
       - "traefik.http.routers.hl-traefik.entrypoints=websecure"
       - "traefik.http.routers.hl-traefik.tls=true"
       - "traefik.http.routers.hl-traefik.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-traefik.middlewares=auth"
-      - "traefik.http.middlewares.auth.basicauth.users=${BASIC_AUTH_USER}:${BASIC_AUTH_PASSWORD}"
+      - "traefik.http.routers.hl-traefik.middlewares=authelia@file"

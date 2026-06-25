@@ -35,5 +35,5 @@ services:
       - "traefik.http.routers.hl-traggo.rule=Host(`time.${DOMAIN}`)"
       - "traefik.http.routers.hl-traggo.entrypoints=websecure"
       - "traefik.http.routers.hl-traggo.tls=true"
-      - "traefik.http.routers.hl-traggo.middlewares=auth,robots-deny@file"
+      - "traefik.http.routers.hl-traggo.middlewares=authelia@file,robots-deny@file"
       - "traefik.http.routers.hl-traggo.tls.certresolver=myresolver"

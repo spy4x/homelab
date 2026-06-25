@@ -17,6 +17,11 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_INSTALL_PLUGINS=
+      - GF_AUTH_PROXY_ENABLED=true
+      - GF_AUTH_PROXY_HEADER_NAME=X-Forwarded-User
+      - GF_AUTH_PROXY_HEADER_PROPERTY=username
+      - GF_AUTH_PROXY_AUTO_SIGN_UP=true
+      - GF_AUTH_PROXY_WHITELIST=*
     volumes:
       - ${VOLUMES_PATH}/grafana/data:/var/lib/grafana:z
       - ${PATH_APPS}/configs/grafana/datasources:/etc/grafana/provisioning/datasources:ro,z
@@ -38,5 +43,5 @@ services:
       - "traefik.http.routers.hl-grafana.rule=Host(`metrics.${DOMAIN}`)"
       - "traefik.http.routers.hl-grafana.entrypoints=websecure"
       - "traefik.http.routers.hl-grafana.tls=true"
-      - "traefik.http.routers.hl-grafana.middlewares=auth,robots-deny@file"
+      - "traefik.http.routers.hl-grafana.middlewares=authelia@file,robots-deny@file"
       - "traefik.http.routers.hl-grafana.tls.certresolver=myresolver"

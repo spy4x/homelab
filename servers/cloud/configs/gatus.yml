@@ -88,10 +88,8 @@ endpoints:
     group: home
     url: "https://code.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -117,10 +115,8 @@ endpoints:
     group: home
     url: "https://metube.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -269,10 +265,8 @@ endpoints:
     group: home
     url: "https://metrics.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -280,10 +274,8 @@ endpoints:
     group: home
     url: "https://ollama.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -291,10 +283,8 @@ endpoints:
     group: home
     url: "https://it-tools.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -302,8 +292,6 @@ endpoints:
     group: home
     url: "https://tools.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
       - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
@@ -313,10 +301,8 @@ endpoints:
     group: home
     url: "https://time.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -367,7 +353,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: Authentik
+  - name: Authelia
     group: home
     url: "https://auth.${DOMAIN}"
     interval: 1m
