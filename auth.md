@@ -1,89 +1,138 @@
 # Auth Infrastructure Plan — Authelia Deepening
 
 Current state: Authentik → Authelia migrated. Forward-auth working for
-transmission, akaunting, monica. TOTP configured (CLI). SMTP notifier
-pending. ~15 stacks still use basic auth (`auth` middleware).
+transmission, akaunting, monica. TOTP configured (CLI). Notifier uses
+filesystem (SMTP pending). ~15 stacks still use basic auth (`auth`).
 
-This plan covers three phases:
+Goal: **2FA everywhere. One password + TOTP for all services.**
+No OIDC for now (too complex, revisit later).
 
-1. **Forward-auth all the things** — replace basic auth everywhere
-2. **2FA for admin** — enforce `two_factor` policy on management UIs
-3. **OIDC SSO** — configure Authelia as OIDC provider, eliminate
-   separate passwords for apps that support it
+---
+
+## Why 2FA for everything, not just admin?
+
+Same threat model for all internal services:
+
+- A leaked password exposes torrents, invoices, notes, tools — all
+  personal data
+- TOTP is free (Bitwarden generates it), friction is one extra field
+- "Remember device" cookie avoids re-prompt on the same browser
+- No reason to treat `torrents` as less sensitive than `grafana`
+
+The only exception: services with their own auth that's stronger or
+incompatible with forward-auth (see below).
 
 ---
 
 ## Architecture
 
 ```
-                          ┌──────────────────────────┐
-                          │    Authelia (OIDC + FA)   │
-                          │  auth.antonshubin.com:9091 │
-                          └──────────┬───────────────┘
-                                     │
-              ┌──────────────────────┼──────────────────────┐
-              │  forward-auth        │ OIDC (redirect)      │
-              ▼                      ▼                       ▼
-┌─────────────────────┐  ┌──────────────────────┐  ┌──────────────────────┐
-│ Services w/o OIDC   │  │ Services w/ OIDC      │  │ Public services       │
-│ (transmission, etc) │  │ (grafana, gitea, etc) │  │ (antonshubin.com)     │
-│ authelia@file       │  │ Login with Authelia   │  │ bypass                │
-└─────────────────────┘  └──────────────────────┘  └──────────────────────┘
+User ──► Traefik ──► Authelia (forward-auth, 2FA) ──► Backend
+                ▲
+                └── 401 → redirect to auth.antonshubin.com
+                      ↓ password + TOTP → session cookie
+                      ↓ redirect back to original URL
 ```
 
-Two auth methods coexist:
-
-- **Forward-auth** — no app changes, works with everything
-- **OIDC** — proper SSO, requires app support, enables group-based
-  permissions, passwordless login
+Simple. No OIDC callbacks, no token exchange, no app configuration.
+Every HTTP service works, no exceptions.
 
 ---
 
-## Phase 1 — Forward-Auth Everything
-
-Replace `auth` (Traefik basic auth) with `authelia@file` in every stack.
-This eliminates the shared `BASIC_AUTH_PASSWORD` — one password for all.
+## Phase 1 — Switch basic auth → Authelia (2FA)
 
 ### Affected stacks
 
-Each needs: `middlewares=auth,robots-deny@file` → `middlewares=authelia@file,robots-deny@file`
+Change `middlewares=auth,...` → `middlewares=authelia@file,...`
 
-| Stack            | Service      | Domain               | Notes                                  |
-| ---------------- | ------------ | -------------------- | -------------------------------------- |
-| metube           | MeTube       | metube.${DOMAIN}     | No own auth                            |
-| it-tools         | IT-Tools     | it-tools.${DOMAIN}   | No own auth                            |
-| ollama           | Ollama       | ollama.${DOMAIN}     | No own auth                            |
-| traggo           | Traggo       | time.${DOMAIN}       | Has own auth (weak)                    |
-| stirling-pdf     | Stirling-PDF | tools.${DOMAIN}      | Has own auth                           |
-| grafana          | Grafana      | metrics.${DOMAIN}    | Has own auth, can switch to OIDC later |
-| victoria-metrics | Grafana VM   | metrics-vm.${DOMAIN} | Same as grafana                        |
-| mailserver       | Rspamd       | rspamd.${DOMAIN}     | No own web auth                        |
-| traefik          | Traefik dash | proxy-home.${DOMAIN} | Admin panel, 2FA target                |
-| openhands        | OpenHands    | code.${DOMAIN}       | Has API key auth                       |
+| Stack            | Domain               | Notes                                      |
+| ---------------- | -------------------- | ------------------------------------------ |
+| metube           | metube.${DOMAIN}     | No own auth                                |
+| it-tools         | it-tools.${DOMAIN}   | No own auth                                |
+| ollama           | ollama.${DOMAIN}     | No own auth                                |
+| traggo           | time.${DOMAIN}       | Has own auth (weak)                        |
+| stirling-pdf     | tools.${DOMAIN}      | Has own auth                               |
+| grafana          | metrics.${DOMAIN}    | Has own auth, can trust Remote-User header |
+| victoria-metrics | metrics-vm.${DOMAIN} | Same as grafana                            |
+| mailserver       | rspamd.${DOMAIN}     | No own web auth                            |
+| openhands        | code.${DOMAIN}       | Has API key auth, UI needs protection      |
+| traefik          | proxy-home.${DOMAIN} | Admin panel                                |
 
-### Stacks with complex middleware chains
-
-These need careful editing — don't drop existing middlewares:
+**Complex middleware chains — edit carefully:**
 
 ```yaml
-# openhands currently:
-middlewares=auth,openhands-session-key,robots-deny@file
-# becomes:
-middlewares=authelia@file,openhands-session-key,robots-deny@file
+# openhands:
+  middlewares=auth,openhands-session-key,robots-deny@file
+# → middlewares=authelia@file,openhands-session-key,robots-deny@file
 
-# traefik currently (middleware defined inline, not @file):
-# Line 74: traefik.http.routers.hl-traefik.middlewares=auth
-# Need to switch from inline basic auth to authelia@file
+# grafana / victoria-metrics:
+  middlewares=auth,robots-deny@file
+# → middlewares=authelia@file,robots-deny@file
 
-# grafana currently:
-middlewares=auth,robots-deny@file
-# becomes:
-middlewares=authelia@file,robots-deny@file
+# traefik (inline basic auth on compose line 74):
+  - "traefik.http.routers.hl-traefik.middlewares=auth"
+  # Remove inline auth, add authelia@file instead
+  # Also need a separate middleware label? Check compose first.
 ```
 
-### Add all to access_control rules
+### Already on Authelia — bump to 2FA
 
-In `servers/home/configs/authelia/configuration.yml`:
+These already have `authelia@file`, just change policy:
+
+| Stack        | Domain             | Current    | New        |
+| ------------ | ------------------ | ---------- | ---------- |
+| transmission | torrents.${DOMAIN} | one_factor | two_factor |
+| akaunting    | invoices.${DOMAIN} | one_factor | two_factor |
+| monica       | crm.${DOMAIN}      | one_factor | two_factor |
+
+---
+
+## Services NOT to cover with Authelia
+
+These stay `bypass` (no Authelia in front):
+
+| Service              | Domain              | Reason                                                        |
+| -------------------- | ------------------- | ------------------------------------------------------------- |
+| antonshubin.com      | antonshubin.com     | Public website                                                |
+| neatsoft.dev         | neatsoft.dev        | Public website                                                |
+| auth.antonshubin.com | auth.${DOMAIN}      | Can't auth-lock the auth page                                 |
+| **Vaultwarden**      | passwords.${DOMAIN} | Master password + own 2FA. Mobile app can't do browser auth   |
+| **Immich**           | photos.${DOMAIN}    | Own auth + API keys. Mobile app breaks with forward-auth      |
+| **Jellyfin**         | movies.${DOMAIN}    | Own auth. TV/mobile clients can't forward-auth                |
+| **Gitea**            | git.${DOMAIN}       | Own auth + SSH keys + git CLI. Forward-auth breaks `git push` |
+| **Woodpecker**       | ci.${DOMAIN}        | GitHub OAuth only. No password to put in Authelia             |
+| **Plausible**        | analytics.${DOMAIN} | Own invite-only auth                                          |
+| **Umami**            | stats.${DOMAIN}     | Own auth                                                      |
+| **Stalwart**         | stalwart.${DOMAIN}  | Admin password, already behind wireguard                      |
+| **Paperless-ngx**    | docs.${DOMAIN}      | Own auth + API tokens for automation                          |
+| **Sage**             | sage.${DOMAIN}      | External service, not in this repo                            |
+
+### What about Grafana + OpenHands?
+
+These have own auth BUT they can trust the `Remote-User` header
+that Traefik injects after Authelia passes the request:
+
+**Grafana** — add these env vars to auto-login:
+
+```yaml
+- GF_AUTH_PROXY_ENABLED=true
+- GF_AUTH_PROXY_HEADER_NAME=X-Forwarded-User
+- GF_AUTH_PROXY_HEADER_PROPERTY=username
+- GF_AUTH_PROXY_AUTO_SIGN_UP=true
+- GF_AUTH_PROXY_WHITELIST=*
+```
+
+This way: visit metrics.${DOMAIN} → Authelia (2FA) → Grafana
+auto-logged-in. No second login.
+
+**OpenHands** — already accepts header-based auth via its session
+middleware. Authelia + openhands-session-key work together.
+
+---
+
+## Phase 2 — Update Access Control
+
+Replace current `configuration.yml` rules with:
 
 ```yaml
 access_control:
@@ -99,33 +148,49 @@ access_control:
     - domain: "www.neatsoft.dev"
       policy: bypass
 
-    # one_factor — general services
-    - domain: "torrents.antonshubin.com"
-      policy: one_factor
-    - domain: "invoices.antonshubin.com"
-      policy: one_factor
-    - domain: "monica.antonshubin.com"
-      policy: one_factor
-    - domain: "crm.antonshubin.com"
-      policy: one_factor
+    # Strong own auth — bypass (would break app functionality)
+    - domain: "passwords.antonshubin.com"
+      policy: bypass
+    - domain: "photos.antonshubin.com"
+      policy: bypass
+    - domain: "movies.antonshubin.com"
+      policy: bypass
+    - domain: "git.antonshubin.com"
+      policy: bypass
+    - domain: "ci.antonshubin.com"
+      policy: bypass
+    - domain: "analytics.antonshubin.com"
+      policy: bypass
+    - domain: "stats.antonshubin.com"
+      policy: bypass
+    - domain: "stalwart.antonshubin.com"
+      policy: bypass
+    - domain: "docs.antonshubin.com"
+      policy: bypass
     - domain: "sage.antonshubin.com"
-      policy: one_factor
-    - domain: "metube.antonshubin.com"
-      policy: one_factor
-    - domain: "it-tools.antonshubin.com"
-      policy: one_factor
-    - domain: "ollama.antonshubin.com"
-      policy: one_factor
-    - domain: "time.antonshubin.com"
-      policy: one_factor
-    - domain: "tools.antonshubin.com"
-      policy: one_factor
-    - domain: "rspamd.antonshubin.com"
-      policy: one_factor
-    - domain: "code.antonshubin.com"
-      policy: one_factor
+      policy: bypass
 
-    # two_factor — admin / sensitive
+    # Everything else — 2FA required
+    - domain: "torrents.antonshubin.com"
+      policy: two_factor
+    - domain: "invoices.antonshubin.com"
+      policy: two_factor
+    - domain: "crm.antonshubin.com"
+      policy: two_factor
+    - domain: "metube.antonshubin.com"
+      policy: two_factor
+    - domain: "it-tools.antonshubin.com"
+      policy: two_factor
+    - domain: "ollama.antonshubin.com"
+      policy: two_factor
+    - domain: "time.antonshubin.com"
+      policy: two_factor
+    - domain: "tools.antonshubin.com"
+      policy: two_factor
+    - domain: "rspamd.antonshubin.com"
+      policy: two_factor
+    - domain: "code.antonshubin.com"
+      policy: two_factor
     - domain: "metrics.antonshubin.com"
       policy: two_factor
     - domain: "metrics-vm.antonshubin.com"
@@ -134,358 +199,131 @@ access_control:
       policy: two_factor
 ```
 
-### Execution order
+### Execution
 
 ```bash
-# 1. Update access_control in configuration.yml first
-# 2. Deploy authelia (reloads config)
+# 1. Update configuration.yml, then deploy authelia
 deno task deploy home authelia
 
-# 3. Switch stacks one by one, verify each works
+# 2. Switch stacks one by one, deploy after each
 deno task deploy home metube
 deno task deploy home it-tools
 deno task deploy home ollama
 deno task deploy home traggo
 deno task deploy home stirling-pdf
-deno task deploy home mailserver        # rspamd
 deno task deploy home grafana
 deno task deploy home victoria-metrics
+deno task deploy home mailserver   # rspamd
 deno task deploy home openhands
 deno task deploy home traefik
+
+# 3. After each: visit domain → confirm redirect to Authelia
+#    → log in with password + TOTP → confirm access
 ```
-
-After each: visit the domain, confirm redirect to Authelia login,
-log in, confirm access.
-
----
-
-## Phase 2 — 2FA Enforcement
-
-Currently TOTP is stored but `one_factor` services never prompt for it.
-`two_factor` policy forces 2FA on every login.
-
-### Target services for 2FA
-
-These control infrastructure or personal data:
-
-| Domain               | Service           | Reason                         |
-| -------------------- | ----------------- | ------------------------------ |
-| proxy-home.${DOMAIN} | Traefik dashboard | Reverse proxy control          |
-| metrics.${DOMAIN}    | Grafana           | Infra monitoring               |
-| metrics-vm.${DOMAIN} | Grafana VM        | Infra monitoring               |
-| git.${DOMAIN}        | Gitea             | Code, CI/CD secrets            |
-| code.${DOMAIN}       | OpenHands         | AI has filesystem access       |
-| ci.${DOMAIN}         | Woodpecker        | CI/CD pipeline control         |
-| passwords.${DOMAIN}  | Vaultwarden       | Password manager (has own 2FA) |
-| photos.${DOMAIN}     | Immich            | Personal photos                |
-
-**Note:** Vaultwarden and Immich have their own strong auth (master
-password + 2FA). Adding Authelia in front is redundant and may break
-mobile apps. Keep bypass for these unless OIDC is configured.
-
-### Access control after Phase 2
-
-```yaml
-access_control:
-  default_policy: deny
-  rules:
-    # Public — bypass
-    - domain: "antonshubin.com"
-      policy: bypass
-    - domain: "auth.antonshubin.com"
-      policy: bypass
-    - domain: "neatsoft.dev"
-      policy: bypass
-    - domain: "www.neatsoft.dev"
-      policy: bypass
-
-    # Apps with own strong auth — bypass (no double auth)
-    - domain: "passwords.antonshubin.com"
-      policy: bypass
-    - domain: "photos.antonshubin.com"
-      policy: bypass
-
-    # one_factor — general services
-    - domain: "torrents.antonshubin.com"
-      policy: one_factor
-    - domain: "invoices.antonshubin.com"
-      policy: one_factor
-    - domain: "monica.antonshubin.com"
-      policy: one_factor
-    - domain: "crm.antonshubin.com"
-      policy: one_factor
-    - domain: "sage.antonshubin.com"
-      policy: one_factor
-    - domain: "metube.antonshubin.com"
-      policy: one_factor
-    - domain: "it-tools.antonshubin.com"
-      policy: one_factor
-    - domain: "ollama.antonshubin.com"
-      policy: one_factor
-    - domain: "time.antonshubin.com"
-      policy: one_factor
-    - domain: "tools.antonshubin.com"
-      policy: one_factor
-    - domain: "rspamd.antonshubin.com"
-      policy: one_factor
-    - domain: "code.antonshubin.com"
-      policy: one_factor
-
-    # two_factor — admin / sensitive
-    - domain: "metrics.antonshubin.com"
-      policy: two_factor
-    - domain: "metrics-vm.antonshubin.com"
-      policy: two_factor
-    - domain: "proxy-home.antonshubin.com"
-      policy: two_factor
-    - domain: "git.antonshubin.com"
-      policy: two_factor
-    - domain: "ci.antonshubin.com"
-      policy: two_factor
-```
-
-### OIDC alternative for 2FA
-
-Once OIDC is configured for gitea, woodpecker, grafana — they get
-Authelia's 2FA natively via the OIDC flow. Their forward-auth
-middleware can be removed, and access_control for those domains
-can be set to `bypass` (since OIDC handles auth internally).
-
----
-
-## Phase 3 — OIDC SSO
-
-### Enable OIDC in Authelia
-
-In `configuration.yml`:
-
-```yaml
-identity_providers:
-  oidc:
-    hmac_secret: ${AUTHELIA_OIDC_HMAC_SECRET}
-    issuer_private_key: |
-      -----BEGIN RSA PRIVATE KEY-----
-      ...
-      -----END RSA PRIVATE KEY-----
-    access_token_lifespan: 1h
-    authorize_code_lifespan: 1m
-    id_token_lifespan: 1h
-    refresh_token_lifespan: 90d
-    cors:
-      endpoints:
-        - authorization
-        - token
-        - revocation
-        - end_session
-      allowed_origins:
-        - https://*.antonshubin.com
-    clients:
-      # Grafana
-      - client_id: grafana
-        client_name: Grafana
-        client_secret: ${AUTHELIA_OIDC_CLIENT_SECRET_GRAFANA}
-        public: false
-        authorization_policy: two_factor
-        redirect_uris:
-          - https://metrics.antonshubin.com/login/generic_oauth
-        scopes:
-          - openid
-          - profile
-          - email
-          - groups
-        userinfo_signed_response_alg: none
-
-      # Gitea
-      - client_id: gitea
-        client_name: Gitea
-        client_secret: ${AUTHELIA_OIDC_CLIENT_SECRET_GITEA}
-        public: false
-        authorization_policy: two_factor
-        redirect_uris:
-          - https://git.antonshubin.com/user/oauth2/authelia/callback
-        scopes:
-          - openid
-          - profile
-          - email
-          - groups
-
-      # Woodpecker
-      - client_id: woodpecker
-        client_name: Woodpecker CI
-        client_secret: ${AUTHELIA_OIDC_CLIENT_SECRET_WOODPECKER}
-        public: false
-        authorization_policy: two_factor
-        redirect_uris:
-          - https://ci.antonshubin.com/authorize
-        scopes:
-          - openid
-          - profile
-          - email
-
-      # Open WebUI
-      - client_id: open-webui
-        client_name: Open WebUI
-        client_secret: ${AUTHELIA_OIDC_CLIENT_SECRET_OPENWEBUI}
-        public: false
-        authorization_policy: two_factor
-        redirect_uris:
-          - https://ai.antonshubin.com/oauth/authelia/callback
-        scopes:
-          - openid
-          - profile
-          - email
-          - groups
-
-      # Paperless-ngx
-      - client_id: paperless
-        client_name: Paperless-ngx
-        client_secret: ${AUTHELIA_OIDC_CLIENT_SECRET_PAPERLESS}
-        public: false
-        authorization_policy: two_factor
-        redirect_uris:
-          - https://docs.antonshubin.com/accounts/authelia/login/callback/
-        scopes:
-          - openid
-          - profile
-          - email
-```
-
-### Generate OIDC secrets
-
-```bash
-# One HMAC secret for Authelia (stay fixed, never change)
-openssl rand -hex 32
-
-# Per-client secrets
-openssl rand -base64 32
-```
-
-### Add env vars to `.env` + `.env.example`
-
-```bash
-#region Authelia OIDC
-AUTHELIA_OIDC_HMAC_SECRET=REPLACE_WITH_64_CHAR_HEX
-AUTHELIA_OIDC_CLIENT_SECRET_GRAFANA=REPLACE_WITH_BASE64
-AUTHELIA_OIDC_CLIENT_SECRET_GITEA=REPLACE_WITH_BASE64
-AUTHELIA_OIDC_CLIENT_SECRET_WOODPECKER=REPLACE_WITH_BASE64
-AUTHELIA_OIDC_CLIENT_SECRET_OPENWEBUI=REPLACE_WITH_BASE64
-AUTHELIA_OIDC_CLIENT_SECRET_PAPERLESS=REPLACE_WITH_BASE64
-#endregion
-```
-
-### Generate RSA key for OIDC token signing
-
-```bash
-openssl genrsa -out /dev/stdout 2048
-# Copy the whole output (incl ---BEGIN/END---) into configuration.yml
-# as issuer_private_key
-```
-
-### Configure each app for OIDC
-
-**Grafana** (`stacks/grafana/compose.yml`):
-
-```yaml
-- GF_AUTH_GENERIC_OAUTH_ENABLED=true
-- GF_AUTH_GENERIC_OAUTH_NAME=Authelia
-- GF_AUTH_GENERIC_OAUTH_CLIENT_ID=grafana
-- GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET=${AUTHELIA_OIDC_CLIENT_SECRET_GRAFANA}
-- GF_AUTH_GENERIC_OAUTH_SCOPES=openid profile email groups
-- GF_AUTH_GENERIC_OAUTH_AUTH_URL=https://auth.antonshubin.com/api/oidc/authorization
-- GF_AUTH_GENERIC_OAUTH_TOKEN_URL=https://auth.antonshubin.com/api/oidc/token
-- GF_AUTH_GENERIC_OAUTH_API_URL=https://auth.antonshubin.com/api/oidc/userinfo
-- GF_AUTH_GENERIC_OAUTH_ALLOW_ASSIGN_GRAFANA_ADMIN=true
-- GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH=groups
-- GF_AUTH_SIGNOUT_REDIRECT_URL=https://auth.antonshubin.com/logout
-```
-
-**Gitea** (`stacks/gitea/compose.yml`):
-
-```yaml
-# Add OAuth2 provider via Gitea UI:
-# Settings → Authentication Sources → Add OAuth2
-# OAuth2 Provider: OpenID Connect
-# Client ID: gitea
-# Client Secret: ${AUTHELIA_OIDC_CLIENT_SECRET_GITEA}
-# OpenID Connect Auto Discovery URL: https://auth.antonshubin.com/.well-known/openid-configuration
-```
-
-**Woodpecker** (`stacks/woodpecker/compose.yml`):
-
-```yaml
-- WOODPECKER_OPENID_CONNECT_ENABLED=true
-- WOODPECKER_OPENID_CONNECT_CLIENT_ID=woodpecker
-- WOODPECKER_OPENID_CONNECT_CLIENT_SECRET=${AUTHELIA_OIDC_CLIENT_SECRET_WOODPECKER}
-- WOODPECKER_OPENID_CONNECT_PROVIDER=https://auth.antonshubin.com
-```
-
-**Open WebUI** (`stacks/open-webui/compose.yml`):
-
-```yaml
-- OAUTH_CLIENT_ID=open-webui
-- OAUTH_CLIENT_SECRET=${AUTHELIA_OIDC_CLIENT_SECRET_OPENWEBUI}
-- OAUTH_PROVIDER_NAME=Authelia
-- OPENID_PROVIDER_URL=https://auth.antonshubin.com/.well-known/openid-configuration
-- OAUTH_SCOPES=openid profile email groups
-```
-
-**Paperless-ngx** (`stacks/paperless-ngx/compose.yml`):
-
-```yaml
-# Via Social Account / OIDC config in paperless settings
-# Add in PAPERLESS_* env or via admin UI
-# Provider: Authelia
-# Client ID: paperless
-# Client Secret: ${AUTHELIA_OIDC_CLIENT_SECRET_PAPERLESS}
-# OIDC Config URL: https://auth.antonshubin.com/.well-known/openid-configuration
-```
-
-### Post-OIDC cleanup
-
-Once OIDC is working for an app:
-
-1. Remove its `authelia@file` from Traefik middlewares
-2. Set its domain to `policy: bypass` in access_control
-3. The app's own OIDC flow handles auth + 2FA
-
-Reason: double auth (forward-auth + OIDC) breaks callback URLs.
-OIDC needs direct access to its callback endpoint without Traefik
-intercepting.
 
 ---
 
 ## SMTP Notifier
 
-Currently using filesystem notifier (`/data/notifications.yml`).
-For identity verification emails to arrive in inbox:
+Currently filesystem (`/data/notifications.yml`). Identity verification
+codes are extracted via:
+
+```bash
+ssh homelab 'docker run --rm -v ~/ssd-2tb/apps/.volumes/authelia/data:/data \
+  alpine grep -A1 "one-time code\|following one-time" /data/notifications.yml \
+  2>/dev/null | tail -1'
+```
+
+To get codes via email instead, switch to SMTP. Authelia v4.39
+can't resolve `${VAR}` in typed fields (port numbers, addresses).
+Workaround: bake SMTP values directly into the YAML (the config is
+encrypted in `.env.age` anyway):
 
 ```yaml
 notifier:
   smtp:
     address: smtp://mail.antonshubin.com:587
     username: noreply@antonshubin.com
-    password: ${SMTP_PASSWORD}
+    password: YOUR_SMTP_PASSWORD_HERE
     sender: Authelia <noreply@antonshubin.com>
 ```
 
-**Known issue:** Authelia v4.39 fails to resolve `${SMTP_PASSWORD}` if
-the env var is a plain string. Workaround: bake the values directly
-into the YAML config (since it's encrypted in `.env.age` anyway).
+---
+
+## Gatus Monitoring Problem
+
+302 from Authelia means "auth layer works" but doesn't confirm the
+backend is actually up. Example: transmission could be crashed, but
+gatus sees 302 → thinks everything is fine.
+
+### Option A — Accept 302 as "routing works"
+
+Best effort. Add a separate healthcheck for authelia itself:
+
+Add to `servers/cloud/configs/gatus.yml`:
+
+```yaml
+- name: Authelia
+  group: home
+  url: "https://auth.${DOMAIN}"
+  interval: 1m
+  conditions:
+    - "[STATUS] == 200"
+  alerts:
+    - type: ntfy
+```
+
+And keep existing endpoint checks with 200/302 condition.
+
+### Option B — Bypass path per service
+
+Add a health path that bypasses auth:
+
+```yaml
+access_control:
+  rules:
+    # Monitoring bypass — always allow /health
+    - domain: "torrents.antonshubin.com"
+      resources:
+        - "^/health$"
+      policy: bypass
+```
+
+Gatus hits `https://torrents.antonshubin.com/health` without auth.
+Requires the backend to have a `/health` endpoint.
+
+### Option C — Basic auth monitoring via Authelia
+
+Use `/api/verify?auth=basic` with a dedicated monitoring user.
+Gatus sends:
+
+```yaml
+headers:
+  Authorization: Basic ${AUTHELIA_MONITOR_BASE64}
+```
+
+Create user `monitor` in `users.yml` with a separate password.
+Base64-encode `monitor:password` and store as env var.
+
+**Downside:** failed attempts from this user also trigger regulation
+bans. Mitigation: set `max_retries: 100` or use a very strong
+password that won't be bruteforced.
+
+### Recommendation
+
+Start with **Option A** (simplest). Add option C later if you want
+true end-to-end monitoring. The 302 DOES confirm the backend is
+reachable at the TCP level — if the container were fully down,
+Traefik would return 502/503, not 302.
 
 ---
 
-## Env Vars Checklist
+## Env Vars
 
-Add to `.env` + `.env.example` (`#region Authelia`):
+In `.env` + `.env.example` (`#region Authelia`):
 
 ```bash
 AUTHELIA_SESSION_SECRET=<hex>
-AUTHELIA_OIDC_HMAC_SECRET=<hex>
-AUTHELIA_OIDC_CLIENT_SECRET_GRAFANA=<base64>
-AUTHELIA_OIDC_CLIENT_SECRET_GITEA=<base64>
-AUTHELIA_OIDC_CLIENT_SECRET_WOODPECKER=<base64>
-AUTHELIA_OIDC_CLIENT_SECRET_OPENWEBUI=<base64>
-AUTHELIA_OIDC_CLIENT_SECRET_PAPERLESS=<base64>
 ```
 
 Pass to authelia container in `stacks/authelia/compose.yml`:
@@ -494,39 +332,29 @@ Pass to authelia container in `stacks/authelia/compose.yml`:
 environment:
   - TZ=${TIMEZONE}
   - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
-  - AUTHELIA_OIDC_HMAC_SECRET=${AUTHELIA_OIDC_HMAC_SECRET}
 ```
-
-(The client secrets are used by the apps, not by authelia directly.)
 
 ---
 
-## Gatus Monitoring Updates
-
-Services behind Authelia return 302 (redirect to login) instead of
-200. Update conditions in `servers/cloud/configs/gatus.yml`:
-
-```yaml
-conditions:
-  - "[STATUS] == 200 || [STATUS] == 302"
-```
-
-Already done for transmission, monica, akaunting. Apply to all
-authelia-protected services.
-
----
-
-## Order of Execution (recommended)
+## Order of Execution
 
 ```
-Phase 1a: SMTP notifier + identity verification to email
-Phase 1b: Switch basic auth → authelia@file for all stacks
-Phase 1c: Update gatus conditions, verify all work
-Phase 2:   Enable two_factor for admin services
-Phase 3a:  Generate OIDC keys + configure Authelia
-Phase 3b:  Configure each app for OIDC (grafana first, then gitea, etc)
-Phase 3c:  Remove forward-auth from OIDC apps, switch to bypass
+1.  Update configuration.yml (all two_factor)
+2.  Deploy authelia (config reload)
+3.  Switch metube → deploy → verify
+4.  Switch it-tools → deploy → verify
+5.  Switch ollama → deploy → verify
+6.  Switch traggo → deploy → verify
+7.  Switch stirling-pdf → deploy → verify
+8.  Switch grafana → deploy → verify (+ proxy auth headers)
+9.  Switch victoria-metrics → deploy → verify
+10. Switch mailserver/rspamd → deploy → verify
+11. Switch openhands → deploy → verify
+12. Switch traefik → deploy → verify
+13. Bump transmission/akaunting/monica to two_factor
+14. Update gatus configs
+15. SMTP notifier (optional, makes codes easier)
 ```
 
-Each phase can be done independently. Phase 1 has the highest
-security ROI (eliminates shared basic auth password).
+Each step is reversible: switch middleware back to `auth`, redeploy.
+Basic auth still works as long as `BASIC_AUTH_*` env vars exist.
