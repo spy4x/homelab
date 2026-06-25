@@ -12,7 +12,7 @@ Speaks IMAP + SMTP via the [Model Context Protocol](https://modelcontextprotocol
 
 The user has a self-hosted Docker Mailserver on the cloud server. This MCP
 exposes it to AI agents without going through Gmail/OAuth. Same pattern as
-`caldav-mcp` (events/todos) and `immich-mcp` (photos): a thin HTTP MCP that
+`caldav-mcp` (events/todos): a thin HTTP MCP that
 wraps a self-hosted protocol server.
 
 ## Tools exposed
