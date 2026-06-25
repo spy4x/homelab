@@ -32,6 +32,8 @@ services:
       - DB_USERNAME=postgres
       - DB_DATABASE_NAME=immich
       - REDIS_HOSTNAME=kv
+      # ML container is at service name 'machine-learning', not 'immich-machine-learning'
+      - IMMICH_MACHINE_LEARNING_URL=http://machine-learning:3003
     depends_on:
       - db
       - kv
