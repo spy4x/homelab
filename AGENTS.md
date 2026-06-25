@@ -362,6 +362,7 @@ curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records
 2. **Make changes**: Follow existing patterns and conventions
 3. **After changes**: Run `deno task fix` to auto-format and lint
 4. **Final check**: Run `deno task check` to verify all passes
+5. **Deploy & verify**: Before committing, deploy to the target server and verify the changed functionality actually works. Push only after confirming services are healthy and behaving as expected.
 
 ## 🚨 Error Handling Patterns
 
