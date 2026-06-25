@@ -82,15 +82,20 @@ webauthn:
     user_verification: preferred
 
 # Regulation — brute-force protection
+# High max_retries due to external bots hitting the forward-auth
 regulation:
-  max_retries: 5
-  find_time: 2m
-  ban_time: 5m
+  max_retries: 15
+  find_time: 5m
+  ban_time: 2m
 
-# Notifications — file-based (can add SMTP later)
+# Notifications — SMTP via cloud mailserver
 notifier:
-  filesystem:
-    filename: /data/notifications.yml
+  smtp:
+    host: ${SMTP_HOST}
+    port: ${SMTP_PORT}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    sender: ${SMTP_FROM}
 
 # Theme
 theme: dark
