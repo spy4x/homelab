@@ -89,7 +89,7 @@ notifier:
 # Theme
 theme: dark
 
-# Password reset — disabled for now
+# Password reset — required config even if not actively used
 identity_validation:
   reset_password:
-    disable: true
+    jwt_secret: ${AUTHELIA_SESSION_SECRET}
