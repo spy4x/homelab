@@ -1,0 +1,15 @@
+# GitGuardian configuration
+# Exclude encrypted .env.age files — values are SOPS/Age encrypted,
+# only the key names are visible. Actual secrets require the age
+# private key to decrypt, stored outside this repo.
+version: 2
+
+content:
+  paths:
+    - "**/*.env.age"
+    - "**/*.age"
+
+  # Also exclude the .env.example files — they contain placeholders only
+  ignored_paths:
+    - "**/.env.example"
+    - "**/.env.root.example"
