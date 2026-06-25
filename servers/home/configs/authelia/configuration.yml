@@ -1,14 +1,15 @@
 ###############################################################
 #                   Authelia configuration                    #
 ###############################################################
-host: 0.0.0.0
-port: 9091
-log_level: info
+server:
+  address: tcp://0.0.0.0:9091
+
+log:
+  level: info
 
 # Session — stored in Redis (survives restarts)
 session:
   name: authelia_session
-  domain: antonshubin.com
   secret: ${AUTHELIA_SESSION_SECRET}
   expiration: 1h
   inactivity: 5m
@@ -30,7 +31,6 @@ authentication_backend:
 access_control:
   default_policy: deny
   rules:
-    # Public domains — bypass auth
     - domain: "antonshubin.com"
       policy: bypass
     - domain: "neatsoft.dev"
@@ -38,7 +38,6 @@ access_control:
     - domain: "www.neatsoft.dev"
       policy: bypass
 
-    # Services requiring one-factor auth
     - domain: "torrents.antonshubin.com"
       policy: one_factor
     - domain: "invoices.antonshubin.com"
@@ -50,7 +49,6 @@ access_control:
     - domain: "sage.antonshubin.com"
       policy: one_factor
 
-    # Admin access — requires 2FA
     - domain: "grafana.antonshubin.com"
       policy: two_factor
     - domain: "metrics.antonshubin.com"
@@ -74,16 +72,14 @@ webauthn:
   disable: false
   display_name: Authelia
   attestation_conveyance_preference: none
-  user_verification: preferred
+  selection_criteria:
+    user_verification: preferred
 
 # Regulation — brute-force protection
 regulation:
   max_retries: 5
   find_time: 2m
   ban_time: 5m
-
-# Default redirection URL after login
-default_redirection_url: https://dash.antonshubin.com
 
 # Notifications — file-based (can add SMTP later)
 notifier:
@@ -93,5 +89,7 @@ notifier:
 # Theme
 theme: dark
 
-# Identity validation — required for password reset flow
-# (disabled for now, uses file-based notifications)
+# Password reset — disabled for now
+identity_validation:
+  reset_password:
+    disable: true
