@@ -19,7 +19,14 @@ services:
       - proxy
       - default
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.hl-authelia.loadbalancer.server.port=9091"
+      - "traefik.http.routers.hl-authelia.rule=Host(`auth.${DOMAIN}`)"
+      - "traefik.http.routers.hl-authelia.entrypoints=websecure"
+      - "traefik.http.routers.hl-authelia.tls=true"
+      - "traefik.http.routers.hl-authelia.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-authelia.middlewares=robots-deny@file"
     deploy:
       resources:
         limits:

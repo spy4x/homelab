@@ -33,6 +33,8 @@ access_control:
   rules:
     - domain: "antonshubin.com"
       policy: bypass
+    - domain: "auth.antonshubin.com"
+      policy: bypass
     - domain: "neatsoft.dev"
       policy: bypass
     - domain: "www.neatsoft.dev"
