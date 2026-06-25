@@ -4,6 +4,7 @@ port: 8080
 targets:
   - name: metube
     url: http://hl-metube:8081/
+  - name: ollama
     url: http://hl-ollama:11434/api/tags
   - name: traggo
     url: http://hl-traggo:3030/
@@ -19,4 +20,5 @@ targets:
     url: http://hl-grafana:3000/
   - name: grafana-vm
     url: http://hl-grafana-vm:3000/
+  - name: traefik
     url: http://hl-traefik:8080/dashboard/
