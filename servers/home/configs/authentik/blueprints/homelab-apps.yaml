@@ -6,6 +6,8 @@ entries:
   # Access policy (built-in)
   - model: authentik_policies_expression.ExpressionPolicy
     id: policy-authenticated
+    identifiers:
+      name: Authenticated
     attrs:
       name: Authenticated
       expression: return True
@@ -13,6 +15,8 @@ entries:
   # Proxy Provider for Sage
   - model: authentik_providers_proxy.ProxyProvider
     id: provider-sage
+    identifiers:
+      name: Sage
     attrs:
       name: Sage
       external_host: https://sage.antonshubin.com
@@ -29,6 +33,8 @@ entries:
   # Application: Sage
   - model: authentik_core.Application
     id: app-sage
+    identifiers:
+      slug: sage
     attrs:
       name: Sage
       slug: sage
@@ -39,6 +45,8 @@ entries:
   # Proxy Provider for Invoices (Akaunting)
   - model: authentik_providers_proxy.ProxyProvider
     id: provider-invoices
+    identifiers:
+      name: Invoices
     attrs:
       name: Invoices
       external_host: https://invoices.antonshubin.com
@@ -55,6 +63,8 @@ entries:
   # Application: Invoices
   - model: authentik_core.Application
     id: app-invoices
+    identifiers:
+      slug: invoices
     attrs:
       name: Invoices
       slug: invoices
@@ -69,6 +79,8 @@ entries:
   # stays as a defense-in-depth fallback for direct IP access.
   - model: authentik_providers_proxy.ProxyProvider
     id: provider-transmission
+    identifiers:
+      name: Transmission
     attrs:
       name: Transmission
       external_host: https://torrents.antonshubin.com
@@ -85,6 +97,8 @@ entries:
   # Application: Transmission
   - model: authentik_core.Application
     id: app-transmission
+    identifiers:
+      slug: transmission
     attrs:
       name: Transmission
       slug: transmission
