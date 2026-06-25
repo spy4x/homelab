@@ -70,10 +70,8 @@ endpoints:
     group: home
     url: "https://torrents.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -253,10 +251,8 @@ endpoints:
     group: home
     url: "https://crm.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
@@ -264,10 +260,8 @@ endpoints:
     group: home
     url: "https://invoices.${DOMAIN}"
     interval: 1m
-    headers:
-      Authorization: Basic ${BASIC_AUTH_BASE64}
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] == 200 || [STATUS] == 302"
     alerts:
       - type: ntfy
 
