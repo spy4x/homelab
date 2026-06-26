@@ -23,7 +23,7 @@ alerting:
 endpoints:
   - name: Dash
     group: home
-    url: "https://dash.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/dash"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -32,7 +32,7 @@ endpoints:
 
   - name: Vaultwarden
     group: home
-    url: "https://passwords.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/vaultwarden"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -41,7 +41,7 @@ endpoints:
 
   - name: Jellyfin
     group: home
-    url: "https://movies.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/jellyfin"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -50,7 +50,7 @@ endpoints:
 
   - name: Immich
     group: home
-    url: "https://photos.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/immich"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -59,7 +59,7 @@ endpoints:
 
   - name: AdGuard Home
     group: home
-    url: "https://dns.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/adguard"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -77,7 +77,7 @@ endpoints:
 
   - name: Open-WebUI
     group: home
-    url: "https://ai.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/open-webui"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -95,7 +95,7 @@ endpoints:
 
   - name: Audiobookshelf
     group: home
-    url: "https://books.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/audiobookshelf"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -104,7 +104,7 @@ endpoints:
 
   - name: LibreSpeed
     group: home
-    url: "https://speed-home.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/librespeed"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -122,7 +122,7 @@ endpoints:
 
   - name: FileBrowser
     group: home
-    url: "https://files.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/filebrowser"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -131,7 +131,7 @@ endpoints:
 
   - name: Radicale
     group: home
-    url: "https://cal.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/radicale"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -140,7 +140,7 @@ endpoints:
 
   - name: SearXNG
     group: home
-    url: "https://search.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/searxng"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -149,7 +149,7 @@ endpoints:
 
   - name: Woodpecker CI
     group: home
-    url: "https://ci.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/woodpecker"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -158,7 +158,7 @@ endpoints:
 
   - name: Piped
     group: home
-    url: "https://piped.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/piped"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -167,7 +167,7 @@ endpoints:
 
   - name: Syncthing
     group: home
-    url: "https://sync-home.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/syncthing"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -176,7 +176,7 @@ endpoints:
 
   - name: ntfy
     group: home
-    url: "https://ntfy-home.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/ntfy"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -185,7 +185,7 @@ endpoints:
 
   - name: Gatus
     group: home
-    url: "https://uptime-home.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/gatus"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -203,7 +203,7 @@ endpoints:
 
   - name: Sage
     group: home
-    url: "https://sage.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/sage"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -288,7 +288,7 @@ endpoints:
 
   - name: Usememos
     group: home
-    url: "https://notes.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/memos"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -297,7 +297,7 @@ endpoints:
 
   - name: Reitti
     group: home
-    url: "https://loc.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/reitti"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -306,7 +306,7 @@ endpoints:
 
   - name: Mirotalk
     group: home
-    url: "https://talk.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/mirotalk"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -315,7 +315,7 @@ endpoints:
 
   - name: Gitea
     group: home
-    url: "https://git.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/gitea"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -324,7 +324,7 @@ endpoints:
 
   - name: Stalwart
     group: home
-    url: "https://stalwart.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/stalwart"
     interval: 1m
     headers:
       Authorization: Basic ${BASIC_AUTH_BASE64}
@@ -353,7 +353,7 @@ endpoints:
 
   - name: Paperless-ngx
     group: home
-    url: "https://docs.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/paperless"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -362,7 +362,7 @@ endpoints:
 
   - name: Docker Registry
     group: home
-    url: "https://registry.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/docker-registry"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -371,7 +371,7 @@ endpoints:
 
   - name: Plausible
     group: home
-    url: "https://analytics.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/plausible"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -380,7 +380,7 @@ endpoints:
 
   - name: Umami
     group: home
-    url: "https://stats.${DOMAIN}"
+    url: "https://probe-home.${DOMAIN}/health/umami"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -389,7 +389,16 @@ endpoints:
 
   - name: Schedule
     group: home
-    url: "https://schedule.${DOMAIN}/auth/login"
+    url: "https://probe-home.${DOMAIN}/health/caldiy"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Zond
+    group: home
+    url: "https://probe-home.${DOMAIN}/health"
     interval: 1m
     conditions:
       - "[STATUS] == 200"

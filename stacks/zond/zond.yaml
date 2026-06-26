@@ -2,25 +2,79 @@
 port: 8080
 
 targets:
-  - name: authelia
-    url: http://hl-authelia:9091/api/health
-  - name: metube
-    url: http://hl-metube:8081/
-  - name: ollama
-    url: http://hl-ollama:11434/api/tags
-  - name: traggo
-    url: http://hl-traggo:3030/
-  - name: monica
-    url: http://hl-monica:80/
-  - name: openhands
-    url: http://172.23.0.1:8000/health
-  - name: transmission
-    url: http://hl-transmission:9091/
+  - name: adguard
+    url: http://hl-adguard:80/
   - name: akaunting
     url: http://hl-akaunting:80/health.html
+  - name: audiobookshelf
+    url: http://hl-audiobookshelf:80/
+  - name: authelia
+    url: http://hl-authelia:9091/api/health
+  - name: caldiy
+    url: http://hl-caldiy:3000/
+  - name: dash
+    url: http://dash:80/
+  - name: docker-registry
+    url: http://hl-registry-ui:80/
+  - name: filebrowser
+    url: http://hl-filebrowser:80/
+  - name: gatus
+    url: http://hl-gatus:8080/
+  - name: gitea
+    url: http://hl-gitea:3000/
   - name: grafana
     url: http://hl-grafana:3000/
   - name: grafana-vm
     url: http://hl-grafana-vm:3000/
+  - name: immich
+    url: http://hl-immich-server:2283/
+  - name: jellyfin
+    url: http://hl-jellyfin:8096/
+  - name: librespeed
+    url: http://hl-librespeed:80/
+  - name: memos
+    url: http://hl-memos:5230/
+  - name: metube
+    url: http://hl-metube:8081/
+  - name: mirotalk
+    url: http://hl-mirotalk:3000/
+  - name: monica
+    url: http://hl-monica:80/
+  - name: ntfy
+    url: http://hl-ntfy:80/
+  - name: ollama
+    url: http://hl-ollama:11434/api/tags
+  - name: open-webui
+    url: http://hl-open-webui:8080/
+  - name: openhands
+    url: http://172.23.0.1:8000/health
+  - name: paperless
+    url: http://hl-paperless:8000/
+  - name: piped
+    url: http://hl-piped-frontend:80/
+  - name: plausible
+    url: http://hl-plausible:8000/
+  - name: radicale
+    url: http://hl-radicale:5232/
+  - name: reitti
+    url: http://hl-reitti:8080/
+  - name: sage
+    url: http://sage:3000/
+  - name: searxng
+    url: http://hl-searxng:8080/
+  - name: stalwart
+    url: http://hl-stalwart:8080/
+  - name: syncthing
+    url: http://hl-syncthing:8384/
   - name: traefik
     url: http://hl-traefik:8080/dashboard/
+  - name: traggo
+    url: http://hl-traggo:3030/
+  - name: transmission
+    url: http://hl-transmission:9091/
+  - name: umami
+    url: http://hl-umami:3000/
+  - name: vaultwarden
+    url: http://hl-vaultwarden:80/
+  - name: woodpecker
+    url: http://hl-woodpecker-server:8000/
