@@ -45,16 +45,16 @@ Every HTTP service works, no exceptions.
 
 Change `middlewares=auth,...` → `middlewares=authelia@file,...`
 
-| Stack            | Domain               | Notes                                      |
-| ---------------- | -------------------- | ------------------------------------------ |
-| metube           | metube.${DOMAIN}     | No own auth                                |
-| ollama           | ollama.${DOMAIN}     | No own auth                                |
-| traggo           | time.${DOMAIN}       | Has own auth (weak)                        |
-| grafana          | metrics.${DOMAIN}    | Has own auth, can trust Remote-User header |
-| victoria-metrics | metrics-vm.${DOMAIN} | Same as grafana                            |
-| mailserver       | rspamd.${DOMAIN}     | No own web auth                            |
+| Stack            | Domain               | Notes                                                 |
+| ---------------- | -------------------- | ----------------------------------------------------- |
+| metube           | metube.${DOMAIN}     | No own auth                                           |
+| ollama           | ollama.${DOMAIN}     | No own auth                                           |
+| traggo           | time.${DOMAIN}       | Has own auth (weak)                                   |
+| grafana          | metrics.${DOMAIN}    | Has own auth, can trust Remote-User header            |
+| victoria-metrics | metrics-vm.${DOMAIN} | Same as grafana                                       |
+| mailserver       | rspamd.${DOMAIN}     | No own web auth                                       |
 | openhands        | code.${DOMAIN}       | Has API key auth (--public mode), UI needs protection |
-| traefik          | proxy-home.${DOMAIN} | Admin panel                                |
+| traefik          | proxy-home.${DOMAIN} | Admin panel                                           |
 
 **Complex middleware chains — edit carefully:**
 
