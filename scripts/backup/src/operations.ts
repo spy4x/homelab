@@ -70,8 +70,15 @@ export class BackupOperations {
     // so we must match the same project name to find existing containers.
     const projectName = this.getProjectName(composePath)
 
+    // Use "up -d" for start to recreate containers if they were removed
+    // (e.g., after docker compose down). "docker compose start" fails when
+    // no container exists for a service.
+    const args = action === "start"
+      ? ["compose", "-p", projectName, "-f", composePath, "up", "-d"]
+      : ["compose", "-p", projectName, "-f", composePath, action]
+
     const cmd = new Deno.Command("docker", {
-      args: ["compose", "-p", projectName, "-f", composePath, action],
+      args,
       stdout: "piped",
       stderr: "piped",
     })

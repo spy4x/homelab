@@ -70,9 +70,14 @@ services:
       - PAPERLESS_OCR_LANGUAGE=eng
     deploy:
       resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
         limits:
-          memory: 1G
-          cpus: "1"
+          memory: 2G
+          cpus: "2"
     security_opt:
       - no-new-privileges:true
     networks:
@@ -91,7 +96,7 @@ services:
   paperless-worker:
     container_name: hl-paperless-worker
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    command: ["document-consumer"]
+    command: ["svc-consumer"]
     restart: unless-stopped
     depends_on:
       paperless-db:
@@ -117,9 +122,14 @@ services:
       - PAPERLESS_OCR_LANGUAGE=eng
     deploy:
       resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
         limits:
-          memory: 1G
-          cpus: "1"
+          memory: 2G
+          cpus: "2"
     security_opt:
       - no-new-privileges:true
     networks:

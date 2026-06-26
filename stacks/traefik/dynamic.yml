@@ -51,3 +51,21 @@ http:
       headers:
         customResponseHeaders:
           X-Robots-Tag: "all"
+
+  # Non-Docker services — file-based routes (no Docker labels)
+  routers:
+    # OpenHands — standalone systemd service on host, not a container
+    hl-openhands:
+      rule: "Host(`code.antonshubin.com`)"
+      entrypoints: websecure
+      middlewares:
+        - authelia
+        - robots-deny
+      service: hl-openhands
+      tls:
+        certResolver: myresolver
+  services:
+    hl-openhands:
+      loadBalancer:
+        servers:
+          - url: "http://172.23.0.1:8001"

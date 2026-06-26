@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "caldav-mcp": {
+      "command": "/home/spy4x/sync/code/opencode-db/caldav-mcp.sh",
+      "args": [],
+      "transport": "stdio"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium",
+        "--headless",
+        "--timeout-navigation",
+        "300000"
+      ],
+      "transport": "stdio"
+    }
+  }
+}

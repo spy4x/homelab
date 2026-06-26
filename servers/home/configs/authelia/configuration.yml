@@ -19,7 +19,7 @@ session:
   inactivity: 5m
   remember_me: 1d
   cookies:
-    - domain: antonshubin.com
+    - domain: "antonshubin.com"
       authelia_url: https://auth.antonshubin.com
       default_redirection_url: https://dash.antonshubin.com
   redis:
@@ -77,11 +77,9 @@ access_control:
       policy: two_factor
     - domain: "metube.antonshubin.com"
       policy: two_factor
-      policy: two_factor
     - domain: "ollama.antonshubin.com"
       policy: two_factor
     - domain: "time.antonshubin.com"
-      policy: two_factor
       policy: two_factor
     - domain: "rspamd.antonshubin.com"
       policy: two_factor

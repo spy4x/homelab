@@ -1,37 +1,20 @@
+# DECOMMISSIONED — OpenHands runs as standalone systemd service.
+# See docs/openhands.md for deployment instructions.
+# This compose file is kept for reference only, not deployed.
+
 networks:
   proxy:
     external: true
 
 services:
   openhands:
-    container_name: hl-openhands
+    # NOT DEPLOYED — placeholder
     image: ghcr.io/openhands/agent-canvas:latest
-    restart: unless-stopped
+    profiles:
+      - decommissioned
+    container_name: hl-openhands
+    restart: "no"
     environment:
       - PORT=8000
-      - OH_SECRET_KEY=${OPENHANDS_SECRET_KEY}
-      - DOCKER_HOST=tcp://hl-docker-sock-proxy:2375
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
-    volumes:
-      - ${VOLUMES_PATH}/openhands:/home/openhands/.openhands:z
-      - ${PATH_APPS}/openhands/projects:/projects:z
-      # Patch SDK bug: llm_registry.add() should not fail on duplicate usage_id
-      - ${VOLUMES_PATH}/openhands/patches/sdk/llm/llm_registry.py:/usr/local/lib/python3.13/site-packages/openhands/sdk/llm/llm_registry.py:z
     networks:
       - proxy
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 2G
-    security_opt:
-      - no-new-privileges:true
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.hl-openhands.rule=Host(`code.${DOMAIN}`)"
-      - "traefik.http.routers.hl-openhands.entrypoints=websecure"
-      - "traefik.http.routers.hl-openhands.tls=true"
-      - "traefik.http.routers.hl-openhands.tls.certresolver=myresolver"
-      - "traefik.http.routers.hl-openhands.middlewares=authelia@file,openhands-session-key,robots-deny@file"
-      - "traefik.http.middlewares.openhands-session-key.headers.customrequestheaders.X-Session-API-Key=${OPENHANDS_API_KEY}"
-      - "traefik.http.services.hl-openhands.loadbalancer.server.port=8000"

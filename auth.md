@@ -53,15 +53,16 @@ Change `middlewares=auth,...` → `middlewares=authelia@file,...`
 | grafana          | metrics.${DOMAIN}    | Has own auth, can trust Remote-User header |
 | victoria-metrics | metrics-vm.${DOMAIN} | Same as grafana                            |
 | mailserver       | rspamd.${DOMAIN}     | No own web auth                            |
-| openhands        | code.${DOMAIN}       | Has API key auth, UI needs protection      |
+| openhands        | code.${DOMAIN}       | Has API key auth (--public mode), UI needs protection |
 | traefik          | proxy-home.${DOMAIN} | Admin panel                                |
 
 **Complex middleware chains — edit carefully:**
 
 ```yaml
 # openhands:
-  middlewares=auth,openhands-session-key,robots-deny@file
-# → middlewares=authelia@file,openhands-session-key,robots-deny@file
+  middlewares=auth,robots-deny@file
+# → middlewares=authelia@file,robots-deny@file
+# (API key handled by --public mode in systemd unit, not via HTTP header middlewares)
 
 # grafana / victoria-metrics:
   middlewares=auth,robots-deny@file
