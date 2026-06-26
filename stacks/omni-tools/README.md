@@ -25,4 +25,4 @@ Available at `tools.${DOMAIN}`.
 
 ## Auth
 
-Protected by Authelia SSO (one_factor).
+Public — no authentication required. Share the link with friends and family.
