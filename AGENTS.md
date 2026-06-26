@@ -38,6 +38,30 @@ git push -u origin feat/my-thing
 - Flat names create flat directories (e.g., `feat-foo` → `feat-foo/`)
 - You cannot check out the same branch in two worktrees at once — always create a fresh branch for new work
 
+### 🔄 Pull Requests & Issues
+
+**Creating PRs:** After committing and pushing changes, always create a PR. Use the GitHub CLI:
+```bash
+gh pr create --fill
+```
+
+**Commits:** Always add `Co-authored-by: openhands <openhands@all-hands.dev>` to commit messages. This applies to initial commits and any follow-up commits on a PR.
+
+**Linking Issues:** If the task references an existing GitHub issue, include `Fixes #N` or `Closes #N` in the PR body so the issue auto-closes on merge.
+
+**Merge Strategy:**
+- **Squash merge** (`gh pr merge --squash`): Use when all commits in a PR relate to a single change/fix/feature. Default choice.
+- **Rebase merge** (`gh pr merge --rebase`): Use when commits are independent/distinct changes that should remain separate in history.
+
+### ✅ Deploy & Verify (REQUIRED)
+
+**Before committing or reporting "done", you MUST:**
+1. Deploy the changed service(s) to production: `deno task deploy <server> [stack]`
+2. Verify the service starts, stays healthy, and the fix/feature actually works as expected
+3. Only after verification passes, commit and push
+
+This applies to any change that affects deployed services (compose files, scripts, configs). Trivial doc-only changes can skip this step.
+
 ## 📝 Commit Convention (Angular-adapted)
 
 ```
