@@ -530,6 +530,17 @@
           </li>
           <li class="service-item">
             <a
+              href="https://tools.${DOMAIN}"
+              target="_blank"
+              class="service-link"
+            >
+              <div class="service-icon">🛠️</div>
+              <div class="service-name">Tools</div>
+              <img src="https://uptime-cloud.${DOMAIN}/api/v1/endpoints/home_omni-tools/health/badge.svg" alt="Home Tools Uptime Badge" />
+            </a>
+          </li>
+          <li class="service-item">
+            <a
               href="https://schedule.${DOMAIN}"
               target="_blank"
               class="service-link"

@@ -91,6 +91,8 @@ access_control:
       policy: two_factor
     - domain: "proxy-home.antonshubin.com"
       policy: two_factor
+    - domain: "tools.antonshubin.com"
+      policy: one_factor
 
 # Storage — SQLite
 storage:

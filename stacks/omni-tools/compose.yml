@@ -1,0 +1,35 @@
+name: ${PROJECT}
+
+networks:
+  proxy:
+    external: true
+  default:
+    external: true
+    name: proxy
+
+services:
+  # OmniTools - Self-hosted collection of everyday online tools
+  # All processing is client-side, nothing leaves your device
+  # https://github.com/iib0011/omni-tools
+  omni-tools:
+    container_name: hl-omni-tools
+    image: iib0011/omni-tools:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: ${OMNITOOLS_CPU_LIMIT:-0.5}
+          memory: ${OMNITOOLS_MEM_LIMIT:-256M}
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "traefik.http.services.hl-omni-tools.loadbalancer.server.port=80"
+      - "traefik.http.routers.hl-omni-tools.rule=Host(`${OMNITOOLS_SUBDOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.hl-omni-tools.middlewares=authelia@file,robots-deny@file"
+      - "traefik.http.routers.hl-omni-tools.entrypoints=websecure"
+      - "traefik.http.routers.hl-omni-tools.tls=true"
+      - "traefik.http.routers.hl-omni-tools.tls.certresolver=myresolver"
