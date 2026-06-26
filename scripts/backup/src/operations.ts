@@ -279,6 +279,11 @@ export class BackupOperations {
       return false
     }
 
+    // Clear transient error from failed repo check — init succeeded
+    config.status = BackupStatus.IN_PROGRESS
+    config.error = undefined
+    config.errorAtStep = undefined
+
     // Verify repository was created successfully
     return await this.runResticCommand({
       args: ["-r", repoPath, "cat", "config"],
