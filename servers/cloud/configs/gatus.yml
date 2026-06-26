@@ -335,7 +335,16 @@ endpoints:
 
   - name: Authelia
     group: home
-    url: "https://auth.${DOMAIN}"
+    url: "https://auth.${DOMAIN}/api/health"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Grafana (VM)
+    group: home
+    url: "https://probe-home.${DOMAIN}/health/grafana-vm"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
@@ -380,7 +389,7 @@ endpoints:
 
   - name: Schedule
     group: home
-    url: "https://schedule.${DOMAIN}"
+    url: "https://schedule.${DOMAIN}/auth/login"
     interval: 1m
     conditions:
       - "[STATUS] == 200"

@@ -91,4 +91,4 @@ services:
       - "traefik.http.routers.hl-schedule.entrypoints=websecure"
       - "traefik.http.routers.hl-schedule.tls=true"
       - "traefik.http.routers.hl-schedule.tls.certresolver=myresolver"
-      # - "traefik.http.routers.hl-schedule.middlewares=auth,robots-deny@file"
+      - "traefik.http.routers.hl-schedule.middlewares=robots-deny@file"

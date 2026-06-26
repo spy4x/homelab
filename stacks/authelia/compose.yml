@@ -16,6 +16,19 @@ services:
       - TZ=${TIMEZONE}
       - AUTHELIA_SESSION_SECRET=${AUTHELIA_SESSION_SECRET}
     restart: unless-stopped
+    healthcheck:
+      test: [
+        "CMD",
+        "wget",
+        "--no-verbose",
+        "--tries=1",
+        "--spider",
+        "http://localhost:9091/api/health",
+      ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     networks:
       - proxy
       - default
@@ -31,7 +44,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128M
+          memory: 256M
           cpus: "0.3"
 
   authelia-redis:
