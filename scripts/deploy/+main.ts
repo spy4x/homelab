@@ -263,6 +263,27 @@ try {
   }
   success("Synced completed successfully")
 
+  // Clean up stale stack directories on remote server (removed from config.json)
+  log("Cleaning up stale stack directories...")
+  const activeStacks = stacks.map((s) => s.name)
+  const stackNamesPattern = activeStacks.map((s) => `" ${s} "`).join("|")
+  const remoteStacksScript = [
+    `cd ${PATH_APPS}/stacks || exit 0`,
+    `for dir in */; do`,
+    `  dir_name="\${dir%/}"`,
+    `  case " \${dir_name} " in`,
+    `    ${stackNamesPattern}) ;;`,
+    `    *) echo "Removing stale stack: \${dir_name}"; rm -rf "\${dir}";;`,
+    `  esac`,
+    `done`,
+  ].join("\n")
+  const cleanupCommand = await runCommand(["ssh", SSH_ADDRESS, remoteStacksScript])
+  if (!cleanupCommand.success) {
+    log(`Warning: Failed to clean up stale stacks: ${cleanupCommand.error}`)
+  } else {
+    success("Stale stacks cleaned up")
+  }
+
   // Snapshot checksums after rsync and detect changes
   const restartStacks = new Set<string>()
   if (stacksWithConfigFiles.length > 0) {
