@@ -2,6 +2,42 @@
 
 This file contains guidelines for agentic coding agents (including AI assistants) working in this homelab infrastructure repository.
 
+## 🏗️ Git Worktree Structure (IMPORTANT)
+
+This repo uses **git worktrees** — every branch gets its own directory under the same root, sharing one `.git`.
+
+```
+homelab/                          ← bare repo (contains .git data)
+├── main/                         ← worktree for main branch
+├── fix/backup-errors/            ← worktree for fix branch
+├── feat-my-feature/              ← worktree for feature branch
+└── ...
+```
+
+### ⚠️ MANDATORY: Create a new worktree for every session
+
+When you receive a task that requires code changes, you **MUST** create a new branch and worktree instead of modifying the current directory directly. The only exception is trivial changes (typo fixes, README edits).
+
+```bash
+# 1. Create a new branch + worktree (from main)
+git -C .. worktree add -b feat/my-thing feat/my-thing main
+
+# 2. Do ALL work inside the new worktree
+cd ../feat/my-thing
+
+# 3. Commit and push as normal
+git add -A && git commit -m "feat(my-thing): add the thing"
+git push -u origin feat/my-thing
+```
+
+**Why:** This allows parallel OpenHands sessions to work on different branches simultaneously without conflicts.
+
+**Rules:**
+- The bare repo is at `..` (parent directory) from any worktree
+- Branch names with `/` create subdirectories (e.g., `fix/foo` → `fix/foo/`)
+- Flat names create flat directories (e.g., `feat-foo` → `feat-foo/`)
+- You cannot check out the same branch in two worktrees at once — always create a fresh branch for new work
+
 ## 📝 Commit Convention (Angular-adapted)
 
 ```
@@ -336,29 +372,25 @@ curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records
 ## 📁 Project Structure
 
 ```
-├── stacks/              # Service catalog (reusable)
-│   └── {service}/
-│       ├── compose.yml
-│       ├── backup.ts
-│       └── README.md
-├── servers/             # Server-specific configs
-│   └── {name}/
-│       ├── config.json
-│       ├── .env (gitignored)
-│       ├── .env.example
-│       └── configs/
-├── scripts/             # TypeScript automation
-│   ├── backup/
-│   ├── deploy/
-│   ├── ansible/
-│   └── +lib.ts
-├── ansible/             # Ansible playbooks
-└── deno.jsonc          # Deno configuration
+homelab/                         ← bare repo (parent of all worktrees)
+├── main/                        ← YOUR CURRENT WORKTREE
+│   ├── stacks/                  # Service catalog (reusable)
+│   │   └── {service}/
+│   │       ├── compose.yml
+│   │       ├── backup.ts
+│   │       └── README.md
+│   ├── servers/                 # Server-specific configs
+│   ├── scripts/                 # TypeScript automation
+│   ├── ansible/                 # Ansible playbooks
+│   ├── deno.jsonc               # Deno configuration
+│   └── AGENTS.md                ← this file (in every worktree)
+├── fix/backup-errors/           # Another worktree for fix branch
+└── feat-*/                      # More worktrees for parallel work
 ```
 
 ## 🔧 Development Workflow
 
-1. **Before making changes**: Run `deno task check` to ensure clean state
+1. **Create worktree**: `git -C .. worktree add -b feat/my-thing feat/my-thing main && cd ../feat/my-thing`
 2. **Make changes**: Follow existing patterns and conventions
 3. **After changes**: Run `deno task fix` to auto-format and lint
 4. **Final check**: Run `deno task check` to verify all passes
