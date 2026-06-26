@@ -11,11 +11,11 @@ targets:
   - name: monica
     url: http://hl-monica:80/
   - name: openhands
-    url: http://hl-openhands:8000/
+    url: http://172.23.0.1:8000/health
   - name: transmission
     url: http://hl-transmission:9091/
   - name: akaunting
-    url: http://hl-akaunting:80/
+    url: http://hl-akaunting:80/health.html
   - name: grafana
     url: http://hl-grafana:3000/
   - name: grafana-vm

@@ -38,6 +38,7 @@ services:
         condition: service_healthy
     volumes:
       - ${VOLUMES_PATH}/akaunting/data:/var/www/akaunting/storage:z
+      - ./health.html:/var/www/html/health.html
     environment:
       - APP_URL=https://invoices.${DOMAIN}
       - DB_CONNECTION=mysql
