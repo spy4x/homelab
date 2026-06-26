@@ -335,7 +335,7 @@ endpoints:
 
   - name: Authelia
     group: home
-    url: "https://auth.${DOMAIN}/api/health"
+    url: "https://probe-home.${DOMAIN}/health/authelia"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
