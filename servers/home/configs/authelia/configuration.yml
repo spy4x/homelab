@@ -65,8 +65,6 @@ access_control:
       policy: bypass
     - domain: "docs.antonshubin.com"
       policy: bypass
-    - domain: "sage.antonshubin.com"
-      policy: bypass
 
     # Everything else — 2FA required
     - domain: "torrents.antonshubin.com"

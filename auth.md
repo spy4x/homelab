@@ -104,7 +104,6 @@ These stay `bypass` (no Authelia in front):
 | **Umami**            | stats.${DOMAIN}     | Own auth                                                      |
 | **Stalwart**         | stalwart.${DOMAIN}  | Admin password, already behind wireguard                      |
 | **Paperless-ngx**    | docs.${DOMAIN}      | Own auth + API tokens for automation                          |
-| **Sage**             | sage.${DOMAIN}      | External service, not in this repo                            |
 
 ### What about Grafana + OpenHands?
 
@@ -165,8 +164,6 @@ access_control:
     - domain: "stalwart.antonshubin.com"
       policy: bypass
     - domain: "docs.antonshubin.com"
-      policy: bypass
-    - domain: "sage.antonshubin.com"
       policy: bypass
 
     # Everything else — 2FA required

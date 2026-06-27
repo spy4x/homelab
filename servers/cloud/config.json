@@ -8,6 +8,7 @@
     { "name": "librespeed" },
     { "name": "mailserver" },
     { "name": "healthchecks" },
+    { "name": "snappymail" },
     { "name": "mail-ai" },
     { "name": "upwork-triage" },
     {

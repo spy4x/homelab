@@ -63,13 +63,12 @@ services:
       # Internal MCP — no Traefik exposure. OpenWebUI reaches it via Docker DNS.
       - "traefik.enable=false"
     healthcheck:
-      # MCP Streamable HTTP only accepts POST with a valid JSON-RPC body.
-      # Ping with initialize request — 200 = healthy.
+      # MCP Streamable HTTP — send initialize, expect 200 with "result" key.
       test: [
         "CMD",
         "python",
         "-c",
-        "import urllib.request, json; r=urllib.request.Request('http://localhost:9557/mcp', data=json.dumps({'jsonrpc':'2.0','id':1,'method':'ping'}).encode(), headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'}); urllib.request.urlopen(r, timeout=5).read()",
+        "import urllib.request, json; b=json.dumps({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2024-11-05','capabilities':{},'clientInfo':{'name':'hc','version':'1'}}}).encode(); r=urllib.request.Request('http://localhost:9557/mcp', data=b, headers={'Content-Type':'application/json','Accept':'application/json, text/event-stream'}); resp=urllib.request.urlopen(r, timeout=5); assert resp.status==200; assert b'result' in resp.read()",
       ]
       interval: 30s
       timeout: 5s
