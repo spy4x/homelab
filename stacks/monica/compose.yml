@@ -64,7 +64,9 @@ services:
       - MAIL_FROM_ADDRESS=noreply@${DOMAIN}
       - MAIL_FROM_NAME="Monica CRM"
       - CHECK_VERSION=false
-      - APP_FORCE_URL=https://crm.${DOMAIN}
+      # APP_FORCE_URL intentionally unset — TRUSTED_PROXIES handles scheme
+      # via X-Forwarded-Proto. Without this, internal Docker requests to
+      # hl-monica:80 get redirected to the public URL, breaking MCP auth.
     deploy:
       resources:
         limits:
@@ -79,8 +81,17 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy"
       - "traefik.http.services.hl-monica.loadbalancer.server.port=80"
+      # General router — web UI with Authelia
       - "traefik.http.routers.hl-monica.rule=Host(`crm.${DOMAIN}`)"
       - "traefik.http.routers.hl-monica.entrypoints=websecure"
       - "traefik.http.routers.hl-monica.tls=true"
       - "traefik.http.routers.hl-monica.middlewares=authelia@file,robots-deny@file"
       - "traefik.http.routers.hl-monica.tls.certresolver=myresolver"
+      # API router — bypass Authelia (Bearer token auth instead)
+      - "traefik.http.routers.hl-monica-api.rule=Host(`crm.${DOMAIN}`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.hl-monica-api.entrypoints=websecure"
+      - "traefik.http.routers.hl-monica-api.tls=true"
+      - "traefik.http.routers.hl-monica-api.tls.certresolver=myresolver"
+      - "traefik.http.routers.hl-monica-api.priority=100"
+      - "traefik.http.routers.hl-monica-api.service=hl-monica"
+      # No middlewares for the API router — Authelia bypassed, token auth handled by Monica
