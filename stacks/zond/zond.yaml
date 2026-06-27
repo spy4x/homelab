@@ -76,3 +76,4 @@ targets:
     url: http://hl-vaultwarden:80/
   - name: woodpecker
     url: http://hl-woodpecker-server:8000/
+  # No self-target — zond is infrastructure, not a monitored service
