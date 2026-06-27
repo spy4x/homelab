@@ -202,7 +202,7 @@ endpoints:
       - type: ntfy
 
 
-  - name: Proxy
+  - name: Traefik
     group: offsite
     url: "https://proxy-offsite.${DOMAIN}/dashboard"
     interval: 1m
@@ -390,7 +390,16 @@ endpoints:
 
   - name: Zond
     group: home
-    url: "https://probe-home.${DOMAIN}/health/traefik"
+    url: "https://probe-home.${DOMAIN}/health/zond"
+    interval: 1m
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: Omni Tools
+    group: home
+    url: "https://tools.${DOMAIN}"
     interval: 1m
     conditions:
       - "[STATUS] == 200"

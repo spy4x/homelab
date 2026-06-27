@@ -86,7 +86,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: Proxy
+  - name: Traefik
     group: cloud
     url: "https://proxy-cloud.${DOMAIN}/dashboard"
     interval: 1m
@@ -97,7 +97,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: Proxy
+  - name: Traefik
     group: offsite
     url: "https://proxy-offsite.${DOMAIN}/dashboard"
     interval: 1m
