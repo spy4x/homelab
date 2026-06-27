@@ -70,34 +70,12 @@ export class BackupOperations {
     // so we must match the same project name to find existing containers.
     const projectName = this.getProjectName(composePath)
 
-    // Use "up -d" for start to recreate containers if they were removed
-    // (e.g., after docker compose down). "docker compose start" fails when
-    // no container exists for a service.
-    const args = action === "start"
-      ? ["compose", "-p", projectName, "-f", composePath, "up", "-d"]
-      : ["compose", "-p", projectName, "-f", composePath, action]
-
-    // Resolve ~ in path env vars before passing to docker compose.
-    // Docker compose inherits these and expands ${VOLUMES_PATH} etc in compose files.
-    // Without resolution, ~ expands to the HOME of the effective user — /root when
-    // run via cron root crontab — creating bind mounts at /root/ instead of /home/.
-    const homeEnv = Deno.env.get("HOME") || `/home/${Deno.env.get("USER") || "spy4x"}`
-    const pathVars = ["BASE_PATH", "PATH_APPS", "VOLUMES_PATH", "PATH_BACKUPS", "PATH_MEDIA", "PATH_SYNC"]
-    const cleanEnv: Record<string, string> = {}
-    for (const [k, v] of Object.entries(Deno.env.toObject())) {
-      cleanEnv[k] = v
-    }
-    for (const key of pathVars) {
-      if (cleanEnv[key]?.startsWith("~/")) {
-        cleanEnv[key] = cleanEnv[key].replace("~", homeEnv)
-      }
-    }
+    const args = ["compose", "-p", projectName, "-f", composePath, action]
 
     const cmd = new Deno.Command("docker", {
       args,
       stdout: "piped",
       stderr: "piped",
-      env: cleanEnv,
     })
 
     const { code, stderr } = await cmd.output()
