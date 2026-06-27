@@ -264,8 +264,9 @@ try {
   success("Synced completed successfully")
 
   // Clean up stale stack directories on remote server (removed from config.json)
+  // Use the full config.stacks list, not the filtered one (single-stack deploy)
   log("Cleaning up stale stack directories...")
-  const activeStacks = stacks.map((s) => s.name)
+  const activeStacks = (config.stacks || []).map((s) => s.name)
   const stackNamesPattern = activeStacks.map((s) => `" ${s} "`).join("|")
   const remoteStacksScript = [
     `cd ${PATH_APPS}/stacks || exit 0`,
