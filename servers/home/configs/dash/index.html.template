@@ -29,6 +29,50 @@
         text-align: center;
       }
 
+      .search-container {
+        text-align: center;
+        margin: 24px auto;
+        max-width: 480px;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 16px;
+        border: 2px solid #333;
+        border-radius: 12px;
+        background-color: #1e1e1e;
+        color: #fff;
+        outline: none;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        box-sizing: border-box;
+      }
+
+      .search-input:focus {
+        border-color: #2979ff;
+        box-shadow: 0 0 0 3px rgba(41, 121, 255, 0.2);
+      }
+
+      .search-input::placeholder {
+        color: #666;
+      }
+
+      .no-results {
+        display: none;
+        text-align: center;
+        color: #666;
+        font-size: 18px;
+        padding: 60px 20px;
+      }
+
+      .no-results.visible {
+        display: block;
+      }
+
+      .section.hidden {
+        display: none;
+      }
+
       .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -128,6 +172,19 @@
 
   <body>
     <h1>Anton Shubin's servers</h1>
+
+    <div class="search-container">
+      <input
+        type="text"
+        class="search-input"
+        id="searchInput"
+        placeholder="🔍 Search services..."
+        autocomplete="off"
+      />
+    </div>
+
+    <div id="noResults" class="no-results">No services match your search</div>
+
     <div class="container">
       <div class="section">
         <h2 class="section-title">Home</h2>
@@ -722,6 +779,33 @@
             })
         })
       }
+
+      // Search/filter functionality
+      var searchInput = document.getElementById("searchInput")
+      var noResults = document.getElementById("noResults")
+      var sections = document.querySelectorAll(".section")
+
+      searchInput.addEventListener("input", function () {
+        var query = this.value.trim().toLowerCase()
+        var anyVisible = false
+
+        sections.forEach(function (section) {
+          var items = section.querySelectorAll(".service-item")
+          var sectionHasVisible = false
+
+          items.forEach(function (item) {
+            var text = item.textContent.toLowerCase()
+            var match = !query || text.indexOf(query) !== -1
+            item.style.display = match ? "" : "none"
+            if (match) sectionHasVisible = true
+          })
+
+          section.classList.toggle("hidden", !sectionHasVisible)
+          if (sectionHasVisible) anyVisible = true
+        })
+
+        noResults.classList.toggle("visible", !anyVisible && query !== "")
+      })
     </script>
   </body>
 </html>
