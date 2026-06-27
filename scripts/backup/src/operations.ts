@@ -77,10 +77,27 @@ export class BackupOperations {
       ? ["compose", "-p", projectName, "-f", composePath, "up", "-d"]
       : ["compose", "-p", projectName, "-f", composePath, action]
 
+    // Resolve ~ in path env vars before passing to docker compose.
+    // Docker compose inherits these and expands ${VOLUMES_PATH} etc in compose files.
+    // Without resolution, ~ expands to the HOME of the effective user — /root when
+    // run via cron root crontab — creating bind mounts at /root/ instead of /home/.
+    const homeEnv = Deno.env.get("HOME") || `/home/${Deno.env.get("USER") || "spy4x"}`
+    const pathVars = ["BASE_PATH", "PATH_APPS", "VOLUMES_PATH", "PATH_BACKUPS", "PATH_MEDIA", "PATH_SYNC"]
+    const cleanEnv: Record<string, string> = {}
+    for (const [k, v] of Object.entries(Deno.env.toObject())) {
+      cleanEnv[k] = v
+    }
+    for (const key of pathVars) {
+      if (cleanEnv[key]?.startsWith("~/")) {
+        cleanEnv[key] = cleanEnv[key].replace("~", homeEnv)
+      }
+    }
+
     const cmd = new Deno.Command("docker", {
       args,
       stdout: "piped",
       stderr: "piped",
+      env: cleanEnv,
     })
 
     const { code, stderr } = await cmd.output()
