@@ -52,6 +52,7 @@
     { "name": "caldav-mcp" },
     { "name": "email-mcp" },
     { "name": "google-maps-mcp" },
+    { "name": "monica-mcp" },
     { "name": "zond" },
     { "name": "omni-tools" }
   ]

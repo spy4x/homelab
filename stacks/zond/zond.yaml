@@ -58,8 +58,6 @@ targets:
     url: http://hl-radicale:5232/
   - name: reitti
     url: http://hl-reitti:8080/
-  - name: sage
-    url: http://sage:3000/
   - name: searxng
     url: http://hl-searxng:8080/
   - name: stalwart

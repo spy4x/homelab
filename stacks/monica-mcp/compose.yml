@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     environment:
       - MCP_PORT=3000
-      - MONICA_BASE_URL=https://crm.${DOMAIN}
+      - MONICA_BASE_URL=http://hl-monica:80
       - MONICA_API_TOKEN=${MONICA_API_TOKEN}
       - MONICA_TOKEN_TYPE=bearer
     deploy:

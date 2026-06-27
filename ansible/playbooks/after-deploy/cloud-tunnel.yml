@@ -31,7 +31,7 @@
     cloud_tunnel_ssh_host: "23.88.101.28"
     cloud_tunnel_ssh_port: 26845
     cloud_tunnel_ssh_user: "spy4x"
-    cloud_tunnel_target_ip: "172.25.0.2"
+    cloud_tunnel_target_ip: "172.18.0.6"
 
   tasks:
     - name: Deploy systemd unit
