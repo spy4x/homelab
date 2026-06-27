@@ -390,7 +390,7 @@ endpoints:
 
   - name: Zond
     group: home
-    url: "https://probe-home.${DOMAIN}/health"
+    url: "https://probe-home.${DOMAIN}/health/traefik"
     interval: 1m
     conditions:
       - "[STATUS] == 200"
