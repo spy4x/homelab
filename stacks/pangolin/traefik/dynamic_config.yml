@@ -3,6 +3,12 @@ http:
     badger:
       plugin:
         badger:
+          apiBaseUrl: "http://pangolin:3001/api/v1"
+          userSessionCookieName: "p_session_token"
+          accessTokenQueryParam: "p_token"
+          accessTokenIdHeader: "P-Access-Token-Id"
+          accessTokenHeader: "P-Access-Token"
+          resourceSessionRequestParam: "resource_session_request_param"
           disableForwardAuth: true
     redirect-to-https:
       redirectScheme:

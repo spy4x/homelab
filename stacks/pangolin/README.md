@@ -123,6 +123,16 @@ Then follow the dashboard from step 3.
 - **traefik configs**: `./traefik` is bind-mounted into `hl-pangolin-traefik`,
   repo edits apply on next deploy. Pangolin-managed routes come from the HTTP
   provider (`http://pangolin:3001/api/v1/traefik-config`).
+- **badger middleware is per-provider in traefik**: middleware names are scoped
+  to the provider that defines them (`badger@file` vs `badger@http`). The file
+  provider's `badger` instance does NOT share Pangolin session state with the
+  HTTP provider's `badger`, so file-defined routers referencing `badger` will
+  not actually gate traffic. Keep auth-bearing routers in the HTTP provider
+  (Pangolin UI Resources) and avoid file-provider overrides that try to attach
+  `badger` to a router — the HTTP provider's auto-router already does this with
+  the correct session/cookie state. If you need to override (e.g. for header
+  rewrites), let the HTTP provider handle auth and add other middlewares
+  (header rewrites, etc.) instead of redefining `badger`.
 - **volumes**: `pangolin-config` is shared — pangolin uses `/app/config`,
   gerbil writes its key to `/var/config`. Needs backup/restore support (see
   TODO).
