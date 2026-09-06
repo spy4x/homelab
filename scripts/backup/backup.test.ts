@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert"
-import { BackupStatus } from "./src/types.ts"
+import { BackupStatus, isMissingContainerError } from "./src/types.ts"
 
 Deno.test({
   name: "BackupStatus enum starts at 1, increments by 1",
@@ -25,5 +25,38 @@ Deno.test({
     // Ordering matters for state machine transitions
     assertEquals(BackupStatus.IN_PROGRESS < BackupStatus.SUCCESS, true)
     assertEquals(BackupStatus.SUCCESS < BackupStatus.ERROR, true)
+  },
+})
+
+Deno.test({
+  name: "isMissingContainerError matches compose 'no container to start' stderr",
+  fn() {
+    // Reproduces the 2026-09-05 cloud-server stalwart backup failure,
+    // where Watchtower recreated `hl-cert-sync` between backup's stop
+    // and start, leaving docker compose with nothing to restart.
+    const stderr = `service "cert-sync" has no container to start`
+    assertEquals(isMissingContainerError(stderr), true)
+  },
+})
+
+Deno.test({
+  name: "isMissingContainerError matches when error is wrapped in other text",
+  fn() {
+    const stderr = [
+      "Error starting compose stack:",
+      'service "cert-sync" has no container to start',
+      "",
+    ].join("\n")
+    assertEquals(isMissingContainerError(stderr), true)
+  },
+})
+
+Deno.test({
+  name: "isMissingContainerError returns false for unrelated stderr",
+  fn() {
+    assertEquals(isMissingContainerError(""), false)
+    assertEquals(isMissingContainerError("permission denied"), false)
+    assertEquals(isMissingContainerError("cannot connect to Docker daemon"), false)
+    assertEquals(isMissingContainerError("compose file not found"), false)
   },
 })

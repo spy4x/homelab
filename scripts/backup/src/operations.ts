@@ -1,6 +1,11 @@
 import { absPath, error, log } from "../../+lib.ts"
 import { USER } from "./+lib.ts"
-import { BackupConfigState, BackupStatus, ResticCommandOptions } from "./types.ts"
+import {
+  BackupConfigState,
+  BackupStatus,
+  isMissingContainerError,
+  ResticCommandOptions,
+} from "./types.ts"
 
 export class BackupOperations {
   private backupsPassword: string
@@ -57,6 +62,22 @@ export class BackupOperations {
 
   /**
    * Manages a Docker Compose stack (stop/start all services)
+   *
+   * Stop: plain `docker compose stop` is fine — it shuts down running
+   * containers in place.
+   *
+   * Start: prefer `docker compose start` (fast, no env re-eval, leaves
+   * bind mounts alone). Fall back to `docker compose up -d` if `start`
+   * fails because a container vanished during the backup window — a
+   * common race when Watchtower updates a service mid-backup and
+   * removes/recreates the old container. `up -d` is idempotent: it
+   * recreates only missing containers and leaves the rest running.
+   *
+   * HOME is forced to the user's real home before `up -d` so that any
+   * `~` in bind-mount env vars resolves to /home/<USER>, not /root.
+   * (Cron runs the backup as root, which would otherwise redirect
+   * bind mounts into /root/ and take the stack down — see git history
+   * for the 2026-06-26 all-46-services-down incident.)
    */
   private async manageComposeStack(
     composePath: string,
@@ -70,7 +91,8 @@ export class BackupOperations {
     // so we must match the same project name to find existing containers.
     const projectName = this.getProjectName(composePath)
 
-    const args = ["compose", "-p", projectName, "-f", composePath, action]
+    const baseArgs = ["compose", "-p", projectName, "-f", composePath]
+    const args = [...baseArgs, action]
 
     const cmd = new Deno.Command("docker", {
       args,
@@ -80,10 +102,46 @@ export class BackupOperations {
 
     const { code, stderr } = await cmd.output()
 
-    if (code !== 0) {
-      const errorMsg = `Error ${action}ing compose stack:\n${new TextDecoder().decode(stderr)}`
-      this.markBackupFailed(config, errorMsg, `compose_${action}`)
+    if (code === 0) {
+      return
     }
+
+    const errStr = new TextDecoder().decode(stderr)
+
+    // Only retry for start. Stop failures are real (compose file gone,
+    // project name typo, daemon down) — don't paper over them.
+    if (action === "start" && isMissingContainerError(errStr)) {
+      log(
+        `start failed (missing container), falling back to up -d:\n${errStr.trim()}`,
+      )
+      const fallback = new Deno.Command("docker", {
+        args: [...baseArgs, "up", "-d"],
+        env: {
+          ...Deno.env.toObject(),
+          HOME: `/home/${USER}`,
+        },
+        stdout: "piped",
+        stderr: "piped",
+      })
+      const { code: upCode, stderr: upStderr } = await fallback.output()
+      if (upCode !== 0) {
+        const upErrStr = new TextDecoder().decode(upStderr)
+        this.markBackupFailed(
+          config,
+          `Error ${action}ing compose stack (start failed: ${errStr}; up -d also failed: ${upErrStr})`,
+          `compose_${action}`,
+        )
+        return
+      }
+      log("up -d fallback succeeded")
+      return
+    }
+
+    this.markBackupFailed(
+      config,
+      `Error ${action}ing compose stack:\n${errStr}`,
+      `compose_${action}`,
+    )
   }
 
   /**
