@@ -1,4 +1,4 @@
-import { BackupConfig } from "./+lib.ts"
+import type { BackupConfig } from "./+lib.ts"
 
 export enum BackupStatus {
   IN_PROGRESS = 1,
@@ -40,4 +40,15 @@ export interface ResticCommandOptions {
   config: BackupConfigState
   step: string
   workingDir?: string
+}
+
+/**
+ * Detects the "container disappeared while we were looking" error that
+ * `docker compose start` returns when Watchtower (or any other process
+ * with docker.sock access) removed/recreated a service container
+ * during the backup window. The phrase "no container to start" is
+ * stable across Docker Compose v2.x versions; match on that substring.
+ */
+export function isMissingContainerError(stderr: string): boolean {
+  return stderr.includes("no container to start")
 }
