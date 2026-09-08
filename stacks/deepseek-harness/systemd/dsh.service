@@ -12,9 +12,16 @@ Type=simple
 Environment=DSH_HOME=%h/.local/share/dsh
 Environment=DSH_TELEMETRY_DISABLED=1
 Environment=HOME=%h
-# npm prefix path so `dsh` (installed with `npm install --prefix ~/.local -g`)
-# resolves on PATH inside the unit. Matches the install recipe in README.
-Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin
+# PATH covers three homes the unit might need:
+#   %h/.local/bin    — dsh itself (npm install --prefix ~/.local -g)
+#   %h/.deno/bin     — any Deno-based MCP child (e.g. caldav/start.sh
+#                      shells out to `deno run -A`). Without this, Deno
+#                      MCPs fail to spawn and dsh logs
+#                      "ERROR: deno not in PATH" repeatedly. Symptom
+#                      surfaces as failing tool calls (the failing MCP
+#                      is conflated with unrelated tools in the UI).
+#   /usr/local/bin:/usr/bin — system fallbacks (node, npm, npx)
+Environment=PATH=%h/.local/bin:%h/.deno/bin:/usr/local/bin:/usr/bin
 # dsh-web-app's startup.js rejects `--host 0.0.0.0` by design (the agent
 # can execute code). Bind to loopback and front it with a public reverse
 # proxy (Pangolin on cloud, or any TLS terminator) for external access.

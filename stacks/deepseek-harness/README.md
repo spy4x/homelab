@@ -156,3 +156,20 @@ preserved across upgrades.
 - **403 from DeepSeek API** — bad/missing key in
   Settings → Models. Curl from the host:
   `curl -s https://api.deepseek.com` to confirm egress works.
+- **Tool calls fail with "deno not in PATH"** — a Deno-based MCP
+  child (e.g. `~/sync/code/mcps/caldav/start.sh`) can't spawn
+  because the systemd unit's `PATH` excludes `%h/.deno/bin`. dsh
+  retries the spawn every few seconds, drowning the journal. The
+  unit's `PATH` line must list every tool home an MCP launcher
+  needs. Symptom often surfaces as a generic "tool failed" in the
+  Web UI even for tools unrelated to the failing MCP — the failing
+  child's stderr leaks into the same error stream.
+- **Playwright MCP fails on Fedora / non-Ubuntu** — Playwright's
+  `npx playwright install-deps` tries `apt-get`, which doesn't
+  exist on Fedora. But the libraries it checks for
+  (`libicu74`, `libjpeg-turbo8`) are already present at newer SONAMEs
+  on Fedora (`libicu77`, `libjpeg-turbo3`); Chrome launches fine.
+  Verify with `~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome
+  --headless --dump-dom https://example.com`. Only run
+  `npx playwright install` (browser download), skip
+  `install-deps`.
